@@ -2,8 +2,10 @@
 import Base from '../layouts/Base.astro';
 import Counter from '../components/Counter.astro';
 import Bi from '../components/Bi.astro';
+import { stats } from '../lib/content';
 
-// Years in the market: computed live so it is always current (climbs from 1997).
+// Years in the market: computed live so it is always current (climbs from the founding
+// year the client sets in the admin).
 const year = new Date().getFullYear();
 
 // ── EDITABLE CONTENT ────────────────────────────────────────────────────────
@@ -18,7 +20,7 @@ const year = new Date().getFullYear();
 // right shape, swapped for Amal's real assets via the admin.
 const content = {
   cover: {
-    eyebrow: { en: "Since 1997 · Jeddah, Saudi Arabia", ar: "منذ عام 1997 · جدة، المملكة العربية السعودية" },
+    eyebrow: { en: `Since ${stats.founded} · Jeddah, Saudi Arabia`, ar: `منذ عام ${stats.founded} · جدة، المملكة العربية السعودية` },
     titleHtml: {
       en: 'Where technology<br>meets <span class="serif-note" style="color:var(--gold-bright)">vision.</span>',
       ar: 'حيث تلتقي التقنية<br>مع <span class="serif-note" style="color:var(--gold-bright)">الرؤية.</span>',
@@ -45,25 +47,25 @@ const content = {
       { href: "/about",    img: "/images/factory.jpg",           name: { en: "About Us",         ar: "من نحن" },          desc: { en: "Our story, people, plant and responsibility since 1997.", ar: "قصتنا وفريقنا ومصنعنا ومسؤوليتنا منذ عام 1997." } },
       { href: "/quality",  img: "/images/factory-engraving.jpg",  name: { en: "Quality System",   ar: "نظام الجودة" },      desc: { en: "Certificates, quality assurance and in-house lab testing.", ar: "الشهادات وضمان الجودة والفحص المخبري الداخلي." } },
       { href: "/products", img: "/images/lineup.jpg",             name: { en: "Products",         ar: "المنتجات" },        desc: { en: "Flexible packaging for every category, made to order.", ar: "تغليف مرن لكل فئة، يُصنع حسب الطلب." } },
-      { href: "/partners", img: "/images/factory-bagging.jpg",    name: { en: "Success Partners", ar: "شركاء النجاح" },    desc: { en: "The brands we print for, across 35 countries.", ar: "العلامات التي نطبع لها في أكثر من 35 دولة." } },
+      { href: "/partners", img: "/images/factory-bagging.jpg",    name: { en: "Success Partners", ar: "شركاء النجاح" },    desc: { en: `The brands we print for, across ${stats.countries} countries.`, ar: `العلامات التي نطبع لها في أكثر من ${stats.countries} دولة.` } },
       { href: "/careers",  img: "/images/dept-3.jpg",             name: { en: "Careers",          ar: "الوظائف" },         desc: { en: "Open roles and how to join the Printopack team.", ar: "الوظائف المتاحة وكيفية الانضمام إلى فريق برنتوباك." } },
       { href: "/news-gallery", img: "/images/dept-1.jpg",         name: { en: "News & Gallery",   ar: "الأخبار والمعرض" }, desc: { en: "Latest news and events, plus our photo and video gallery.", ar: "أحدث الأخبار والفعاليات ومعرض الصور والفيديو." } },
       { href: "/contact",  img: "/images/factory.jpg",            name: { en: "Contact",          ar: "التواصل" },         desc: { en: "Reach our head office and regional offices across the region.", ar: "تواصل مع مقرنا الرئيسي ومكاتبنا الإقليمية في المنطقة." } },
     ],
   },
   counters: [
-    { from: 1997, value: year, label: "In the market since 1997", labelAr: "في السوق منذ عام 1997" },
-    { prefix: "+", value: 35, label: "Countries served", labelAr: "دولة حول العالم" },
-    { value: 10, label: "Regional offices", labelAr: "مكاتب إقليمية" },
-    { prefix: "~", value: 400, label: "Team members", labelAr: "من أفراد الفريق" },
+    { from: stats.founded, value: year, label: `In the market since ${stats.founded}`, labelAr: `في السوق منذ عام ${stats.founded}` },
+    { prefix: "+", value: stats.countries, label: "Countries served", labelAr: "دولة حول العالم" },
+    { value: stats.offices, label: "Regional offices", labelAr: "مكاتب إقليمية" },
+    { prefix: "~", value: stats.employees, label: "Team members", labelAr: "من أفراد الفريق" },
   ],
   partners: {
     eyebrow: { en: "Success partners", ar: "شركاء النجاح" },
     title: { en: "Trusted by leading brands", ar: "موضع ثقة العلامات الرائدة" },
     logos: Array.from({ length: 20 }, (_, i) => ({ img: `/images/clients/client-${i + 1}.png`, alt: "Client brand" })),
     counters: [
-      { prefix: "+", value: 35, label: "Countries served", labelAr: "دولة حول العالم" },
-      { prefix: "+", value: 20, label: "Brand partners", labelAr: "علامة شريكة" },
+      { prefix: "+", value: stats.countries, label: "Countries served", labelAr: "دولة حول العالم" },
+      { prefix: "+", value: stats.partners, label: "Brand partners", labelAr: "علامة شريكة" },
     ],
   },
   news: {

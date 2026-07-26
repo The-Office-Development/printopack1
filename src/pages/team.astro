@@ -2,7 +2,7 @@
 import Base from '../layouts/Base.astro';
 import Counter from '../components/Counter.astro';
 import Bi from '../components/Bi.astro';
-import { collection } from '../lib/content';
+import { collection, stats } from '../lib/content';
 const year = new Date().getFullYear();
 
 // ── EDITABLE CONTENT (bilingual) ─────────────────────────────────────────────
@@ -25,10 +25,10 @@ const content = {
     },
   },
   counters: [
-    { prefix: "~", value: 400, label: { en: "Team members", ar: "عضو في الفريق" } },
-    { from: 1997, value: year, label: { en: "Operating since 1997", ar: "نعمل منذ 1997" } },
-    { value: 5, label: { en: "Production departments", ar: "أقسام إنتاجية" } },
-    { value: 6, label: { en: "Regional offices", ar: "مكاتب إقليمية" } },
+    { prefix: "~", value: stats.employees, label: { en: "Team members", ar: "عضو في الفريق" } },
+    { from: stats.founded, value: year, label: { en: `Operating since ${stats.founded}`, ar: `نعمل منذ ${stats.founded}` } },
+    { value: stats.departments, label: { en: "Production departments", ar: "أقسام إنتاجية" } },
+    { value: stats.offices, label: { en: "Regional offices", ar: "مكاتب إقليمية" } },
   ],
   leadership: {
     eyebrow: { en: "Leadership", ar: "القيادة" },

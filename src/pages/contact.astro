@@ -3,7 +3,7 @@ import Base from '../layouts/Base.astro';
 import Bi from '../components/Bi.astro';
 import Counter from '../components/Counter.astro';
 import { reachMap } from '../data/reach-map';
-import { collection } from '../lib/content';
+import { collection, stats } from '../lib/content';
 
 // Offices directory, sourced from the content store (admin-managed), split by group.
 const _offices = collection('offices');
@@ -72,9 +72,9 @@ const content = {
     },
   },
   counters: [
-    { value: "10", label: { en: "Regional offices", ar: "مكتب إقليمي" } },
-    { prefix: "+", value: "35", label: { en: "Countries served", ar: "دولة نصل إليها" } },
-    { from: "1997", value: String(year), label: { en: "In the market since 1997", ar: "في السوق منذ 1997" } },
+    { value: String(stats.offices), label: { en: "Regional offices", ar: "مكتب إقليمي" } },
+    { prefix: "+", value: String(stats.countries), label: { en: "Countries served", ar: "دولة نصل إليها" } },
+    { from: String(stats.founded), value: String(year), label: { en: `In the market since ${stats.founded}`, ar: `في السوق منذ ${stats.founded}` } },
   ],
   // General contact channels (head office + direct management emails + customer portal).
   channels: {

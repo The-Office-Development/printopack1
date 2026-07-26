@@ -137,7 +137,7 @@ var SEED={
   mission:"To be the driving force behind brands' packaging evolution.",missionAr:"أن نكون القوة الدافعة وراء تطوّر تغليف العلامات التجارية.",
   vision:"Empowering brands through creative packaging excellence.",visionAr:"تمكين العلامات التجارية عبر التميّز في التغليف الإبداعي.",
   values:"Quality, responsibility, innovation and reliable supply.",valuesAr:"الجودة والمسؤولية والابتكار والتوريد الموثوق.",
-  statOffices:"10",statCountries:"35",statYears:"25",statEmployees:"400",statAvgExp:"14"
+  statOffices:"10",statCountries:"35",statFounded:"1997",statEmployees:"400",statAvgExp:"14",statCustomers:"1000"
  },
  settings:{
   company:"Printopack - Saudi Modern Packaging Factory Co. Ltd.",
@@ -398,7 +398,7 @@ function aboutView(m){
  m.innerHTML=topbar('About & Home','Site','<button class="btn btn-ok" id="save">Save changes</button>')+'<div class="view">'+
   formPanel('Home hero','The headline visitors see first.',[{name:'heroTitle',type:'text',label:'Hero headline'},{name:'heroTitleAr',type:'text',label:'Hero headline',ar:'Arabic',rtl:true},{name:'heroSub',type:'textarea',label:'Hero subtext'},{name:'heroSubAr',type:'textarea',label:'Hero subtext',ar:'Arabic',rtl:true}],p)+
   formPanel('About us','Company story shown on the About page.',[{name:'history',type:'textarea',label:'History (English)'},{name:'historyAr',type:'textarea',label:'History',ar:'Arabic',rtl:true},{name:'ownership',type:'text',label:'Ownership'},{name:'ownershipAr',type:'text',label:'Ownership',ar:'Arabic',rtl:true},{name:'mission',type:'textarea',label:'Mission'},{name:'missionAr',type:'textarea',label:'Mission',ar:'Arabic',rtl:true},{name:'vision',type:'textarea',label:'Vision'},{name:'visionAr',type:'textarea',label:'Vision',ar:'Arabic',rtl:true},{name:'values',type:'textarea',label:'Values'},{name:'valuesAr',type:'textarea',label:'Values',ar:'Arabic',rtl:true}],p)+
-  formPanel('Counters','The stat icons across the site.',[{name:'statOffices',type:'text',label:'Offices',half:true},{name:'statCountries',type:'text',label:'Countries',half:true},{name:'statYears',type:'text',label:'Years',half:true},{name:'statEmployees',type:'text',label:'Employees',half:true},{name:'statAvgExp',type:'text',label:'Avg. experience (yrs)',half:true}],p)+
+  formPanel('Counters','The stat numbers shown across the site. Change a number here and every page that shows it follows.',[{name:'statOffices',type:'text',label:'Offices',half:true},{name:'statCountries',type:'text',label:'Countries',half:true},{name:'statFounded',type:'text',label:'Year founded',half:true,rec:'Years in the market are counted from this year automatically.'},{name:'statEmployees',type:'text',label:'Employees',half:true},{name:'statAvgExp',type:'text',label:'Avg. experience (yrs)',half:true},{name:'statCustomers',type:'text',label:'Customers',half:true}],p)+
   '</div>';
  var d={};m.querySelectorAll('[data-f]').forEach(function(el){el.addEventListener('input',function(){d[el.getAttribute('data-f')]=el.value;});});
  $('#save').addEventListener('click',function(){var cur=obj('about');Object.keys(d).forEach(function(k){cur[k]=d[k];});setObj('about',cur);toast('Saved','ok');});

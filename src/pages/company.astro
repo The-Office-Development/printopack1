@@ -2,6 +2,7 @@
 import Base from '../layouts/Base.astro';
 import Counter from '../components/Counter.astro';
 import Bi from '../components/Bi.astro';
+import { stats } from '../lib/content';
 const year = new Date().getFullYear();
 
 // ── EDITABLE CONTENT (bilingual) ─────────────────────────────────────────────
@@ -22,10 +23,10 @@ const content = {
     },
   },
   counters: [
-    { from: 1997, value: year, label: { en: "In the market since 1997", ar: "في السوق منذ 1997" } },
-    { prefix: "+", value: 35, label: { en: "Countries served", ar: "دولة نخدمها" } },
-    { prefix: "~", value: 400, label: { en: "Team members", ar: "عضو في الفريق" } },
-    { value: 10, label: { en: "Regional offices", ar: "مكاتب إقليمية" } },
+    { from: stats.founded, value: year, label: { en: `In the market since ${stats.founded}`, ar: `في السوق منذ ${stats.founded}` } },
+    { prefix: "+", value: stats.countries, label: { en: "Countries served", ar: "دولة نخدمها" } },
+    { prefix: "~", value: stats.employees, label: { en: "Team members", ar: "عضو في الفريق" } },
+    { value: stats.offices, label: { en: "Regional offices", ar: "مكاتب إقليمية" } },
   ],
   history: {
     eyebrow: { en: "Our history", ar: "تاريخنا" },

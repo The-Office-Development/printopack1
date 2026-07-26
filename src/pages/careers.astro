@@ -2,6 +2,7 @@
 import Base from '../layouts/Base.astro';
 import Counter from '../components/Counter.astro';
 import Bi from '../components/Bi.astro';
+import { stats } from '../lib/content';
 const year = new Date().getFullYear();
 
 // Careers (Nasser's Page 5). His brief: open roles with specs + requirements, a
@@ -72,9 +73,9 @@ const content = {
     },
   },
   counters: [
-    { prefix: "~", value: 400, label: { en: "People on the team", ar: "في فريقنا" } },
-    { from: 1997, value: year, label: { en: "Serving since 1997", ar: "نعمل منذ 1997" } },
-    { prefix: "+", value: 35, label: { en: "Countries served", ar: "دولة نصل إليها" } },
+    { prefix: "~", value: stats.employees, label: { en: "People on the team", ar: "في فريقنا" } },
+    { from: stats.founded, value: year, label: { en: `Serving since ${stats.founded}`, ar: `نعمل منذ ${stats.founded}` } },
+    { prefix: "+", value: stats.countries, label: { en: "Countries served", ar: "دولة نصل إليها" } },
   ],
   roles: {
     eyebrow: { en: "Now hiring", ar: "نوظّف الآن" },

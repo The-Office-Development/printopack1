@@ -3,7 +3,7 @@ import Base from '../layouts/Base.astro';
 import Counter from '../components/Counter.astro';
 import Bi from '../components/Bi.astro';
 import { reachMap } from '../data/reach-map';
-import { collection } from '../lib/content';
+import { collection, stats } from '../lib/content';
 const year = new Date().getFullYear();
 
 // Success Partners (Nasser's Page 4). His brief: client names + logos + country, a
@@ -41,10 +41,10 @@ const content = {
   // The two counters Nasser named (countries, customers) come first; years and team add
   // the substance he likes. Counters count up once in view; nothing else moves.
   counters: [
-    { prefix: "+", value: 35, label: { en: "Countries served", ar: "دولة نصل إليها" } },
-    { prefix: "+", value: 1000, label: { en: "Customers", ar: "عميل" } },
-    { from: 1997, value: year, label: { en: "Printing since 1997", ar: "نطبع منذ 1997" } },
-    { prefix: "~", value: 400, label: { en: "Team members", ar: "عضو في الفريق" } },
+    { prefix: "+", value: stats.countries, label: { en: "Countries served", ar: "دولة نصل إليها" } },
+    { prefix: "+", value: stats.customers, label: { en: "Customers", ar: "عميل" } },
+    { from: stats.founded, value: year, label: { en: `Printing since ${stats.founded}`, ar: `نطبع منذ ${stats.founded}` } },
+    { prefix: "~", value: stats.employees, label: { en: "Team members", ar: "عضو في الفريق" } },
   ],
   wall: {
     eyebrow: { en: "Our partners", ar: "شركاؤنا" },

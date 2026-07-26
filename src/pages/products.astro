@@ -3,6 +3,7 @@ import Base from '../layouts/Base.astro';
 import Counter from '../components/Counter.astro';
 import Bi from '../components/Bi.astro';
 import { categories, filters } from '../data/products';
+import { stats } from '../lib/content';
 const year = new Date().getFullYear();
 
 // Products (Nasser's Page 3). Catalogue-and-enquire model: browse product groups, open
@@ -57,10 +58,10 @@ const content = {
     ],
   },
   counters: [
-    { from: 1997, value: year, label: { en: "Printing since 1997", ar: "نطبع منذ 1997" } },
-    { prefix: "+", value: 35, label: { en: "Countries served", ar: "دولة نخدمها" } },
-    { prefix: "~", value: 400, label: { en: "Team members", ar: "عضو في الفريق" } },
-    { value: 5, label: { en: "Production departments", ar: "أقسام إنتاجية" } },
+    { from: stats.founded, value: year, label: { en: `Printing since ${stats.founded}`, ar: `نطبع منذ ${stats.founded}` } },
+    { prefix: "+", value: stats.countries, label: { en: "Countries served", ar: "دولة نخدمها" } },
+    { prefix: "~", value: stats.employees, label: { en: "Team members", ar: "عضو في الفريق" } },
+    { value: stats.departments, label: { en: "Production departments", ar: "أقسام إنتاجية" } },
   ],
   cta: {
     eyebrow: { en: "Let's talk packaging", ar: "لنتحدّث عن التغليف" },
