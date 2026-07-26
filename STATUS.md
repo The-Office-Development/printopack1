@@ -1,6 +1,6 @@
 # Printopack — current status
 
-_Last updated: 2026-07-23_
+_Last updated: 2026-07-26_
 
 ## What we're doing (the big picture)
 Moving all of the website's content out of hardcoded pages and into a real, free, self-managed
@@ -18,8 +18,8 @@ Full technical plan: **`BACKEND_MIGRATION_PLAN.md`**.
 - Free forever, nothing that pauses, nothing that bills under normal use.
 
 ## Done
-- **Phase 1 — content schema + seed.** `db/schema.sql` + `db/seed.json` (all real content: 112
-  records across 11 collections + `about`/`settings`) + `db/seed.sql` generator.
+- **Phase 1 — content schema + seed.** `db/schema.sql` + `db/seed.json` (all real content: 116
+  records across 12 collections + `about`/`settings`) + `db/seed.sql` generator.
 - **Phase 2 — backend API + admin swap.** `functions/api/*` (list/create/delete, singletons, image
   upload, publish). Admin data layer swapped to dual-mode: uses Cloudflare when deployed, falls back
   to localStorage otherwise (so the demo never breaks). Verified end to end locally against a real D1.
@@ -39,21 +39,26 @@ Full technical plan: **`BACKEND_MIGRATION_PLAN.md`**.
 5. **Handover guide** for the client (Phase 5).
 6. **Domain cutover** (later): GoDaddy DNS — add `www` CNAME + apex forward; email and `api` untouched.
 
-## TODO — remaining page wiring (Phase 3 tail)
-- [x] **Footer** — company details (phone / email / address / company name) now read the editable
+## Phase 3 tail, page wiring: DONE (2026-07-26)
+Every page now reads its content from the database. Nothing a client would reasonably want to
+change is left hardcoded, apart from the navigation, which is a deliberate decision (below).
+
+- [x] **Footer**: company details (phone / email / address / company name) now read the editable
       `settings`, and the regional-offices strip is built from the offices collection. The contact
       details in the top utility strip of the header read the same record.
-- [ ] **Side menu / header navigation** — the nav *labels and structure* are still in `Header.astro`.
-      Decide whether the client should be able to rename or reorder the seven sections; the routes
-      themselves must stay fixed so the nav can never point at a page that does not exist.
-- [x] **Counters** (offices / countries / years / employees / departments / customers) — read from
+- [x] **Side menu / header navigation**: **decided: the nav stays in code.** The seven sections are
+      the GM's own sitemap and are not expected to be renamed, so the labels and structure stay in
+      `Header.astro` rather than adding another surface for the creative manager to manage (and a way
+      to point the nav at a page that does not exist). Only the contact details in the top strip are
+      editable, from `settings`.
+- [x] **Counters** (offices / countries / years / employees / departments / customers): read from
       the editable `about` record via `stats` in `src/lib/content.ts`, on all eight pages that show
       them. The admin's free-text "Years" field became "Year founded", and the years-in-market
       counters count from it to the current year on their own.
-- [x] **Company page story** (history / mission / vision) — sourced from the `about` record, headline
+- [x] **Company page story** (history / mission / vision): sourced from the `about` record, headline
       plus a body whose blank lines become paragraphs. **Values** became their own collection, so the
       client can reword, reorder, add or remove one.
-- [x] **Gallery video tiles** — open the YouTube / Vimeo link when the client sets one (videos are
+- [x] **Gallery video tiles**: open the YouTube / Vimeo link when the client sets one (videos are
       external, never hosted here).
 
 ## Notes
