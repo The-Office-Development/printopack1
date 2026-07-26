@@ -13,3 +13,7 @@ reference/
 .wrangler
 node_modules
 dist
+
+# Pictures the client uploaded, written into the build workspace by scripts/fetch-content.mjs.
+# They live in D1, not in git.
+public/uploads/

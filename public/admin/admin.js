@@ -36,6 +36,36 @@ var ICON={
 };
 function svg(n){return '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-linecap="round" stroke-linejoin="round">'+(ICON[n]||'')+'</svg>';}
 
+/* ---------------- image intake ----------------
+   Pictures are resized and re-encoded in this browser before they are ever sent, so an
+   untouched phone photo (4-6 MB) cannot reach the site or eat into free storage. The
+   recommended size printed on the field is the target box; anything bigger is scaled to
+   fit it, encoded as WebP, and stepped down in quality until it is under IMG_MAX_KB.
+   Nothing but a picture gets through: video belongs on YouTube or Vimeo as a link. */
+var IMG_MAX_KB=400,IMG_BOX=1800;
+function recBox(rec){var m=/(\d{3,4})\s*[x×]\s*(\d{3,4})/.exec(rec||'');return m?Math.max(+m[1],+m[2]):IMG_BOX;}
+function dataKB(d){return Math.round((d.length-d.indexOf(',')-1)*0.75/1024);}
+function prepImage(f,box,cb){
+ if(f.type==='image/svg+xml'){toast('SVG files are not accepted. Please save it as a PNG.','err');return;}
+ if(f.type.slice(0,6)!=='image/'){toast('Pictures only. A video goes in as a YouTube or Vimeo link.','err');return;}
+ var url=URL.createObjectURL(f),im=new Image();
+ im.onerror=function(){URL.revokeObjectURL(url);toast('That image could not be read','err');};
+ im.onload=function(){
+  URL.revokeObjectURL(url);
+  var s=Math.min(1,box/Math.max(im.width,im.height));
+  var c=document.createElement('canvas');c.width=Math.round(im.width*s)||1;c.height=Math.round(im.height*s)||1;
+  c.getContext('2d').drawImage(im,0,0,c.width,c.height);
+  /* WebP keeps transparency, so logos on a transparent background survive. A browser that
+     cannot encode WebP silently returns a PNG data URL, in which case fall back to JPEG. */
+  var q=0.82,out=c.toDataURL('image/webp',q);
+  var type=out.slice(0,15)==='data:image/webp'?'image/webp':'image/jpeg';
+  if(type==='image/jpeg')out=c.toDataURL(type,q);
+  while(dataKB(out)>IMG_MAX_KB&&q>0.4){q=Math.round((q-0.1)*100)/100;out=c.toDataURL(type,q);}
+  cb(out,dataKB(out));
+ };
+ im.src=url;
+}
+
 /* ---------------- data layer ---------------- */
 var KEY='pp_admin_v4';
 var IMG={cat:function(i){return '/images/cat-'+i+'.png';},dept:function(i){return '/images/dept-'+i+'.jpg';},client:function(i){return '/images/clients/client-'+i+'.png';}};
@@ -161,6 +191,14 @@ var SEED={
    CACHE; writes update the CACHE immediately (snappy UI) and persist in the background. */
 var API='/api';
 var MODE='local';
+
+/* A picture the client just uploaded lives in the database and only becomes the static file
+   /uploads/<key> at the next Publish, so until then previews are read back from /media/<key>.
+   Everywhere else (the live site) uses the /uploads path unchanged. */
+function imgSrc(v){
+ v=v||'';
+ return MODE==='api'&&v.slice(0,9)==='/uploads/'?'/media/'+v.slice(9):v;
+}
 var COLLECTIONS=['news','productGroups','products','team','careers','partners','factory','quality','responsibility','gallery','offices','values'];
 var CACHE={entries:{},singletons:{}};
 
@@ -299,6 +337,20 @@ function render(){
 }
 function renderView(){var m=$('#main');if(view==='dashboard')return dashView(m);if(view==='about')return aboutView(m);if(view==='settings')return settingsView(m);if(MODELS[view])return listView(m,view);}
 
+/* Picture storage, shown on the dashboard when the Cloudflare backend is live. Local demo
+   mode has nothing to measure, so the panel simply stays hidden. */
+function storageMeter(){
+ if(MODE!=='api')return;
+ fetch(API+'/storage').then(function(r){return r.json();}).then(function(s){
+  var panel=$('#storage');if(!panel||!s||s.limit==null)return;
+  var mb=function(b){return b<1048576?(Math.round(b/1024)+' KB'):((b/1048576).toFixed(b>10485760?0:1)+' MB');};
+  var pct=Math.min(100,s.bytes/s.limit*100);
+  panel.hidden=false;
+  $('#mfill').style.width=Math.max(pct,0.5)+'%';
+  $('#mtext').textContent=s.count+' picture'+(s.count===1?'':'s')+', '+mb(s.bytes)+' of '+mb(s.limit)+' used ('+(pct<0.1?'under 0.1':pct.toFixed(1))+'%).';
+ }).catch(function(){});
+}
+
 /* ---------------- dashboard ---------------- */
 function dashView(m){
  var cards=[{k:'news',l:'News posts',icon:'news'},{k:'products',l:'Products',icon:'products'},{k:'team',l:'Team members',icon:'team'},{k:'partners',l:'Partners',icon:'partners'}].map(function(c){
@@ -309,15 +361,17 @@ function dashView(m){
  m.innerHTML=topbar('Welcome back','Dashboard','<button class="btn btn-gold" data-open="news:new">'+svg('plus')+'New post</button>')+
   '<div class="view"><div class="stat-grid">'+cards+'</div>'+
   '<div class="panel"><div class="panel-head"><h2>Recent news</h2><button class="btn btn-ghost btn-sm" data-nav="news">View all</button></div><table class="tbl"><thead><tr><th>Title</th><th>Category</th><th>Status</th><th>Date</th></tr></thead><tbody>'+(recent||'')+'</tbody></table></div>'+
-  '<div class="panel"><div class="panel-head"><div><h2>Quick actions</h2><p>Jump into what you update most.</p></div></div><div class="panel-body" style="display:flex;gap:10px;flex-wrap:wrap">'+quick+'<button class="btn btn-ghost" data-nav="about">'+svg('edit')+'Edit home & about</button></div></div></div>';
+  '<div class="panel"><div class="panel-head"><div><h2>Quick actions</h2><p>Jump into what you update most.</p></div></div><div class="panel-body" style="display:flex;gap:10px;flex-wrap:wrap">'+quick+'<button class="btn btn-ghost" data-nav="about">'+svg('edit')+'Edit home & about</button></div></div>'+
+  '<div class="panel" id="storage" hidden><div class="panel-head"><div><h2>Picture storage</h2><p>Every picture on the site, and how much of the free allowance is left.</p></div></div><div class="panel-body"><div class="meter"><span id="mfill"></span></div><p id="mtext" class="meter-text"></p></div></div></div>';
  bind(m);
+ storageMeter();
 }
 
 /* ---------------- list ---------------- */
 function statusPill(s){return s==='published'?'<span class="pill pub">Published</span>':'<span class="pill draft">Draft</span>';}
 function cellFor(col,row){
  var v=row[col.field];
- if(col.type==='thumb'){var cls='thumb'+(col.round?' round':'')+(col.contain?' contain':'');return v?'<img class="'+cls+'" src="'+esc(v)+'">':'<div class="'+cls+'" style="display:grid;place-items:center;color:var(--faint);font-family:var(--disp);font-size:15px">'+esc(initials(row))+'</div>';}
+ if(col.type==='thumb'){var cls='thumb'+(col.round?' round':'')+(col.contain?' contain':'');return v?'<img class="'+cls+'" src="'+esc(imgSrc(v))+'">':'<div class="'+cls+'" style="display:grid;place-items:center;color:var(--faint);font-family:var(--disp);font-size:15px">'+esc(initials(row))+'</div>';}
  if(col.type==='title'){var t=v||row[col.fallback]||'Untitled';var sub=col.sub&&row[col.sub]?'<div class="t-sub">'+esc(row[col.sub])+'</div>':'';return '<div class="t-title">'+esc(t)+'</div>'+sub;}
  if(col.type==='pill')return statusPill(v);
  if(col.type==='active')return v?'<span class="pill pub">Visible</span>':'<span class="pill off">Hidden</span>';
@@ -350,7 +404,7 @@ function fieldHTML(f,val){
  var lab='<label>'+esc(f.label)+(f.ar?' <span class="ar">· '+esc(f.ar)+'</span>':'')+'</label>';
  var rtl=f.rtl?' dir="rtl"':'';
  var hint=f.rec?'<div class="hint">'+esc(f.rec)+'</div>':'';
- if(f.type==='image'){var has=val?' has':'';var cn=f.contain?' contain':'';var rec=f.rec?'<span class="imgrec">'+svg('image')+'Recommended: <b>'+esc(f.rec)+'</b> for a flawless fit</span>':'';return '<div class="field full"><label>'+esc(f.label)+'</label>'+rec+'<div class="imgpick'+has+cn+'" data-imgpick="'+f.name+'"><img src="'+esc(val||'')+'"><div class="ph">'+svg('image')+'Click to upload</div></div><input type="file" accept="image/*" data-imgfile="'+f.name+'" hidden></div>';}
+ if(f.type==='image'){var has=val?' has':'';var cn=f.contain?' contain':'';var rec=f.rec?'<span class="imgrec">'+svg('image')+'Recommended: <b>'+esc(f.rec)+'</b> for a flawless fit</span>':'';return '<div class="field full"><label>'+esc(f.label)+'</label>'+rec+'<div class="imgpick'+has+cn+'" data-imgpick="'+f.name+'" data-box="'+recBox(f.rec)+'"><img src="'+esc(imgSrc(val))+'"><div class="ph">'+svg('image')+'Click to upload</div></div><input type="file" accept="image/*" data-imgfile="'+f.name+'" hidden></div>';}
  if(f.type==='textarea')return '<div class="field full">'+lab+'<textarea data-f="'+f.name+'"'+rtl+'>'+esc(val||'')+'</textarea>'+hint+'</div>';
  if(f.type==='select'){var src=f.optionsFrom?coll(f.optionsFrom).map(function(g){return g.name;}).filter(Boolean):f.options;var list=f.optionsFrom?[''].concat(src):src;var opts=list.map(function(o){return '<option'+(String(val)===String(o)?' selected':'')+'>'+esc(o)+'</option>';}).join('');return '<div class="field'+(f.half?'':' full')+'">'+lab+'<select data-f="'+f.name+'">'+opts+'</select>'+hint+'</div>';}
  var t=f.type==='date'?'date':(f.type==='number'?'number':(f.type==='url'?'url':'text'));
@@ -369,7 +423,7 @@ function openForm(key,id){
  function close(){$('#ov',host).classList.remove('show');$('#dw',host).classList.remove('show');setTimeout(function(){host.remove();},350);}
  $('#xc',host).addEventListener('click',close);$('#cx',host).addEventListener('click',close);$('#ov',host).addEventListener('click',close);
  host.querySelectorAll('[data-f]').forEach(function(el){el.addEventListener('input',function(){draft[el.getAttribute('data-f')]=el.value;});});
- host.querySelectorAll('[data-imgpick]').forEach(function(p){var name=p.getAttribute('data-imgpick');var file=host.querySelector('[data-imgfile="'+name+'"]');p.addEventListener('click',function(){file.click();});file.addEventListener('change',function(e){var f=e.target.files[0];if(!f)return;var rd=new FileReader();rd.onload=function(){draft[name]=rd.result;p.classList.add('has');$('img',p).src=rd.result;};rd.readAsDataURL(f);});});
+ host.querySelectorAll('[data-imgpick]').forEach(function(p){var name=p.getAttribute('data-imgpick');var file=host.querySelector('[data-imgfile="'+name+'"]');p.addEventListener('click',function(){file.click();});file.addEventListener('change',function(e){var f=e.target.files[0];if(!f)return;prepImage(f,+p.getAttribute('data-box')||IMG_BOX,function(out,kb){draft[name]=out;p.classList.add('has');$('img',p).src=out;toast('Picture ready, '+kb+' KB','ok');});file.value='';});});
  if(mdl.hasImport){$('#lib',host).addEventListener('click',function(){importLI(host);});$('#liu',host).addEventListener('keydown',function(e){if(e.key==='Enter')importLI(host);});}
  $('#sv',host).addEventListener('click',function(){
   if(key==='products')draft.active=String(draft.active)!=='false';

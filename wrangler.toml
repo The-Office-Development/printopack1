@@ -1,7 +1,11 @@
-# Cloudflare Pages + D1 + R2 configuration for Printopack.
-# Malek fills the two REPLACE_ values after creating the D1 database and R2 bucket
-# (Phase 0 in BACKEND_MIGRATION_PLAN.md). Bindings can also be set in the Pages dashboard;
-# this file lets `wrangler` do the schema load, seed import, and local dev.
+# Cloudflare Pages + D1 configuration for Printopack.
+#
+# D1 is the only binding, on purpose: uploaded pictures and the published snapshot live in
+# it too, so the whole site runs on products that do not ask for a payment method. There is
+# deliberately no R2 bucket here (see "Why not R2" in BACKEND_MIGRATION_PLAN.md).
+#
+# Bindings can also be set in the Pages dashboard; this file lets `wrangler` do the schema
+# load, seed import, and local dev.
 
 name = "printopack"
 compatibility_date = "2024-11-01"
@@ -13,12 +17,6 @@ binding = "DB"
 database_name = "printopack"
 database_id = "69f1feed-217e-482f-998a-9e7d08294d3b"
 
-# Uploaded images + the published content.json snapshot
-[[r2_buckets]]
-binding = "MEDIA"
-bucket_name = "printopack-media"
-
-# Non-secret vars. Secrets (DEPLOY_HOOK_URL) are set with `wrangler pages secret put`.
-[vars]
-# Public base URL of the R2 bucket (r2.dev or a custom subdomain), e.g. https://media.printopack...
-R2_PUBLIC_BASE = "REPLACE_WITH_R2_PUBLIC_BASE_URL"
+# Secrets (DEPLOY_HOOK_URL) are set with `wrangler pages secret put`, never in this file.
+# CONTENT_URL is set as a build variable in the Pages dashboard and points at this site's
+# own /content route, e.g. https://printopack.pages.dev/content

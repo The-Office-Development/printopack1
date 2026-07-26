@@ -30,14 +30,32 @@ Full technical plan: **`BACKEND_MIGRATION_PLAN.md`**.
 - **Phase 0 provisioning (started).** D1 database **created and seeded on the client's Cloudflare
   account** (id in `wrangler.toml`, region WEUR).
 
+## Storage decision (2026-07-26): no R2, no card
+
+R2 is out. Enabling it means completing a subscription checkout that puts a payment method on the
+account, and the promise here is no card at all, not a $0 bill. Uploaded pictures now live in D1
+alongside the content, and the build writes them out as static files, so visitors are still served
+plain files from the CDN. Details and the numbers behind it: "Why not R2" in
+`BACKEND_MIGRATION_PLAN.md`.
+
+What keeps that safe long term, and is already built:
+- Every upload is scaled and re-encoded to WebP in the browser before it is sent, under 400 KB
+  (a 4.6 MB phone photo lands at ~65 KB, measured). The API re-checks type and size.
+- Nothing but a picture gets in. No video files, no SVG. Gallery videos are YouTube/Vimeo links.
+- The dashboard shows how much of the 500 MB free database the pictures use.
+
+**Still open:** the free Cloudflare Access plan is also reported to ask for a payment method. If it
+does, the admin login cannot be Access either and we run our own. Check the real account first.
+
 ## In progress / next steps (to go live)
-1. **R2**: either enable it in the dashboard (free tier, card on file, $0) or choose the no-card route
-   (store uploaded images in the database). Then create the bucket + set its public URL.
-2. **Connect the repo to Cloudflare Pages** (git) and set the `CONTENT_URL` build variable.
-3. **Cloudflare Access** login (email code) on `/admin` + `/api`.
-4. **Deploy hook + admin "Publish" button** (Phase 4).
-5. **Handover guide** for the client (Phase 5).
-6. **Domain cutover** (later): GoDaddy DNS — add `www` CNAME + apex forward; email and `api` untouched.
+1. **Connect the repo to Cloudflare Pages** (git), bind D1, and set the `CONTENT_URL` build
+   variable to this site's own `/content` route.
+2. **Admin login** on `/admin` + `/api`: Cloudflare Access if it is genuinely card-free, otherwise
+   our own (see above).
+3. **Deploy hook + admin "Publish" button** (Phase 4).
+4. **Handover guide** for the client (Phase 5).
+5. **Domain cutover** (later): GoDaddy DNS - add `www` CNAME + apex forward; email and `api`
+   untouched.
 
 ## Phase 3 tail, page wiring: DONE (2026-07-26)
 Every page now reads its content from the database. Nothing a client would reasonably want to
