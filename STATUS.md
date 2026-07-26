@@ -47,7 +47,7 @@ Full technical plan: **`BACKEND_MIGRATION_PLAN.md`**.
 - [ ] **Counters** (offices / countries / years / employees) — read from the editable `about` values
       across the pages that show them.
 - [ ] **Company page story** (history / mission / vision / values) — source from the `about` singleton.
-- [ ] **Gallery video tiles** — open the YouTube / Vimeo link when the client sets one (videos are
+- [x] **Gallery video tiles** — open the YouTube / Vimeo link when the client sets one (videos are
       external, never hosted here).
 
 ## Notes
