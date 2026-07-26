@@ -140,9 +140,11 @@ var SEED={
   statOffices:"10",statCountries:"35",statFounded:"1997",statEmployees:"400",statAvgExp:"14",statCustomers:"1000"
  },
  settings:{
-  company:"Printopack - Saudi Modern Packaging Factory Co. Ltd.",
+  company:"Printopack - Saudi Modern Packaging Factory Co. Ltd.",companyAr:"برنتوباك - مصنع التغليف السعودي الحديث المحدود",
   phone:"+966 12 608 1074",fax:"+966 12 608 1082",email:"info@printopack.com.sa",
-  hours:"9:00 AM to 5:00 PM",address:"Industrial Area 5, Unit 10, 8508, Jeddah 22428, Saudi Arabia"
+  hours:"9:00 AM to 5:00 PM",address:"Industrial Area 5, Unit 10, 8508, Jeddah 22428, Saudi Arabia",
+  addressAr:"المنطقة الصناعية 5، وحدة 10، 8508، جدة 22428، المملكة العربية السعودية",
+  addressShort:"Industrial Area 5, Jeddah, Saudi Arabia",addressShortAr:"المنطقة الصناعية 5، جدة، السعودية"
  }
 };
 /* Dual-mode data layer. When the Cloudflare backend is reachable (deployed), reads/writes
@@ -406,7 +408,7 @@ function aboutView(m){
 function settingsView(m){
  var s=obj('settings');
  m.innerHTML=topbar('Settings','Site','<button class="btn btn-ok" id="save">Save changes</button>')+'<div class="view">'+
-  formPanel('Company details','Shown in the footer and contact page.',[{name:'company',type:'text',label:'Company name'},{name:'phone',type:'text',label:'Phone',half:true},{name:'fax',type:'text',label:'Fax',half:true},{name:'email',type:'text',label:'Email',half:true},{name:'hours',type:'text',label:'Office hours',half:true},{name:'address',type:'textarea',label:'Address'}],s)+'</div>';
+  formPanel('Company details','Shown in the footer of every page and on the contact page.',[{name:'company',type:'text',label:'Company name (English)'},{name:'companyAr',type:'text',label:'Company name',ar:'Arabic',rtl:true},{name:'phone',type:'text',label:'Phone',half:true},{name:'fax',type:'text',label:'Fax',half:true},{name:'email',type:'text',label:'Email',half:true},{name:'hours',type:'text',label:'Office hours',half:true},{name:'address',type:'textarea',label:'Address (English)'},{name:'addressAr',type:'textarea',label:'Address',ar:'Arabic',rtl:true},{name:'addressShort',type:'text',label:'Short address (English)',rec:'The compact version shown in the bar at the very top of every page.'},{name:'addressShortAr',type:'text',label:'Short address',ar:'Arabic',rtl:true}],s)+'</div>';
  var d={};m.querySelectorAll('[data-f]').forEach(function(el){el.addEventListener('input',function(){d[el.getAttribute('data-f')]=el.value;});});
  $('#save').addEventListener('click',function(){var cur=obj('settings');Object.keys(d).forEach(function(k){cur[k]=d[k];});setObj('settings',cur);toast('Saved','ok');});
 }

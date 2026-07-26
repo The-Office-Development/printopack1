@@ -1,5 +1,19 @@
 ---
 import Bi from './Bi.astro';
+import { singleton } from '../lib/content';
+// Contact details in the utility strip come from the editable `settings` record, the
+// same one the footer and contact page read, so the client changes a phone or an
+// address once in the admin and it updates everywhere.
+const s = singleton('settings');
+const phone = s.phone || '+966 12 608 1074';
+const email = s.email || 'info@printopack.com.sa';
+// The strip needs a compact address; the client can set one, otherwise the full
+// address from settings is used.
+const addr = {
+  en: s.addressShort || s.address || '',
+  ar: s.addressShortAr || s.addressAr || s.addressShort || s.address || '',
+};
+
 // Global header. The client's seven main routes (his 7-page sitemap). Labels are
 // bilingual { en, ar }; the Arabic is Nasser's own wording from his brief.
 const nav = [
@@ -56,17 +70,17 @@ const nav = [
 <div class="hdr-utility">
   <div class="wrap-wide util-inner">
     <div class="util-contact">
-      <a href="tel:+966126081074" class="util-item">
+      <a href={`tel:${phone.replace(/[^+\d]/g, '')}`} class="util-item">
         <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6"><path d="M4 5c0 9 6 15 15 15l2.5-3.5-4.5-2-1.8 1.8a12 12 0 0 1-5.3-5.3L7.7 9 5.7 4.5 4 5z"/></svg>
-        <span dir="ltr">+966 12 608 1074</span>
+        <span dir="ltr">{phone}</span>
       </a>
-      <a href="mailto:info@printopack.com.sa" class="util-item">
+      <a href={`mailto:${email}`} class="util-item">
         <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6"><rect x="3" y="5" width="18" height="14" rx="1.5"/><path d="M3.5 6.5 12 13l8.5-6.5"/></svg>
-        <span>info@printopack.com.sa</span>
+        <span>{email}</span>
       </a>
       <span class="util-item util-addr">
         <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6"><path d="M12 21s7-5.4 7-11a7 7 0 1 0-14 0c0 5.6 7 11 7 11z"/><circle cx="12" cy="10" r="2.5"/></svg>
-        <span><Bi en="Industrial Area 5, Jeddah, Saudi Arabia" ar="المنطقة الصناعية 5، جدة، السعودية" /></span>
+        <span><Bi en={addr.en} ar={addr.ar} /></span>
       </span>
     </div>
     <div class="util-social">

@@ -159,11 +159,15 @@
     },
     "settings": {
       "company": "Printopack - Saudi Modern Packaging Factory Co. Ltd.",
+      "companyAr": "برنتوباك - مصنع التغليف السعودي الحديث المحدود",
       "phone": "+966 12 608 1074",
       "fax": "+966 12 608 1082",
       "email": "info@printopack.com.sa",
       "hours": "9:00 AM to 5:00 PM",
-      "address": "Industrial Area 5, Unit 10, 8508, Jeddah 22428, Saudi Arabia"
+      "address": "Industrial Area 5, Unit 10, 8508, Jeddah 22428, Saudi Arabia",
+      "addressAr": "المنطقة الصناعية 5، وحدة 10، 8508، جدة 22428، المملكة العربية السعودية",
+      "addressShort": "Industrial Area 5, Jeddah, Saudi Arabia",
+      "addressShortAr": "المنطقة الصناعية 5، جدة، السعودية"
     }
   }
 }

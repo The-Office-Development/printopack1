@@ -1,15 +1,22 @@
 ---
 import Bi from './Bi.astro';
+import { collection, singleton, stats } from '../lib/content';
 // Global footer: newsletter band + deep navy footer with columns, QR, offices, legal.
+// Company details come from the editable `settings` record and the regional offices
+// from the offices collection, so the client changes an address, a phone or an office
+// once in the admin and the footer of every page follows.
 const year = new Date().getFullYear();
-// Real regional offices (from Printopack's updated contact list). HQ (Jeddah) is shown
-// above as the head-office address; these are the regional sales offices.
-const offices = [
-  { en: "Kuwait", ar: "الكويت" }, { en: "Jordan", ar: "الأردن" }, { en: "Iraq", ar: "العراق" },
-  { en: "Egypt", ar: "مصر" }, { en: "Sudan", ar: "السودان" }, { en: "Tunisia", ar: "تونس" },
-  { en: "Libya", ar: "ليبيا" }, { en: "Algeria", ar: "الجزائر" }, { en: "Morocco", ar: "المغرب" },
-  { en: "Yemen", ar: "اليمن" }, { en: "Syria", ar: "سوريا" },
-];
+const s = singleton('settings');
+// Trailing full stop trimmed so the copyright line never reads "Co. Ltd.. All rights reserved."
+const stop = (t: string) => String(t || '').trim().replace(/\.$/, '');
+const company = stop(s.company) || 'Printopack - Saudi Modern Packaging Factory Co. Ltd';
+const phone = s.phone || '+966 12 608 1074';
+const email = s.email || 'info@printopack.com.sa';
+const address = { en: s.address || '', ar: s.addressAr || s.address || '' };
+// HQ (Jeddah) is shown above as the head-office address; these are the regional sales offices.
+const offices = collection('offices')
+  .filter((o) => o.group === 'Regional & Export')
+  .map((o) => ({ en: o.city, ar: o.cityAr || o.city }));
 ---
 <!-- newsletter band -->
 <section class="news-band">
@@ -29,7 +36,7 @@ const offices = [
     <div class="foot-grid">
       <div class="foot-brand">
         <a href="/" class="wordmark" aria-label="Printopack home"><img src="/images/printopack-logo-white.png" alt="Printopack, Saudi Modern Packaging Factory" width="1600" height="562" /></a>
-        <p><Bi en="Flexible packaging, printed and finished in Jeddah for brands across 35+ countries since 1997." ar="تغليف مرن، يُطبع ويُجهّز في جدة لعلامات تجارية في أكثر من 35 دولة منذ عام 1997." /></p>
+        <p><Bi en={`Flexible packaging, printed and finished in Jeddah for brands across ${stats.countries}+ countries since ${stats.founded}.`} ar={`تغليف مرن، يُطبع ويُجهّز في جدة لعلامات تجارية في أكثر من ${stats.countries} دولة منذ عام ${stats.founded}.`} /></p>
         <div class="qr">
           <div class="qr-box" aria-hidden="true">
             <img src="/images/printopack-qr.png" alt="Printopack QR code" width="451" height="451" />
@@ -55,9 +62,9 @@ const offices = [
       </div>
       <div class="foot-col foot-visit">
         <h4><Bi en="Visit Us" ar="زورونا" /></h4>
-        <p><Bi en="Industrial Area 5, Unit 10, 8508, Jeddah 22428, Saudi Arabia" ar="المنطقة الصناعية 5، وحدة 10، 8508، جدة 22428، السعودية" /></p>
-        <a href="mailto:info@printopack.com.sa">info@printopack.com.sa</a>
-        <a href="tel:+966126081074" dir="ltr">+966 12 608 1074</a>
+        <p><Bi en={address.en} ar={address.ar} /></p>
+        <a href={`mailto:${email}`}>{email}</a>
+        <a href={`tel:${phone.replace(/[^+\d]/g, '')}`} dir="ltr">{phone}</a>
         <div class="offices">
           <span class="offices-label"><Bi en="Regional offices" ar="المكاتب الإقليمية" /></span>
           <div class="offices-list">{offices.map((o) => <span><Bi en={o.en} ar={o.ar} /></span>)}</div>
@@ -66,7 +73,7 @@ const offices = [
     </div>
 
     <div class="foot-bottom">
-      <span>© {year} <Bi en="Printopack, Saudi Modern Packaging Factory Co. Ltd. All rights reserved." ar="برنتوباك، مصنع التغليف السعودي الحديث المحدود. جميع الحقوق محفوظة." /></span>
+      <span>© {year} <Bi en={`${company}. All rights reserved.`} ar={`${stop(s.companyAr) || company}. جميع الحقوق محفوظة.`} /></span>
       <div class="foot-legal">
         <a href="/privacy"><Bi en="Privacy" ar="الخصوصية" /></a>
         <a href="/conditions"><Bi en="Conditions" ar="الشروط" /></a>
