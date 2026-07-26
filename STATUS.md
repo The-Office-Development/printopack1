@@ -40,13 +40,19 @@ Full technical plan: **`BACKEND_MIGRATION_PLAN.md`**.
 6. **Domain cutover** (later): GoDaddy DNS — add `www` CNAME + apex forward; email and `api` untouched.
 
 ## TODO — remaining page wiring (Phase 3 tail)
-- [ ] **Footer** — wire the company details (phone / email / address / company name) to the editable
-      `settings` so the client can update them from the admin.
-- [ ] **Side menu / header navigation** — review and wire the nav (labels / structure) to editable
-      content so it is admin-managed like the rest.
-- [ ] **Counters** (offices / countries / years / employees) — read from the editable `about` values
-      across the pages that show them.
-- [ ] **Company page story** (history / mission / vision / values) — source from the `about` singleton.
+- [x] **Footer** — company details (phone / email / address / company name) now read the editable
+      `settings`, and the regional-offices strip is built from the offices collection. The contact
+      details in the top utility strip of the header read the same record.
+- [ ] **Side menu / header navigation** — the nav *labels and structure* are still in `Header.astro`.
+      Decide whether the client should be able to rename or reorder the seven sections; the routes
+      themselves must stay fixed so the nav can never point at a page that does not exist.
+- [x] **Counters** (offices / countries / years / employees / departments / customers) — read from
+      the editable `about` record via `stats` in `src/lib/content.ts`, on all eight pages that show
+      them. The admin's free-text "Years" field became "Year founded", and the years-in-market
+      counters count from it to the current year on their own.
+- [x] **Company page story** (history / mission / vision) — sourced from the `about` record, headline
+      plus a body whose blank lines become paragraphs. **Values** became their own collection, so the
+      client can reword, reorder, add or remove one.
 - [x] **Gallery video tiles** — open the YouTube / Vimeo link when the client sets one (videos are
       external, never hosted here).
 

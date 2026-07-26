@@ -5,7 +5,7 @@
 CREATE TABLE IF NOT EXISTS entries (
   collection TEXT NOT NULL,          -- news | productGroups | products | team | careers |
                                      -- partners | factory | quality | responsibility |
-                                     -- gallery | offices
+                                     -- gallery | offices | values
   id         TEXT NOT NULL,
   data       TEXT NOT NULL,          -- JSON: the full record (bilingual fields, image URLs, ...)
   sort       INTEGER NOT NULL DEFAULT 0,

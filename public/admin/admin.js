@@ -112,6 +112,12 @@ var SEED={
   {id:uid(),title:"Finished product lineup",titleAr:"تشكيلة المنتجات النهائية",kind:"Photo",image:"/images/lineup.jpg",url:""},
   {id:uid(),title:"Printopack corporate film",titleAr:"الفيلم التعريفي لبرينتوباك",kind:"Video",image:"/images/factory.jpg",url:"https://"}
  ],
+ values:[
+  {id:uid(),title:"Quality without compromise",titleAr:"جودةٌ بلا تنازل",text:"Every reel is held to the Printopack standard, from incoming substrate to final dispatch.",textAr:"كل لفّةٍ تخضع لمعيار برنتوباك، من استلام المواد حتى التسليم النهائي."},
+  {id:uid(),title:"Responsible by design",titleAr:"المسؤولية بالتصميم",text:"Food-safe materials, solvent recovery and efficient production run through everything we make.",textAr:"موادٌ آمنة غذائياً واسترجاعٌ للمذيبات وإنتاجٌ كفؤ في كل ما نصنع."},
+  {id:uid(),title:"Partnership, not supply",titleAr:"شراكةٌ لا مجرّد توريد",text:"We advise on structure and print from the first brief, so the packaging fits the product and the line.",textAr:"نقدّم المشورة في البنية والطباعة منذ أول موجز، ليناسب التغليف المنتج وخط الإنتاج."},
+  {id:uid(),title:"Built to deliver",titleAr:"التزامٌ بالتسليم",text:"Planned materials and export logistics mean orders land on time, run after run.",textAr:"تخطيطٌ للمواد ولوجستيات التصدير يضمن وصول الطلبات في وقتها، تشغيلةً بعد أخرى."}
+ ],
  offices:[
   {id:uid(),city:"Head Office, Jeddah",cityAr:"المقر الرئيسي، جدة",group:"Saudi Arabia",country:"Western Area",countryAr:"المنطقة الغربية",staffName:"Name Name",staffNameAr:"الاسم الاسم",staffRole:"Office manager",staffRoleAr:"مدير المكتب",phone:"+966 12 608 1074",email:"info@printopack.com.sa"},
   {id:uid(),city:"Riyadh Office",cityAr:"مكتب الرياض",group:"Saudi Arabia",country:"Central Area",countryAr:"المنطقة الوسطى",staffName:"Name Name",staffNameAr:"الاسم الاسم",staffRole:"Office manager",staffRoleAr:"مدير المكتب",phone:"+966 57 675 8589",email:"riyadoffice@printopack.com.sa"},
@@ -136,7 +142,9 @@ var SEED={
   ownership:"Saudi Modern Packaging Factory Co. Ltd.",ownershipAr:"شركة السعودية الحديثة للتغليف المحدودة.",
   mission:"To be the driving force behind brands' packaging evolution.",missionAr:"أن نكون القوة الدافعة وراء تطوّر تغليف العلامات التجارية.",
   vision:"Empowering brands through creative packaging excellence.",visionAr:"تمكين العلامات التجارية عبر التميّز في التغليف الإبداعي.",
-  values:"Quality, responsibility, innovation and reliable supply.",valuesAr:"الجودة والمسؤولية والابتكار والتوريد الموثوق.",
+  historyTitle:"From one line in 1997 to brands across 35 countries.",historyTitleAr:"من خطٍّ واحد عام 1997 إلى علاماتٍ في 35 دولة.",
+  visionBody:"Printopack's vision is to redefine packaging as a transformative brand experience, fostering a sustainable and captivating future for industries worldwide.",visionBodyAr:"تسعى رؤية برنتوباك إلى إعادة تعريف التغليف بوصفه تجربةً تُحوِّل العلامة التجارية، وترسم مستقبلاً مستداماً وجاذباً للصناعات حول العالم.",
+  missionBody:"At Printopack, our mission is to be the driving force behind brands' packaging evolution. With a legacy of expertise in flexible packaging solutions since 1997, we are dedicated to designing, developing, and producing responsible packaging that transcends mere functionality.",missionBodyAr:"رسالتنا في برنتوباك أن نكون القوة الدافعة وراء تطوّر تغليف العلامات التجارية. وبإرثٍ من الخبرة في حلول التغليف المرن منذ عام 1997، نلتزم بتصميم تغليفٍ مسؤول وتطويره وإنتاجه بما يتجاوز مجرّد الوظيفة.",
   statOffices:"10",statCountries:"35",statFounded:"1997",statEmployees:"400",statAvgExp:"14",statCustomers:"1000"
  },
  settings:{
@@ -153,7 +161,7 @@ var SEED={
    CACHE; writes update the CACHE immediately (snappy UI) and persist in the background. */
 var API='/api';
 var MODE='local';
-var COLLECTIONS=['news','productGroups','products','team','careers','partners','factory','quality','responsibility','gallery','offices'];
+var COLLECTIONS=['news','productGroups','products','team','careers','partners','factory','quality','responsibility','gallery','offices','values'];
 var CACHE={entries:{},singletons:{}};
 
 function coll(k){return CACHE.entries[k]||(CACHE.entries[k]=[]);}
@@ -166,8 +174,10 @@ function persistLocal(){try{localStorage.setItem(KEY,JSON.stringify(flatDb()));}
 function loadLocal(){
  var d=null;try{d=JSON.parse(localStorage.getItem(KEY));}catch(e){}
  if(!d)d=SEED;
- CACHE.entries={};COLLECTIONS.forEach(function(k){CACHE.entries[k]=(d[k]||[]).slice();});
- CACHE.singletons={about:d.about||{},settings:d.settings||{}};
+ /* A section added after this browser last saved falls back to its seed, so a new
+    collection is not silently empty for someone with an older saved copy. */
+ CACHE.entries={};COLLECTIONS.forEach(function(k){CACHE.entries[k]=(d[k]||SEED[k]||[]).slice();});
+ CACHE.singletons={about:Object.assign({},SEED.about,d.about),settings:Object.assign({},SEED.settings,d.settings)};
  if(!localStorage.getItem(KEY))persistLocal();
 }
 
@@ -238,6 +248,9 @@ var MODELS={
  gallery:{label:"Gallery",singular:"Item",icon:"gallery",group:"Company",
   columns:[{type:"thumb",field:"image"},{type:"title",field:"title",sub:"kind"},{type:"tag",field:"kind"}],
   fields:[{name:"kind",type:"select",label:"Type",half:true,options:["Photo","Video","Advertisement"]},{name:"span",type:"select",label:"Size (photos & ads)",half:true,options:["normal","wide","tall"]},{name:"title",type:"text",label:"Title (English)",half:true},{name:"image",type:"image",label:"Image / thumbnail",rec:"1600 × 1000px JPG/WebP. For videos, upload only a poster image."},{name:"titleAr",type:"text",label:"Title",ar:"Arabic",rtl:true},{name:"url",type:"url",label:"External video / campaign link",rec:"Paste a YouTube or Vimeo link. Do not upload video files."}]},
+ values:{label:"Our Values",singular:"Value",icon:"about",group:"Company",
+  columns:[{type:"title",field:"title",sub:"text"},{type:"text",field:"titleAr"}],
+  fields:[{name:"title",type:"text",label:"Value (English)",half:true},{name:"titleAr",type:"text",label:"Value",ar:"Arabic",rtl:true,half:true},{name:"text",type:"textarea",label:"Description (English)"},{name:"textAr",type:"textarea",label:"Description",ar:"Arabic",rtl:true}]},
  offices:{label:"Offices & Contact",singular:"Office",icon:"offices",group:"Site",
   columns:[{type:"title",field:"city",sub:"staffName"},{type:"text",field:"phone"},{type:"text",field:"email"}],
   fields:[{name:"city",type:"text",label:"Office (English)",half:true},{name:"cityAr",type:"text",label:"Office",ar:"Arabic",rtl:true,half:true},{name:"group",type:"select",label:"Group",half:true,options:["Saudi Arabia","Regional & Export"]},{name:"country",type:"text",label:"Country / area (English)",half:true},{name:"countryAr",type:"text",label:"Country / area",ar:"Arabic",rtl:true,half:true},{name:"staffName",type:"text",label:"Manager name (English)",half:true},{name:"staffNameAr",type:"text",label:"Manager name",ar:"Arabic",rtl:true,half:true},{name:"staffRole",type:"text",label:"Manager title (English)",half:true},{name:"staffRoleAr",type:"text",label:"Manager title",ar:"Arabic",rtl:true,half:true},{name:"phone",type:"text",label:"Phone",half:true},{name:"email",type:"text",label:"Email",half:true}]}
@@ -262,7 +275,7 @@ function renderLogin(){
 
 /* ---------------- shell ---------------- */
 var view='dashboard';
-var NAV=[{k:'dashboard',label:'Dashboard',icon:'dash'},{grp:'Content'},{k:'news'},{k:'products'},{k:'team'},{k:'careers'},{k:'partners'},{grp:'Company'},{k:'factory'},{k:'quality'},{k:'responsibility'},{k:'gallery'},{grp:'Site'},{k:'about',label:'About & Home',icon:'about'},{k:'offices'},{k:'settings',label:'Settings',icon:'settings'}];
+var NAV=[{k:'dashboard',label:'Dashboard',icon:'dash'},{grp:'Content'},{k:'news'},{k:'products'},{k:'team'},{k:'careers'},{k:'partners'},{grp:'Company'},{k:'factory'},{k:'quality'},{k:'responsibility'},{k:'values'},{k:'gallery'},{grp:'Site'},{k:'about',label:'About & Home',icon:'about'},{k:'offices'},{k:'settings',label:'Settings',icon:'settings'}];
 function sidebar(){
  var items=NAV.map(function(n){
   if(n.grp)return '<div class="sb-group">'+n.grp+'</div>';
@@ -399,7 +412,7 @@ function aboutView(m){
  var p=obj('about');
  m.innerHTML=topbar('About & Home','Site','<button class="btn btn-ok" id="save">Save changes</button>')+'<div class="view">'+
   formPanel('Home hero','The headline visitors see first.',[{name:'heroTitle',type:'text',label:'Hero headline'},{name:'heroTitleAr',type:'text',label:'Hero headline',ar:'Arabic',rtl:true},{name:'heroSub',type:'textarea',label:'Hero subtext'},{name:'heroSubAr',type:'textarea',label:'Hero subtext',ar:'Arabic',rtl:true}],p)+
-  formPanel('About us','Company story shown on the About page.',[{name:'history',type:'textarea',label:'History (English)'},{name:'historyAr',type:'textarea',label:'History',ar:'Arabic',rtl:true},{name:'ownership',type:'text',label:'Ownership'},{name:'ownershipAr',type:'text',label:'Ownership',ar:'Arabic',rtl:true},{name:'mission',type:'textarea',label:'Mission'},{name:'missionAr',type:'textarea',label:'Mission',ar:'Arabic',rtl:true},{name:'vision',type:'textarea',label:'Vision'},{name:'visionAr',type:'textarea',label:'Vision',ar:'Arabic',rtl:true},{name:'values',type:'textarea',label:'Values'},{name:'valuesAr',type:'textarea',label:'Values',ar:'Arabic',rtl:true}],p)+
+  formPanel('The company story','Shown on the Company page. Leave a blank line between paragraphs and each one is laid out separately. The values themselves are edited under Our Values.',[{name:'historyTitle',type:'text',label:'History headline (English)'},{name:'historyTitleAr',type:'text',label:'History headline',ar:'Arabic',rtl:true},{name:'history',type:'textarea',label:'History (English)'},{name:'historyAr',type:'textarea',label:'History',ar:'Arabic',rtl:true},{name:'ownership',type:'text',label:'Ownership'},{name:'ownershipAr',type:'text',label:'Ownership',ar:'Arabic',rtl:true},{name:'vision',type:'text',label:'Vision headline (English)'},{name:'visionAr',type:'text',label:'Vision headline',ar:'Arabic',rtl:true},{name:'visionBody',type:'textarea',label:'Vision (English)'},{name:'visionBodyAr',type:'textarea',label:'Vision',ar:'Arabic',rtl:true},{name:'mission',type:'text',label:'Mission headline (English)'},{name:'missionAr',type:'text',label:'Mission headline',ar:'Arabic',rtl:true},{name:'missionBody',type:'textarea',label:'Mission (English)'},{name:'missionBodyAr',type:'textarea',label:'Mission',ar:'Arabic',rtl:true}],p)+
   formPanel('Counters','The stat numbers shown across the site. Change a number here and every page that shows it follows.',[{name:'statOffices',type:'text',label:'Offices',half:true},{name:'statCountries',type:'text',label:'Countries',half:true},{name:'statFounded',type:'text',label:'Year founded',half:true,rec:'Years in the market are counted from this year automatically.'},{name:'statEmployees',type:'text',label:'Employees',half:true},{name:'statAvgExp',type:'text',label:'Avg. experience (yrs)',half:true},{name:'statCustomers',type:'text',label:'Customers',half:true}],p)+
   '</div>';
  var d={};m.querySelectorAll('[data-f]').forEach(function(el){el.addEventListener('input',function(){d[el.getAttribute('data-f')]=el.value;});});

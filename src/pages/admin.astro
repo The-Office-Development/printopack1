@@ -1,3 +1,9 @@
+---
+// The admin dashboard route. The dashboard itself is the standalone vanilla app in
+// /public/admin/ (admin.js + admin.css); this page is only its HTML shell, kept here
+// rather than as public/admin/index.html so that `astro dev` serves /admin/ too (the
+// dev server does not resolve a directory index inside public/).
+---
 <!DOCTYPE html>
 <html lang="en">
 <head>
@@ -14,6 +20,6 @@
 <body>
 <div id="root"></div>
 <div class="toast" id="toast"><span id="toastText"></span></div>
-<script src="/admin/admin.js"></script>
+<script src="/admin/admin.js" is:inline></script>
 </body>
 </html>

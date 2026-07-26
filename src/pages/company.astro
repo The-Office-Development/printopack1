@@ -2,8 +2,14 @@
 import Base from '../layouts/Base.astro';
 import Counter from '../components/Counter.astro';
 import Bi from '../components/Bi.astro';
-import { stats } from '../lib/content';
+import { bi, collection, paragraphs, singleton, stats } from '../lib/content';
 const year = new Date().getFullYear();
+
+// The company story (history, vision, mission) is the `about` record the client edits
+// in the admin: a headline plus a body whose blank lines become paragraphs. The values
+// are their own collection, so the client can reword, reorder, add or remove a value.
+const a = singleton('about');
+const values = collection('values');
 
 // ── EDITABLE CONTENT (bilingual) ─────────────────────────────────────────────
 // Each visible string is { en, ar }. The English vision/mission is the client's real
@@ -30,57 +36,25 @@ const content = {
   ],
   history: {
     eyebrow: { en: "Our history", ar: "تاريخنا" },
-    title: { en: "From one line in 1997 to brands across 35 countries.", ar: "من خطٍّ واحد عام 1997 إلى علاماتٍ في 35 دولة." },
+    title: bi(a.historyTitle, a.historyTitleAr),
     image: "/images/factory.jpg",
     imageAlt: "The Printopack plant in Jeddah",
-    paragraphs: [
-      {
-        en: "Printopack, the trading name of Saudi Modern Packaging Factory Co. Ltd., was established in 1997 in Jeddah. What began as a single flexible-packaging operation has grown into a full service converter, with in-house rotogravure printing, cylinder engraving, bag making, finishing and solvent recovery, all under one roof.",
-        ar: "تأسّست برنتوباك، الاسم التجاري لمصنع التغليف السعودي الحديث المحدود، عام 1997 في جدة. وما بدأ كخطٍّ واحد للتغليف المرن نما ليصبح مصنعاً متكامل الخدمات يضمّ الطباعة الروتوغرافية وحفر الأسطوانات وصناعة الأكياس والتشطيب واسترجاع المذيبات، جميعها تحت سقفٍ واحد.",
-      },
-      {
-        en: "Today the company is family-owned and Saudi-operated, serving food, beverage, pharmaceutical and consumer brands across more than 35 countries through ten regional offices. Ownership and the full founding story are added by Printopack through the site's admin.",
-        ar: "واليوم، تملك الشركةَ عائلةٌ وتُدار سعودياً، وتخدم علامات الأغذية والمشروبات والأدوية والسلع الاستهلاكية في أكثر من 35 دولة عبر عشرة مكاتب إقليمية. وتُضيف برنتوباك تفاصيل الملكية وقصة التأسيس الكاملة عبر لوحة تحكم الموقع.",
-      },
-    ],
+    paragraphs: paragraphs(a.history, a.historyAr),
   },
   vision: {
     eyebrow: { en: "Our vision", ar: "رؤيتنا" },
-    title: { en: "Empowering brands through creative packaging excellence.", ar: "تمكين العلامات التجارية عبر التميّز الإبداعي في التغليف." },
-    paragraphs: [
-      {
-        en: "Printopack's vision is to redefine packaging as a transformative brand experience, fostering a sustainable and captivating future for industries worldwide. Our dedication to innovative solutions and responsible practices will shape a world where packaging becomes an enduring testament to brand values and consumer trust.",
-        ar: "تسعى رؤية برنتوباك إلى إعادة تعريف التغليف بوصفه تجربةً تُحوِّل العلامة التجارية، وترسم مستقبلاً مستداماً وجاذباً للصناعات حول العالم. والتزامنا بالحلول المبتكرة والممارسات المسؤولة يصنع عالماً يغدو فيه التغليف شاهداً راسخاً على قيم العلامة وثقة المستهلك.",
-      },
-      {
-        en: "We envision a world where packaging transcends its functional role, becoming an artful representation of brand values, consumer trust, and environmental responsibility, led by responsible practices that resonate with consumers and contribute to a more sustainable planet.",
-        ar: "نتطلّع إلى عالمٍ يتجاوز فيه التغليف دوره الوظيفي ليصبح تعبيراً فنياً عن قيم العلامة وثقة المستهلك والمسؤولية البيئية، تقوده ممارساتٌ مسؤولة تلقى صدى لدى المستهلكين وتُسهم في كوكبٍ أكثر استدامة.",
-      },
-    ],
+    title: bi(a.vision, a.visionAr),
+    paragraphs: paragraphs(a.visionBody, a.visionBodyAr),
   },
   mission: {
     eyebrow: { en: "Our mission", ar: "رسالتنا" },
-    title: { en: "The driving force behind brands' packaging evolution.", ar: "القوة الدافعة وراء تطوّر تغليف العلامات التجارية." },
-    paragraphs: [
-      {
-        en: "At Printopack, our mission is to be the driving force behind brands' packaging evolution. With a legacy of expertise in flexible packaging solutions since 1997, we are dedicated to designing, developing, and producing responsible packaging that transcends mere functionality.",
-        ar: "رسالتنا في برنتوباك أن نكون القوة الدافعة وراء تطوّر تغليف العلامات التجارية. وبإرثٍ من الخبرة في حلول التغليف المرن منذ عام 1997، نلتزم بتصميم تغليفٍ مسؤول وتطويره وإنتاجه بما يتجاوز مجرّد الوظيفة.",
-      },
-      {
-        en: "Through innovative design, cutting-edge technology, and a commitment to sustainability, we empower brands to create packaging experiences that captivate consumers and align with their values, nurturing lasting partnerships with businesses across the globe.",
-        ar: "وعبر التصميم المبتكر والتقنيات المتقدّمة والالتزام بالاستدامة، نُمكّن العلامات من ابتكار تجارب تغليفٍ تأسر المستهلكين وتنسجم مع قيمهم، ونرعى شراكاتٍ دائمة مع الأعمال حول العالم.",
-      },
-    ],
+    title: bi(a.mission, a.missionAr),
+    paragraphs: paragraphs(a.missionBody, a.missionBodyAr),
   },
   values: {
     eyebrow: { en: "What we stand for", ar: "ما نؤمن به" },
     title: { en: "Our values", ar: "قيمنا" },
-    items: [
-      { title: { en: "Quality without compromise", ar: "جودةٌ بلا تنازل" }, text: { en: "Every reel is held to the Printopack standard, from incoming substrate to final dispatch.", ar: "كل لفّةٍ تخضع لمعيار برنتوباك، من استلام المواد حتى التسليم النهائي." } },
-      { title: { en: "Responsible by design", ar: "المسؤولية بالتصميم" }, text: { en: "Food-safe materials, solvent recovery and efficient production run through everything we make.", ar: "موادٌ آمنة غذائياً واسترجاعٌ للمذيبات وإنتاجٌ كفؤ في كل ما نصنع." } },
-      { title: { en: "Partnership, not supply", ar: "شراكةٌ لا مجرّد توريد" }, text: { en: "We advise on structure and print from the first brief, so the packaging fits the product and the line.", ar: "نقدّم المشورة في البنية والطباعة منذ أول موجز، ليناسب التغليف المنتج وخط الإنتاج." } },
-      { title: { en: "Built to deliver", ar: "التزامٌ بالتسليم" }, text: { en: "Planned materials and export logistics mean orders land on time, run after run.", ar: "تخطيطٌ للمواد ولوجستيات التصدير يضمن وصول الطلبات في وقتها، تشغيلةً بعد أخرى." } },
-    ],
+    items: values.map((v) => ({ title: bi(v.title, v.titleAr), text: bi(v.text, v.textAr) })),
   },
   cta: {
     eyebrow: { en: "Work with us", ar: "اعمل معنا" },

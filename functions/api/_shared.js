@@ -5,7 +5,7 @@
 
 export const COLLECTIONS = [
   'news', 'productGroups', 'products', 'team', 'careers', 'partners',
-  'factory', 'quality', 'responsibility', 'gallery', 'offices',
+  'factory', 'quality', 'responsibility', 'gallery', 'offices', 'values',
 ];
 export const SINGLETONS = ['about', 'settings'];
 

@@ -23,6 +23,16 @@ export function singleton(key: string): Rec {
 /** Wrap a flat en/ar pair into the { en, ar } shape the bilingual components expect. */
 export const bi = (en: any, ar: any) => ({ en: en ?? '', ar: ar ?? en ?? '' });
 
+/** Split a long admin text field into paragraphs, pairing English and Arabic by
+ *  position. The client separates paragraphs with a blank line in the editor; an
+ *  empty field renders nothing rather than an empty <p>. */
+export function paragraphs(en: any, ar: any): { en: string; ar: string }[] {
+  const split = (t: any) => String(t ?? '').split(/\n\s*\n/).map((p) => p.trim()).filter(Boolean);
+  const e = split(en);
+  const a = split(ar);
+  return e.map((p, i) => ({ en: p, ar: a[i] || p }));
+}
+
 /** The counter numbers, read from the editable `about` singleton so the client owns
  *  every stat on the site from one place in the admin. `founded` drives the
  *  "since <year>" counters, which climb to the current year, so they never go stale.
