@@ -33,7 +33,9 @@ var ICON={
  logout:'<path d="M9 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h4"/><path d="M16 17l5-5-5-5M21 12H9"/>',
  image:'<rect x="3" y="3" width="18" height="18" rx="2"/><circle cx="8.5" cy="8.5" r="1.8"/><path d="M21 15l-5-5L5 21"/>',
  link:'<path d="M10 13a5 5 0 0 0 7 0l3-3a5 5 0 0 0-7-7l-1 1"/><path d="M14 11a5 5 0 0 0-7 0l-3 3a5 5 0 0 0 7 7l1-1"/>',
- publish:'<path d="M12 19V5"/><path d="M6 11l6-6 6 6"/><path d="M4 21h16"/>'
+ publish:'<path d="M12 19V5"/><path d="M6 11l6-6 6 6"/><path d="M4 21h16"/>',
+ up:'<path d="M18 15l-6-6-6 6"/>',
+ down:'<path d="M6 9l6 6 6-6"/>'
 };
 function svg(n){return '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-linecap="round" stroke-linejoin="round">'+(ICON[n]||'')+'</svg>';}
 
@@ -227,6 +229,7 @@ function apiUploadDataUrls(rec){
 }
 function apiSaveRecord(collection,rec){return apiUploadDataUrls(rec).then(function(r){return fetch(API+'/'+collection,{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify(r)});}).then(function(r){if(!r.ok)throw 0;});}
 function apiDeleteRecord(collection,id){return fetch(API+'/'+collection+'/'+encodeURIComponent(id),{method:'DELETE'}).then(function(r){if(!r.ok)throw 0;});}
+function apiSaveOrder(collection,ids){return fetch(API+'/order/'+collection,{method:'PUT',headers:{'Content-Type':'application/json'},body:JSON.stringify({ids:ids})}).then(function(r){if(!r.ok)throw 0;});}
 function apiSaveSingleton(key,o){return fetch(API+'/singleton/'+key,{method:'PUT',headers:{'Content-Type':'application/json'},body:JSON.stringify(o)}).then(function(r){if(!r.ok)throw 0;});}
 
 /* unified writes (optimistic: update CACHE now, persist in the background) */
@@ -243,7 +246,19 @@ function deleteRecord(collection,id){
  if(MODE==='api')apiDeleteRecord(collection,id).catch(function(){toast('Delete failed','err');});
  else persistLocal();
 }
-function setColl(k,a){CACHE.entries[k]=a;if(MODE!=='api')persistLocal();}
+/* Every page renders its collection in stored order and none of them re-sort, so this is
+   what decides what comes first on the public site. Swapping with the neighbour keeps it
+   predictable on a touch screen, where dragging a table row is unreliable. */
+function moveRecord(collection,id,dir){
+ var arr=coll(collection);
+ var i=arr.findIndex(function(x){return x.id===id;});var j=i+dir;
+ if(i<0||j<0||j>=arr.length)return false;
+ var t=arr[i];arr[i]=arr[j];arr[j]=t;
+ pubTouch();
+ if(MODE==='api')apiSaveOrder(collection,arr.map(function(x){return x.id;})).catch(function(){toast('Could not save the new order','err');});
+ else persistLocal();
+ return true;
+}
 function setObj(k,o){CACHE.singletons[k]=o;pubTouch();if(MODE==='api')apiSaveSingleton(k,o).catch(function(){toast('Save failed','err');});else persistLocal();}
 
 /* boot: try the backend, else fall back to localStorage, then render */
@@ -458,8 +473,23 @@ function listView(m,key){
  function paint(f){
   var list=rows.filter(function(r){return !f||JSON.stringify(r).toLowerCase().indexOf(f.toLowerCase())>-1;});
   if(!list.length){$('#host').innerHTML='<div class="panel"><div class="empty">'+svg(mdl.icon)+'<h3>Nothing here yet</h3><p>Create your first '+mdl.singular.toLowerCase()+' with the button above.</p></div></div>';return;}
-  var body=list.map(function(r){var tds=mdl.columns.map(function(c){return '<td>'+cellFor(c,r)+'</td>';}).join('');return '<tr class="row" data-open="'+key+':'+r.id+'">'+tds+'<td><div class="cell-actions"><button class="icon-btn" data-open="'+key+':'+r.id+'">'+svg('edit')+'</button><button class="icon-btn del" data-del="'+key+':'+r.id+'">'+svg('trash')+'</button></div></td></tr>';}).join('');
-  $('#host').innerHTML='<div class="panel"><table class="tbl"><thead><tr>'+heads+'</tr></thead><tbody>'+body+'</tbody></table></div>';bind($('#host'));
+  /* Reordering is hidden while a search is active: the arrows move a record past its
+     neighbour in the real list, which is not what someone looking at a filtered subset
+     would expect to happen. */
+  var canOrder=!f&&list.length>1;
+  var body=list.map(function(r,i){
+   var tds=mdl.columns.map(function(c){return '<td>'+cellFor(c,r)+'</td>';}).join('');
+   var mv=canOrder?'<button class="icon-btn mv" data-mv="'+key+':'+r.id+':-1"'+(i===0?' disabled':'')+' title="Move up" aria-label="Move up">'+svg('up')+'</button>'+
+                   '<button class="icon-btn mv" data-mv="'+key+':'+r.id+':1"'+(i===list.length-1?' disabled':'')+' title="Move down" aria-label="Move down">'+svg('down')+'</button>':'';
+   return '<tr class="row" data-open="'+key+':'+r.id+'">'+tds+'<td><div class="cell-actions">'+mv+'<button class="icon-btn" data-open="'+key+':'+r.id+'">'+svg('edit')+'</button><button class="icon-btn del" data-del="'+key+':'+r.id+'">'+svg('trash')+'</button></div></td></tr>';
+  }).join('');
+  var hint=canOrder?'<p class="order-hint">The order here is the order on the website.</p>':'';
+  $('#host').innerHTML='<div class="panel"><table class="tbl"><thead><tr>'+heads+'</tr></thead><tbody>'+body+'</tbody></table></div>'+hint;bind($('#host'));
+  $('#host').querySelectorAll('[data-mv]').forEach(function(el){el.addEventListener('click',function(e){
+   e.stopPropagation();
+   var p=el.getAttribute('data-mv').split(':');
+   if(moveRecord(p[0],p[1],+p[2]))paint(f);
+  });});
  }
  paint('');$('#q').addEventListener('input',function(){paint(this.value);});
  if(mdl.hasCalendar){var seg=$('#tg');seg.querySelectorAll('button').forEach(function(b){b.addEventListener('click',function(){seg.querySelectorAll('button').forEach(function(x){x.classList.remove('on');});b.classList.add('on');if(b.dataset.mode==='cal')renderCal($('#host'));else paint($('#q').value);});});}
