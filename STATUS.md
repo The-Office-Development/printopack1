@@ -52,7 +52,8 @@ does, the admin login cannot be Access either and we run our own. Check the real
    variable to this site's own `/content` route.
 2. **Admin login** on `/admin` + `/api`: Cloudflare Access if it is genuinely card-free, otherwise
    our own (see above).
-3. **Deploy hook + admin "Publish" button** (Phase 4).
+3. **Deploy hook** (Phase 4). The admin's Publish button is built; it needs `DEPLOY_HOOK_URL`
+   set as a Pages secret, otherwise it saves the snapshot and warns that nothing rebuilt.
 4. **Handover guide** for the client (Phase 5).
 5. **Domain cutover** (later): GoDaddy DNS - add `www` CNAME + apex forward; email and `api`
    untouched.

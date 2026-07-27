@@ -212,3 +212,20 @@ h1,h2,h3,h4{font-family:var(--disp);font-weight:400;letter-spacing:-.01em;line-h
 .meter{height:8px;border-radius:99px;background:var(--line);overflow:hidden}
 .meter span{display:block;height:100%;border-radius:99px;background:var(--gold);transition:width .4s}
 .meter-text{margin:11px 0 0;font-size:13px;color:var(--muted)}
+
+/* ---------- PUBLISH (sidebar) ----------
+   Pinned above the user block so it is reachable from every view. Deliberately two lines
+   tall: the nav above it needs the height. Gold when there is something to push live. */
+.sb-pub{padding:13px 14px;border-top:1px solid rgba(255,255,255,.08)}
+.pub-btn{width:100%;display:flex;align-items:center;justify-content:center;gap:9px;padding:10px 12px;border:none;border-radius:8px;background:var(--gold);color:var(--navy);font-family:var(--disp);font-size:13.5px;font-weight:500;letter-spacing:.04em;cursor:pointer;transition:.2s}
+.pub-btn:hover:not(:disabled){background:var(--gold-bright)}
+.pub-btn svg{width:16px;height:16px;stroke-width:1.9}
+.pub-btn:disabled{background:rgba(255,255,255,.06);color:#6f7c96;cursor:default}
+.pub-note{margin-top:8px;font-size:11px;line-height:1.45;color:#65718a;letter-spacing:.01em}
+.pub-note i{display:inline-block;width:6px;height:6px;border-radius:50%;background:#4d5c78;margin-inline-end:6px;vertical-align:middle}
+.sb-pub.pending .pub-note{color:#8d9ab1}
+.sb-pub.pending .pub-note i{background:var(--gold-bright);box-shadow:0 0 0 3px rgba(202,160,84,.18)}
+.pub-note.warn{color:#e0b968}
+.sb-pub.busy .pub-btn svg{animation:pubup 1.1s var(--ease) infinite}
+@keyframes pubup{0%{transform:translateY(2px);opacity:.5}50%{transform:translateY(-2px);opacity:1}100%{transform:translateY(2px);opacity:.5}}
+@media(prefers-reduced-motion:reduce){.sb-pub.busy .pub-btn svg{animation:none}}

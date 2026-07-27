@@ -32,7 +32,8 @@ var ICON={
  search:'<circle cx="11" cy="11" r="7"/><path d="M21 21l-4.3-4.3"/>',
  logout:'<path d="M9 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h4"/><path d="M16 17l5-5-5-5M21 12H9"/>',
  image:'<rect x="3" y="3" width="18" height="18" rx="2"/><circle cx="8.5" cy="8.5" r="1.8"/><path d="M21 15l-5-5L5 21"/>',
- link:'<path d="M10 13a5 5 0 0 0 7 0l3-3a5 5 0 0 0-7-7l-1 1"/><path d="M14 11a5 5 0 0 0-7 0l-3 3a5 5 0 0 0 7 7l1-1"/>'
+ link:'<path d="M10 13a5 5 0 0 0 7 0l3-3a5 5 0 0 0-7-7l-1 1"/><path d="M14 11a5 5 0 0 0-7 0l-3 3a5 5 0 0 0 7 7l1-1"/>',
+ publish:'<path d="M12 19V5"/><path d="M6 11l6-6 6 6"/><path d="M4 21h16"/>'
 };
 function svg(n){return '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-linecap="round" stroke-linejoin="round">'+(ICON[n]||'')+'</svg>';}
 
@@ -232,16 +233,18 @@ function apiSaveSingleton(key,o){return fetch(API+'/singleton/'+key,{method:'PUT
 function saveRecord(collection,rec){
  var arr=coll(collection);var i=arr.findIndex(function(x){return x.id===rec.id;});
  if(i>-1)arr[i]=rec;else arr.unshift(rec);
+ pubTouch();
  if(MODE==='api')apiSaveRecord(collection,rec).catch(function(){toast('Save failed - check your connection','err');});
  else persistLocal();
 }
 function deleteRecord(collection,id){
  CACHE.entries[collection]=coll(collection).filter(function(x){return x.id!==id;});
+ pubTouch();
  if(MODE==='api')apiDeleteRecord(collection,id).catch(function(){toast('Delete failed','err');});
  else persistLocal();
 }
 function setColl(k,a){CACHE.entries[k]=a;if(MODE!=='api')persistLocal();}
-function setObj(k,o){CACHE.singletons[k]=o;if(MODE==='api')apiSaveSingleton(k,o).catch(function(){toast('Save failed','err');});else persistLocal();}
+function setObj(k,o){CACHE.singletons[k]=o;pubTouch();if(MODE==='api')apiSaveSingleton(k,o).catch(function(){toast('Save failed','err');});else persistLocal();}
 
 /* boot: try the backend, else fall back to localStorage, then render */
 function boot(){
@@ -249,8 +252,8 @@ function boot(){
   MODE='api';CACHE.entries=d.entries||{};CACHE.singletons=d.singletons||{};
   COLLECTIONS.forEach(function(k){if(!CACHE.entries[k])CACHE.entries[k]=[];});
   try{localStorage.setItem(SKEY,'1');}catch(e){} /* Cloudflare Access already authenticated the user */
-  render();
- }).catch(function(){MODE='local';loadLocal();render();});
+  render();pubRefresh();
+ }).catch(function(){MODE='local';loadLocal();render();pubRefresh();});
 }
 
 /* ---------------- models ---------------- */
@@ -323,8 +326,71 @@ function sidebar(){
  }).join('');
  return '<aside class="sidebar"><div class="sb-brand"><b>PRINTO<span>·</span>PACK</b><small>System · Admin</small></div>'+
   '<nav class="sb-nav">'+items+'</nav>'+
+  '<div class="sb-pub" id="pub"></div>'+
   '<div class="sb-foot"><div class="sb-user"><div class="av">CM</div><div><div class="nm">Creative Manager</div><div class="rl">creative@printopack.com.sa</div></div></div>'+
   '<button class="sb-logout" data-logout>'+svg('logout')+'Sign out</button></div></aside>';
+}
+
+/* ---------------- publishing ----------------
+   Saving and going live are two different things, and the client must never have to guess
+   which one they just did. Every edit is saved instantly and privately; this panel is the
+   only thing that puts it in front of the public, and it sits in the sidebar so it is
+   reachable from every screen. */
+var PUB={pending:false,publishedAt:null,canDeploy:true,busy:false};
+function agoText(ts){
+ if(!ts)return 'never';
+ var s=Math.floor((Date.now()-ts)/1000);
+ if(s<90)return 'just now';
+ if(s<5400)return Math.round(s/60)+' min ago';
+ var d=new Date(ts),now=new Date();
+ var sameDay=d.toDateString()===now.toDateString();
+ return (sameDay?'today':d.toLocaleDateString('en-GB',{day:'numeric',month:'short'}))+' at '+d.toLocaleTimeString('en-GB',{hour:'2-digit',minute:'2-digit'});
+}
+/* Kept to two lines: the sidebar nav already needs the height, and this panel is pinned above
+   it on every screen. Status and last-published time share one line under the button. */
+function pubRender(){
+ var el=$('#pub');if(!el)return;
+ if(PUB.busy){
+  el.className='sb-pub busy';
+  el.innerHTML='<button class="pub-btn" disabled>'+svg('publish')+'Publishing…</button>'+
+   '<p class="pub-note">'+(PUB.canDeploy?'The site rebuilds in a minute or two.':'Saving your changes for publishing.')+'</p>';
+  return;
+ }
+ el.className='sb-pub'+(PUB.pending?' pending':'');
+ var state=PUB.pending?'<i></i>Changes not live yet':'<i></i>Everything is live';
+ /* Say this before they press the button, not after: without the deploy hook a publish saves
+    the snapshot and the website does not change. */
+ var warn=PUB.canDeploy?'':'<p class="pub-note warn">Automatic rebuild is not set up yet, so publishing will not update the website.</p>';
+ el.innerHTML='<button class="pub-btn" id="pubgo"'+(PUB.pending?'':' disabled')+'>'+svg('publish')+'Publish to live site</button>'+
+  warn+
+  '<p class="pub-note">'+state+' · last published '+esc(agoText(PUB.publishedAt))+'.</p>';
+ var b=$('#pubgo');if(b)b.addEventListener('click',doPublish);
+}
+/* Called after every save so the sidebar reacts immediately, without waiting for the server
+   to be asked again. */
+function pubTouch(){if(!PUB.pending){PUB.pending=true;pubRender();}}
+function pubRefresh(){
+ if(MODE!=='api'){PUB.pending=true;pubRender();return;}
+ fetch(API+'/publish').then(function(r){return r.json();}).then(function(s){
+  if(!s)return;
+  PUB.pending=!!s.pending;PUB.publishedAt=s.publishedAt;PUB.canDeploy=s.canDeploy!==false;
+  pubRender();
+ }).catch(function(){});
+}
+function doPublish(){
+ if(MODE!=='api'){toast('This is a preview copy. Publishing works on the live site.','err');return;}
+ if(!confirm('Publish everything you have edited to the public website?'))return;
+ PUB.busy=true;pubRender();
+ fetch(API+'/publish',{method:'POST'}).then(function(r){if(!r.ok)throw 0;return r.json();}).then(function(o){
+  PUB.busy=false;PUB.pending=false;PUB.publishedAt=Date.now();pubRender();
+  /* A snapshot with no rebuild behind it looks identical from in here, so say so plainly
+     rather than let the client believe the website changed. */
+  if(o&&o.deployed===false)toast('Saved for publishing, but the site rebuild was not triggered. Tell your developer.','err');
+  else toast('Published. The site rebuilds in a minute or two.','ok');
+ }).catch(function(){
+  PUB.busy=false;pubRender();
+  toast('Publish failed. Nothing was changed on the live site.','err');
+ });
 }
 function topbar(title,crumb,actions){return '<div class="topbar"><div><div class="crumb">'+esc(crumb||'Printopack System')+'</div><h1>'+esc(title)+'</h1></div><div class="topbar-actions">'+(actions||'')+'</div></div>';}
 function render(){
@@ -332,6 +398,7 @@ function render(){
  if(!loggedIn()){renderLogin();return;}
  root.innerHTML='<div class="app">'+sidebar()+'<main class="main" id="main"></main></div>';
  renderView();
+ pubRender();
  root.querySelectorAll('[data-nav]').forEach(function(el){el.addEventListener('click',function(){view=el.getAttribute('data-nav');render();});});
  var lo=root.querySelector('[data-logout]');if(lo)lo.addEventListener('click',function(){localStorage.removeItem(SKEY);render();});
 }
