@@ -23,6 +23,18 @@ not be visible to site visitors. Known locations (search for these classes/strin
 Tip: these notes use muted italic helper classes (`resp-note`, `qnote`, etc.). Strip the
 lines, not the surrounding content.
 
+## Sample products (added 2026-07-29)
+`db/seed.json` now carries **4 sample products** in the "Chips & Snacks" group only
+(`prod-01` .. `prod-04`: Pillow Bags, Gusseted Bags, Zipper Bags, Stand-up Pouches). They exist
+so the new product list on `/products/[slug]` is visible and reviewable while the real catalogue
+is still client-gated.
+
+They are real bag formats from Printopack's own catalogue and their descriptions are factual, so
+they are not embarrassing if seen, but they are **not a real product list**. Deliberately they
+carry **no image**, so no invented photography ships; the card falls back to the product's
+initials. Replace or delete them through the admin once the client supplies the real catalogue.
+The other 19 groups have no products, and the section simply does not render for them.
+
 ## Other pre-production items
 - Real certificates are now live (from `Desktop\printopack-data`): BRCGS + ISO 22000 badges on Quality/Certificates; ISO 14001 + ISO 45001 badges + the real Mowaamah 2025 certificate (links to `/downloads/mowaamah-certificate-2025.pdf`) on Social Responsibility. The old `public/images/cert-brcgs.jpg` is now unreferenced (safe to delete). If the client sends full ISO/BRCGS certificate documents, swap the badge images for the actual certificate scans.
 - Product catalogue PDF is live at `/downloads/printopack-catalogue.pdf` (Products page "Download our catalogue"). Replace if the client issues a newer edition.

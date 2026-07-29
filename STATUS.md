@@ -76,12 +76,8 @@ change is left hardcoded, apart from the navigation, which is a deliberate decis
 >
 > - **`careers`: FIXED.** `careers.astro` carried its own hardcoded array of three roles. It now
 >   reads `collection('careers')` and honours the Status field. Details below.
-> - **`products`: STILL OPEN.** The admin has a Products model (name, group, image, bilingual
->   description, "Visible on site"), but no page renders individual products. `productGroups` is
->   wired and correct; products inside a group have no surface. A client adding one today would
->   see nothing happen. Decision needed before handover: either build the product list into
->   `/products/[slug]`, or remove the model so the dashboard does not promise something the site
->   cannot show. The collection is empty in the baseline (0 records), so nothing is lost either way.
+> - **`products`: FIXED.** The admin had a Products model that no page rendered. `/products/[slug]`
+>   now lists the products in its group. Details below.
 
 ## Careers wired to the dashboard (2026-07-29)
 The Careers page is now driven entirely by the admin, and the model gained the fields the page
@@ -101,6 +97,29 @@ needed but never had:
 - The richer copy that lived in the hardcoded array (summaries and three requirements per role, in
   both languages) was migrated into `db/seed.json` rather than discarded, and `db/seed.sql` was
   regenerated from it.
+
+## Products wired to the dashboard (2026-07-29)
+The admin's Products model now has a surface. `/products/[slug]` lists the products belonging to
+that group, under the group narrative and above the Printopack Standard band.
+
+- **Matching:** the model's "Group" field is a dropdown built from the product groups, so it
+  stores the group's **English name**, and the page matches on that. No new field, no new route.
+- **"Visible on site"** hides a product without deleting it. Anything not explicitly set to
+  `false` stays visible, so a newly created product does not silently vanish before the client
+  has touched the dropdown. Verified end to end by flipping one product and rebuilding.
+- **The section renders only when the group has products.** Nineteen of twenty groups are empty
+  today, and an empty band on all of them would be noise. It appears on its own as content lands.
+- **No photograph yet is a designed state, not a broken one:** the card falls back to the
+  product's initials on a cream tile, the same idea as the team page's monogram.
+- **Card:** image or monogram, bilingual name, bilingual description, "Price on request", and an
+  Enquire link whose mailto subject names both the product and its group, so an enquiry arrives
+  already identified. Catalogue and enquiry only, no cart, consistent with the rest of the site.
+- **Sample data:** 4 real bag formats were seeded into "Chips & Snacks" so the feature is
+  reviewable while the real catalogue is client-gated. They carry no image on purpose. Flagged in
+  `PRODUCTION_TODO.md` for replacement.
+
+With this, **all twelve admin collections are read by the site.** No model in the dashboard writes
+to nothing any more.
 
 - [x] **Footer**: company details (phone / email / address / company name) now read the editable
       `settings`, and the regional-offices strip is built from the offices collection. The contact

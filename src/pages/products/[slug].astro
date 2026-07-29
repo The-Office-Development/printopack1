@@ -2,6 +2,7 @@
 import Base from '../../layouts/Base.astro';
 import Bi from '../../components/Bi.astro';
 import { categories, filters } from '../../data/products';
+import { collection, bi } from '../../lib/content';
 
 // Product-group detail page (catalogue model, no cart): image + narrative + enquiry.
 // One static page per group; copy comes from the shared data module and the bilingual
@@ -14,6 +15,27 @@ export function getStaticPaths() {
 
 const { cat } = Astro.props;
 const groupFilter = filters.find((f) => f.key === cat.group);
+
+// The products inside this group, from the admin's Products model. Its "Group" field is a
+// dropdown built from the product groups, so it stores the group's English name, which is
+// what this matches on. "Visible on site" hides a product without deleting it; anything the
+// client has not explicitly set to false stays visible, so a newly created product does not
+// silently vanish.
+//
+// The section below renders only when this is non-empty. Most groups have no products yet
+// (the catalogue is client-added content), and an empty band on nineteen pages would be
+// noise rather than information.
+const products = collection('products')
+  .filter((p) => p.category === cat.name.en && String(p.active) !== 'false')
+  .map((p) => ({
+    id: p.id,
+    img: p.image || '',
+    name: bi(p.name, p.nameAr),
+    desc: bi(p.description, p.descriptionAr),
+    // Initials stand in until a photograph is uploaded, the same fallback the team page uses.
+    mono: String(p.name || '').trim().split(/\s+/).slice(0, 2).map((w) => w[0] || '').join('').toUpperCase(),
+    quote: `mailto:mkt@printopack.com.sa?subject=${encodeURIComponent(`Quote request: ${p.name} (${cat.name.en})`)}`,
+  }));
 const related = categories.filter((c) => c.group === cat.group && c.slug !== cat.slug).slice(0, 3);
 const more = related.length ? related : categories.filter((c) => c.slug !== cat.slug).slice(0, 3);
 const quoteMail = `mailto:mkt@printopack.com.sa?subject=${encodeURIComponent(`Quote request: ${cat.name.en}`)}`;
@@ -31,6 +53,13 @@ const t = {
   quote: { en: "Request a quote", ar: "اطلب عرض سعر" },
   talk: { en: "Talk to our team", ar: "تحدّث إلى فريقنا" },
   crumb: { en: "Products", ar: "المنتجات" },
+  products: {
+    eyebrow: { en: "In this group", ar: "في هذه المجموعة" },
+    title: { en: "Products in this range.", ar: "منتجات هذه المجموعة." },
+    price: { en: "Price on request", ar: "السعر عند الطلب" },
+    enquire: { en: "Enquire", ar: "استفسر" },
+    noImage: { en: "Photograph to follow", ar: "الصورة قيد الإضافة" },
+  },
   standard: {
     eyebrow: { en: "The Printopack standard", ar: "معيار برنتوباك" },
     title: { en: "What every order includes.", ar: "ما يشمله كل طلب." },
@@ -86,6 +115,35 @@ const t = {
       </div>
     </div>
   </section>
+
+  <!-- PRODUCTS IN THIS GROUP (only when the client has added some) -->
+  {products.length > 0 && (
+    <section class="pdp-products">
+      <div class="wrap-wide">
+        <div class="more-head">
+          <span class="eyebrow"><Bi en={t.products.eyebrow.en} ar={t.products.eyebrow.ar} /></span>
+          <h2 style="margin-top:14px"><Bi en={t.products.title.en} ar={t.products.title.ar} /></h2>
+        </div>
+        <div class="prod-grid">
+          {products.map((p) => (
+            <article class="prod-card">
+              <span class="prod-img">
+                {p.img
+                  ? <img src={p.img} alt={p.name.en} loading="lazy" decoding="async" />
+                  : <span class="prod-mono" aria-label={t.products.noImage.en}>{p.mono}</span>}
+              </span>
+              <span class="prod-name"><Bi en={p.name.en} ar={p.name.ar} /></span>
+              {p.desc.en && <span class="prod-desc"><Bi en={p.desc.en} ar={p.desc.ar} /></span>}
+              <span class="prod-foot">
+                <span class="prod-price"><Bi en={t.products.price.en} ar={t.products.price.ar} /></span>
+                <a class="prod-enquire" href={p.quote}><Bi en={t.products.enquire.en} ar={t.products.enquire.ar} /></a>
+              </span>
+            </article>
+          ))}
+        </div>
+      </div>
+    </section>
+  )}
 
   <!-- THE PRINTOPACK STANDARD -->
   <section class="on-navy pdp-standard">
@@ -154,6 +212,23 @@ const t = {
 
   .pdp-actions{display:flex;align-items:center;gap:28px;margin-top:30px;flex-wrap:wrap}
 
+  /* Products the client has added to this group. Same card vocabulary as .more-card so the
+     two grids on this page read as one system. `margin-top:auto` on the footer keeps the
+     price and enquiry line flush across a row of uneven descriptions. */
+  .pdp-products{border-top:1px solid var(--line-soft);padding-block:clamp(52px,6.5vw,88px)}
+  .prod-grid{display:grid;grid-template-columns:repeat(3,1fr);gap:clamp(18px,2vw,30px)}
+  .prod-card{display:flex;flex-direction:column;border:1px solid var(--line);background:var(--paper)}
+  .prod-card:hover{border-color:var(--sand);box-shadow:0 20px 38px rgba(14,35,64,.07)}
+  .prod-img{display:flex;align-items:center;justify-content:center;aspect-ratio:4/3;background:var(--cream);overflow:hidden}
+  .prod-img img{width:100%;height:100%;object-fit:contain;padding:18px;mix-blend-mode:multiply}
+  .prod-mono{font-family:var(--display);font-size:clamp(30px,3.4vw,42px);font-weight:300;letter-spacing:.08em;color:var(--gold)}
+  .prod-name{font-family:var(--display);font-size:18px;padding:18px 18px 6px;color:var(--ink);text-align:start}
+  .prod-desc{font-size:14px;line-height:1.62;color:var(--muted);padding:0 18px 16px;text-align:start}
+  .prod-foot{margin-top:auto;display:flex;align-items:center;justify-content:space-between;gap:12px;padding:13px 18px;border-top:1px solid var(--line)}
+  .prod-price{font-family:var(--display);font-size:11px;letter-spacing:.14em;text-transform:uppercase;color:var(--faint)}
+  .prod-enquire{font-family:var(--display);font-size:11px;letter-spacing:.14em;text-transform:uppercase;color:var(--navy)}
+  .prod-enquire:hover{color:var(--gold)}
+
   .pdp-standard{padding-block:clamp(56px,7vw,96px)}
   .std-grid{display:grid;grid-template-columns:repeat(3,1fr);gap:clamp(26px,4vw,52px);margin-top:clamp(26px,3vw,40px)}
   .std-item{border-top:1px solid var(--line-dark);padding-top:22px}
@@ -181,8 +256,10 @@ const t = {
     .std-grid{grid-template-columns:1fr;gap:0}
     .std-item{padding-block:22px}
     .more-grid{grid-template-columns:repeat(2,1fr)}
+    .prod-grid{grid-template-columns:repeat(2,1fr)}
   }
   @media(max-width:520px){
     .more-grid{grid-template-columns:1fr}
+    .prod-grid{grid-template-columns:1fr}
   }
 </style>
