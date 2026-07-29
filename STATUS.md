@@ -70,6 +70,38 @@ does, the admin login cannot be Access either and we run our own. Check the real
 Every page now reads its content from the database. Nothing a client would reasonably want to
 change is left hardcoded, apart from the navigation, which is a deliberate decision (below).
 
+> **Correction (2026-07-29).** The sentence above was not true when it was written. An audit of
+> every `collection()` call against the admin's models found two of the twelve collections were
+> not read by any page, so editing them in the dashboard changed nothing on the site:
+>
+> - **`careers`: FIXED.** `careers.astro` carried its own hardcoded array of three roles. It now
+>   reads `collection('careers')` and honours the Status field. Details below.
+> - **`products`: STILL OPEN.** The admin has a Products model (name, group, image, bilingual
+>   description, "Visible on site"), but no page renders individual products. `productGroups` is
+>   wired and correct; products inside a group have no surface. A client adding one today would
+>   see nothing happen. Decision needed before handover: either build the product list into
+>   `/products/[slug]`, or remove the model so the dashboard does not promise something the site
+>   cannot show. The collection is empty in the baseline (0 records), so nothing is lost either way.
+
+## Careers wired to the dashboard (2026-07-29)
+The Careers page is now driven entirely by the admin, and the model gained the fields the page
+needed but never had:
+
+- **New admin fields:** `locationAr` (the location was English-only, so Arabic visitors saw
+  "Jeddah, KSA" in a right-to-left sentence), plus `summary` / `summaryAr` (the page has always
+  had a summary paragraph; the dashboard had no field for it).
+- **Requirements are one per line**, English and Arabic paired by position, so a half-translated
+  list still renders one bullet per requirement instead of falling back to English wholesale.
+  The admin field hints now say so.
+- **Department and Type** stay single English dropdowns in the admin; their Arabic is a lookup in
+  the page, so the client does not retype a translation for every role.
+- **Status is honoured.** `job-03` (Sales Account Manager) is `draft` in the baseline, so the page
+  now shows two roles where it previously showed three. Flip it to `published` in the dashboard to
+  bring it back. This is the draft mechanism working, not a regression.
+- The richer copy that lived in the hardcoded array (summaries and three requirements per role, in
+  both languages) was migrated into `db/seed.json` rather than discarded, and `db/seed.sql` was
+  regenerated from it.
+
 - [x] **Footer**: company details (phone / email / address / company name) now read the editable
       `settings`, and the regional-offices strip is built from the offices collection. The contact
       details in the top utility strip of the header read the same record.

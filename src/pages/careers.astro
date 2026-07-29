@@ -2,7 +2,7 @@
 import Base from '../layouts/Base.astro';
 import Counter from '../components/Counter.astro';
 import Bi from '../components/Bi.astro';
-import { stats } from '../lib/content';
+import { stats, collection, bi } from '../lib/content';
 const year = new Date().getFullYear();
 
 // Careers (Nasser's Page 5). His brief: open roles with specs + requirements, a
@@ -14,50 +14,50 @@ const year = new Date().getFullYear();
 // that role's correspondence email auto-filled/shown. CV upload is Netlify Forms (works on
 // deploy, not in local preview; success via ?submitted=1).
 //
-// TEMPLATE-FIRST / admin-editable: `roles` (incl. each role's `email`) and every label are
-// the surface the admin dashboard manages. Roles are client-gated, so these are clearly-
-// templated examples (see `.cnote`, strip before production) until real ones arrive.
-const roles = [
-  {
-    key: "production-engineer", email: "hr@printopack.com.sa",
-    title: { en: "Production Engineer", ar: "مهندس إنتاج" },
-    dept: { en: "Production", ar: "الإنتاج" },
-    type: { en: "Full-time", ar: "دوام كامل" },
-    location: { en: "Jeddah, KSA", ar: "جدة، السعودية" },
-    summary: { en: "Run and improve our rotogravure and lamination lines, keeping output on-spec and on-time.", ar: "تشغيل وتحسين خطوط الطباعة الروتوغرافية والتصفيح، مع الحفاظ على مطابقة الإنتاج للمواصفات وتسليمه في وقته." },
-    req: [
-      { en: "BSc in mechanical or industrial engineering.", ar: "بكالوريوس في الهندسة الميكانيكية أو الصناعية." },
-      { en: "3+ years on rotogravure or flexible-packaging lines.", ar: "خبرة 3 سنوات فأكثر على خطوط الطباعة الروتوغرافية أو التغليف المرن." },
-      { en: "A strong grasp of print quality and process control.", ar: "إلمام قوي بجودة الطباعة وضبط العمليات." },
-    ],
-  },
-  {
-    key: "qc-specialist", email: "hr@printopack.com.sa",
-    title: { en: "Quality Control Specialist", ar: "أخصائي مراقبة الجودة" },
-    dept: { en: "Quality", ar: "الجودة" },
-    type: { en: "Full-time", ar: "دوام كامل" },
-    location: { en: "Jeddah, KSA", ar: "جدة، السعودية" },
-    summary: { en: "Check every run against our food-safety and print standards before it ships.", ar: "فحص كل تشغيلة وفق معايير سلامة الغذاء والطباعة قبل شحنها." },
-    req: [
-      { en: "Background in food-contact materials and lab testing.", ar: "خلفية في المواد الملامِسة للأغذية والفحص المخبري." },
-      { en: "Familiarity with BRCGS or similar standards.", ar: "معرفة بمعيار BRCGS أو ما يماثله." },
-      { en: "A meticulous, documentation-driven approach.", ar: "منهجية دقيقة قائمة على التوثيق." },
-    ],
-  },
-  {
-    key: "sales-account-manager", email: "hr@printopack.com.sa",
-    title: { en: "Sales Account Manager", ar: "مدير حسابات مبيعات" },
-    dept: { en: "Sales", ar: "المبيعات" },
-    type: { en: "Full-time", ar: "دوام كامل" },
-    location: { en: "Regional", ar: "إقليمي" },
-    summary: { en: "Grow relationships with food, beverage and consumer brands across the region.", ar: "تنمية العلاقات مع علامات الأغذية والمشروبات والمنتجات الاستهلاكية في المنطقة." },
-    req: [
-      { en: "5+ years of B2B packaging or FMCG sales.", ar: "خبرة 5 سنوات فأكثر في مبيعات التغليف أو السلع الاستهلاكية (B2B)." },
-      { en: "Existing brand relationships are a plus.", ar: "وجود علاقات قائمة مع العلامات ميزة إضافية." },
-      { en: "Fluent Arabic and English.", ar: "إتقان العربية والإنجليزية." },
-    ],
-  },
-];
+// Roles come from the content store: the admin's Careers model is the only place they are
+// edited, and a role stays invisible until its Status is "published" (job-03 is a draft in
+// the baseline, so it is deliberately absent). Before this, the page carried its own
+// hardcoded array and nothing the client typed in the dashboard ever reached the site.
+//
+// Department and Type are fixed dropdowns in the admin, so their Arabic is looked up here
+// rather than being two more fields to fill on every role. Everything else is bilingual in
+// the dashboard.
+const DEPT_AR: Record<string, string> = {
+  Production: "الإنتاج",
+  Quality: "الجودة",
+  Sales: "المبيعات",
+  Engineering: "الهندسة",
+  Admin: "الإدارة",
+  Logistics: "الخدمات اللوجستية",
+  IT: "تقنية المعلومات",
+};
+const TYPE_AR: Record<string, string> = {
+  "Full-time": "دوام كامل",
+  "Part-time": "دوام جزئي",
+  Contract: "بعقد",
+  Internship: "تدريب",
+};
+/** One requirement per line in the admin; blank lines and stray spacing are ignored. */
+const lines = (t: unknown) => String(t ?? '').split('\n').map((l) => l.trim()).filter(Boolean);
+
+const roles = collection('careers')
+  .filter((r) => r.status === 'published')
+  .map((r) => {
+    const req = lines(r.requirements);
+    const reqAr = lines(r.requirementsAr);
+    return {
+      key: r.id,
+      email: r.email || '',
+      title: bi(r.title, r.titleAr),
+      dept: bi(r.dept, DEPT_AR[r.dept] || r.dept),
+      type: bi(r.type, TYPE_AR[r.type] || r.type),
+      location: bi(r.location, r.locationAr),
+      summary: bi(r.summary, r.summaryAr),
+      // Arabic bullets pair with English by position, so a half-translated list still
+      // renders one bullet per requirement instead of dropping to English wholesale.
+      req: req.map((q, i) => ({ en: q, ar: reqAr[i] || q })),
+    };
+  });
 
 const content = {
   meta: {
@@ -160,13 +160,17 @@ const c = content;
                 </span>
               </button>
               <div class="role-body" id={`role-${r.key}`} hidden>
-                <p class="role-summary"><Bi en={r.summary.en} ar={r.summary.ar} /></p>
-                <span class="role-req-label"><Bi en={c.roles.reqLabel.en} ar={c.roles.reqLabel.ar} /></span>
-                <ul class="role-req">
-                  {r.req.map((q) => (
-                    <li><span class="req-tick" aria-hidden="true"></span><Bi en={q.en} ar={q.ar} /></li>
-                  ))}
-                </ul>
+                {r.summary.en && <p class="role-summary"><Bi en={r.summary.en} ar={r.summary.ar} /></p>}
+                {r.req.length > 0 && (
+                  <>
+                    <span class="role-req-label"><Bi en={c.roles.reqLabel.en} ar={c.roles.reqLabel.ar} /></span>
+                    <ul class="role-req">
+                      {r.req.map((q) => (
+                        <li><span class="req-tick" aria-hidden="true"></span><Bi en={q.en} ar={q.ar} /></li>
+                      ))}
+                    </ul>
+                  </>
+                )}
                 <button class="btn btn-solid role-apply" data-role={r.key} data-role-en={r.title.en} data-role-ar={r.title.ar} data-email={r.email}>
                   <Bi en={c.roles.apply.en} ar={c.roles.apply.ar} />
                 </button>
