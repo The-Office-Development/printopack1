@@ -51,10 +51,18 @@ does, the admin login cannot be Access either and we run our own. Check the real
 1. **Connect the repo to Cloudflare Pages** (git), bind D1, and set the `CONTENT_URL` build
    variable to this site's own `/content` route.
 2. **Admin login** on `/admin` + `/api`: Cloudflare Access if it is genuinely card-free, otherwise
-   our own (see above).
+   our own (see above). **This is the hard blocker on going public.** There is no authentication
+   code in `functions/api/*` at all: the whole security model assumes Access sits in front, and the
+   dashboard's own sign-in screen is a demo gate (password `demo`, a `localStorage` flag) that
+   stops nobody. Connecting Pages to a public hostname before this is settled leaves publish,
+   upload and delete open to anyone. Both options are written up in `HANDOVER-OPERATIONS.md` §1.
 3. **Deploy hook** (Phase 4). The admin's Publish button is built; it needs `DEPLOY_HOOK_URL`
    set as a Pages secret, otherwise it saves the snapshot and warns that nothing rebuilt.
-4. **Handover guide** for the client (Phase 5).
+4. ~~**Handover guide** for the client (Phase 5).~~ **DONE (2026-07-29).** Two documents:
+   `HANDOVER-CLIENT.md` (plain-language manual for Printopack staff, safe to send as it is) and
+   `HANDOVER-OPERATIONS.md` (internal runbook: provisioning state, the login blocker, free-tier
+   limits, route reference, recovery). The client guide was written against the real admin UI, so
+   its wording matches what is actually on screen.
 5. **Domain cutover** (later): GoDaddy DNS - add `www` CNAME + apex forward; email and `api`
    untouched.
 
