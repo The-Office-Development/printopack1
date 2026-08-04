@@ -23,6 +23,13 @@ not be visible to site visitors. Known locations (search for these classes/strin
 Tip: these notes use muted italic helper classes (`resp-note`, `qnote`, etc.). Strip the
 lines, not the surrounding content.
 
+## Test data to remove before production
+- **Office manager photos are TEST images.** `public/images/offices/test-manager-1..4.jpg` are
+  cropped factory photos, not portraits, attached to four offices (Tunisia, Libya, Kuwait,
+  Algeria) purely so the layout could be reviewed. Delete the four files and clear the `photo`
+  field on those records once Printopack supplies real photographs, or leave the field empty
+  and the initials placeholder takes over on its own.
+
 ## Other pre-production items
 - Real certificates are now live (from `Desktop\printopack-data`): BRCGS + ISO 22000 badges on Quality/Certificates; ISO 14001 + ISO 45001 badges + the real Mowaamah 2025 certificate (links to `/downloads/mowaamah-certificate-2025.pdf`) on Social Responsibility. The old `public/images/cert-brcgs.jpg` is now unreferenced (safe to delete). If the client sends full ISO/BRCGS certificate documents, swap the badge images for the actual certificate scans.
 - Product catalogue PDF is live at `/downloads/printopack-catalogue.pdf` (Products page "Download our catalogue"). Replace if the client issues a newer edition.
