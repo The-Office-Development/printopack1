@@ -51,16 +51,75 @@ does, the admin login cannot be Access either and we run our own. Check the real
 1. **Connect the repo to Cloudflare Pages** (git), bind D1, and set the `CONTENT_URL` build
    variable to this site's own `/content` route.
 2. **Admin login** on `/admin` + `/api`: Cloudflare Access if it is genuinely card-free, otherwise
-   our own (see above).
+   our own (see above). **This is the hard blocker on going public.** There is no authentication
+   code in `functions/api/*` at all: the whole security model assumes Access sits in front, and the
+   dashboard's own sign-in screen is a demo gate (password `demo`, a `localStorage` flag) that
+   stops nobody. Connecting Pages to a public hostname before this is settled leaves publish,
+   upload and delete open to anyone. Both options are written up in `HANDOVER-OPERATIONS.md` §1.
 3. **Deploy hook** (Phase 4). The admin's Publish button is built; it needs `DEPLOY_HOOK_URL`
    set as a Pages secret, otherwise it saves the snapshot and warns that nothing rebuilt.
-4. **Handover guide** for the client (Phase 5).
+4. ~~**Handover guide** for the client (Phase 5).~~ **DONE (2026-07-29).** Two documents:
+   `HANDOVER-CLIENT.md` (plain-language manual for Printopack staff, safe to send as it is) and
+   `HANDOVER-OPERATIONS.md` (internal runbook: provisioning state, the login blocker, free-tier
+   limits, route reference, recovery). The client guide was written against the real admin UI, so
+   its wording matches what is actually on screen.
 5. **Domain cutover** (later): GoDaddy DNS - add `www` CNAME + apex forward; email and `api`
    untouched.
 
 ## Phase 3 tail, page wiring: DONE (2026-07-26)
 Every page now reads its content from the database. Nothing a client would reasonably want to
 change is left hardcoded, apart from the navigation, which is a deliberate decision (below).
+
+> **Correction (2026-07-29).** The sentence above was not true when it was written. An audit of
+> every `collection()` call against the admin's models found two of the twelve collections were
+> not read by any page, so editing them in the dashboard changed nothing on the site:
+>
+> - **`careers`: FIXED.** `careers.astro` carried its own hardcoded array of three roles. It now
+>   reads `collection('careers')` and honours the Status field. Details below.
+> - **`products`: FIXED.** The admin had a Products model that no page rendered. `/products/[slug]`
+>   now lists the products in its group. Details below.
+
+## Careers wired to the dashboard (2026-07-29)
+The Careers page is now driven entirely by the admin, and the model gained the fields the page
+needed but never had:
+
+- **New admin fields:** `locationAr` (the location was English-only, so Arabic visitors saw
+  "Jeddah, KSA" in a right-to-left sentence), plus `summary` / `summaryAr` (the page has always
+  had a summary paragraph; the dashboard had no field for it).
+- **Requirements are one per line**, English and Arabic paired by position, so a half-translated
+  list still renders one bullet per requirement instead of falling back to English wholesale.
+  The admin field hints now say so.
+- **Department and Type** stay single English dropdowns in the admin; their Arabic is a lookup in
+  the page, so the client does not retype a translation for every role.
+- **Status is honoured.** `job-03` (Sales Account Manager) is `draft` in the baseline, so the page
+  now shows two roles where it previously showed three. Flip it to `published` in the dashboard to
+  bring it back. This is the draft mechanism working, not a regression.
+- The richer copy that lived in the hardcoded array (summaries and three requirements per role, in
+  both languages) was migrated into `db/seed.json` rather than discarded, and `db/seed.sql` was
+  regenerated from it.
+
+## Products wired to the dashboard (2026-07-29)
+The admin's Products model now has a surface. `/products/[slug]` lists the products belonging to
+that group, under the group narrative and above the Printopack Standard band.
+
+- **Matching:** the model's "Group" field is a dropdown built from the product groups, so it
+  stores the group's **English name**, and the page matches on that. No new field, no new route.
+- **"Visible on site"** hides a product without deleting it. Anything not explicitly set to
+  `false` stays visible, so a newly created product does not silently vanish before the client
+  has touched the dropdown. Verified end to end by flipping one product and rebuilding.
+- **The section renders only when the group has products.** Nineteen of twenty groups are empty
+  today, and an empty band on all of them would be noise. It appears on its own as content lands.
+- **No photograph yet is a designed state, not a broken one:** the card falls back to the
+  product's initials on a cream tile, the same idea as the team page's monogram.
+- **Card:** image or monogram, bilingual name, bilingual description, "Price on request", and an
+  Enquire link whose mailto subject names both the product and its group, so an enquiry arrives
+  already identified. Catalogue and enquiry only, no cart, consistent with the rest of the site.
+- **Sample data:** 4 real bag formats were seeded into "Chips & Snacks" so the feature is
+  reviewable while the real catalogue is client-gated. They carry no image on purpose. Flagged in
+  `PRODUCTION_TODO.md` for replacement.
+
+With this, **all twelve admin collections are read by the site.** No model in the dashboard writes
+to nothing any more.
 
 - [x] **Footer**: company details (phone / email / address / company name) now read the editable
       `settings`, and the regional-offices strip is built from the offices collection. The contact

@@ -30,6 +30,12 @@ lines, not the surrounding content.
   field on those records once Printopack supplies real photographs, or leave the field empty
   and the initials placeholder takes over on its own.
 
+## Superseded: the four sample products (2026-07-29)
+An earlier session added `prod-01` to `prod-04` in Chips & Snacks so the new product list had
+something to show. They are gone: Amal's approved taxonomy landed on 2026-08-03 and fills the
+collection with all 73 real sub-sections, so the samples are no longer needed and Chips &
+Snacks carries its six real items instead.
+
 ## Other pre-production items
 - Real certificates are now live (from `Desktop\printopack-data`): BRCGS + ISO 22000 badges on Quality/Certificates; ISO 14001 + ISO 45001 badges + the real Mowaamah 2025 certificate (links to `/downloads/mowaamah-certificate-2025.pdf`) on Social Responsibility. The old `public/images/cert-brcgs.jpg` is now unreferenced (safe to delete). If the client sends full ISO/BRCGS certificate documents, swap the badge images for the actual certificate scans.
 - Product catalogue PDF is live at `/downloads/printopack-catalogue.pdf` (Products page "Download our catalogue"). Replace if the client issues a newer edition.
