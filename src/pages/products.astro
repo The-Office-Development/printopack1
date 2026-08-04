@@ -3,7 +3,7 @@ import Base from '../layouts/Base.astro';
 import Counter from '../components/Counter.astro';
 import Bi from '../components/Bi.astro';
 import { categories, filters } from '../data/products';
-import { stats } from '../lib/content';
+import { stats, collection } from '../lib/content';
 const year = new Date().getFullYear();
 
 // Products (Nasser's Page 3). Catalogue-and-enquire model: browse product groups, open
@@ -39,18 +39,14 @@ const content = {
   formats: {
     eyebrow: { en: "Formats", ar: "الأشكال" },
     title: { en: "Bag and pouch formats we produce.", ar: "أشكال الأكياس والعبوات التي نُنتجها." },
-    items: [
-      { en: "Pillow Bags", ar: "أكياس وسادية" },
-      { en: "Gusseted Bags", ar: "أكياس بجوانب مطويّة" },
-      { en: "Center Seal Bags", ar: "أكياس بلحام مركزي" },
-      { en: "Zipper Bags", ar: "أكياس بسحّاب" },
-      { en: "Stand-up Pouches", ar: "عبوات واقفة" },
-      { en: "Handle Bags", ar: "أكياس بمقبض" },
-    ],
+    // The formats themselves are admin-managed, so Printopack can add or drop one.
+    items: collection('formats').map((f) => ({ en: f.title, ar: f.titleAr || f.title })),
   },
   howto: {
     eyebrow: { en: "How we work", ar: "كيف نعمل" },
     title: { en: "Made to order, offered by consultation.", ar: "يُصنع حسب الطلب، ويُقدَّم بالاستشارة." },
+    // Static on purpose: how Printopack takes an order does not change, so it stays in the
+    // page rather than becoming another thing the client has to look after.
     steps: [
       { n: "01", t: { en: "Share your brief", ar: "شاركونا موجزكم" }, d: { en: "Format, structure, barrier needs and artwork. We advise on the right laminate from the start.", ar: "الشكل والتركيب واحتياجات الحاجز والتصميم. ننصحكم بالتصفيح المناسب من البداية." } },
       { n: "02", t: { en: "We develop and proof", ar: "نطوّر ونجهّز البروفة" }, d: { en: "Cylinders engraved, structure built and printed, refined until it meets the Printopack standard.", ar: "تُحفر الأسطوانات ويُبنى التركيب ويُطبع، ويُنقّح حتى يبلغ معيار برنتوباك." } },
@@ -112,7 +108,7 @@ const c = content;
       <div class="cat-main">
         <div class="cat-grid">
           {categories.map((cat) => (
-            <article class="prod2" data-group={cat.group}>
+            <article class={"prod2" + (cat.isMeasurements ? " prod2-chart" : "")} data-group={cat.group}>
               <a href={`/products/${cat.slug}`} class="prod2-img" aria-label={cat.name.en}>
                 <img src={cat.img} alt={cat.name.en} loading="lazy" decoding="async" />
               </a>
@@ -212,6 +208,11 @@ const c = content;
   .prod2:hover{border-color:var(--sand);box-shadow:0 24px 44px rgba(14,35,64,.07)}
   .prod2-img{display:block;aspect-ratio:4/3;background:var(--cream);overflow:hidden}
   .prod2-img img{width:100%;height:100%;object-fit:contain;padding:22px;mix-blend-mode:multiply}
+  /* A measurements cover is a size chart, so it wants every pixel it can get. The card keeps
+     the exact shape of the other 21: same column, same 4/3 frame. Only the inset comes off,
+     which is the whole of what can be gained without disturbing a grid that is deliberately
+     consistent across all 22 groups. */
+  .prod2-chart .prod2-img img{padding:4px}
   .prod2-body{display:flex;flex-direction:column;flex:1;padding:22px 22px 24px}
   .prod2-name{font-size:clamp(19px,1.5vw,22px);margin-bottom:9px}
   .prod2-name a:hover{color:var(--gold)}

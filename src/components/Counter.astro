@@ -36,12 +36,23 @@ const { prefix = "", value, suffix = "", label, labelAr = null, from = null } = 
     if (Number.isNaN(to)) return;
     const from = el.dataset.from != null ? parseInt(el.dataset.from, 10) : 0;
     if (reduce || Number.isNaN(from)) { el.textContent = String(to); return; }
+    // A counter that starts from a real number (1997) has a starting value worth reading;
+    // one that starts from 0 does not.
+    const fromMeaningful = el.dataset.from != null && from !== 0;
     el.textContent = String(from);
     const run = (t0) => {
-      const dur = 2800; // slow count
+      // Pace the count by how far it has to travel, not by a flat duration. A flat one
+      // made the years counter (1997 to this year) churn four digits at the same speed
+      // as "10 offices" ticking gently, which is the counter the client singled out as
+      // too fast. ~150ms per step, floored at 2.6s so short counts still read as a count
+      // and capped at 6s so nothing outstays its welcome.
+      const dur = Math.min(6000, Math.max(2600, Math.abs(to - from) * 150));
       const step = (now) => {
         const p = Math.min((now - t0) / dur, 1);
-        const eased = 1 - Math.pow(1 - p, 3);
+        // Counters starting from a real year ease IN: they dwell on the starting number long
+        // enough to read it, then gather speed. Counters starting from 0 keep the ease-out,
+        // since nobody needs to read the 0 and arriving gently on the real figure suits them.
+        const eased = fromMeaningful ? Math.pow(p, 3) : 1 - Math.pow(1 - p, 3);
         el.textContent = String(Math.round(from + (to - from) * eased));
         if (p < 1) requestAnimationFrame(step);
         else el.textContent = String(to);

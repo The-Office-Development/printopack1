@@ -3,6 +3,8 @@ import Base from '../layouts/Base.astro';
 import Counter from '../components/Counter.astro';
 import Bi from '../components/Bi.astro';
 import { stats } from '../lib/content';
+import { posts } from '../data/news';
+import { mainPartners } from '../data/partners';
 
 // Years in the market: computed live so it is always current (climbs from the founding
 // year the client sets in the admin).
@@ -14,10 +16,10 @@ const year = new Date().getFullYear();
 // whatever is here. Bilingual fields are { en, ar } (natural fusha, not literal).
 //
 // STRUCTURE (Nasser's brief): the homepage is a still "magazine cover" that
-// welcomes entry; scrolling down reveals the "الفهرس / contents": a horizontal
-// shelf of seven routable section covers. Each card opens that section's page;
-// you side-scroll through the rest. Photos are section-cover placeholders in the
-// right shape, swapped for Amal's real assets via the admin.
+// welcomes entry; scrolling down reveals the "الفهرس / contents": all seven routable
+// section covers laid out at once, four over three. Each card opens that section's
+// page. Photos are section-cover placeholders in the right shape, swapped for Amal's
+// real assets via the admin.
 const content = {
   cover: {
     eyebrow: { en: `Since ${stats.founded} · Jeddah, Saudi Arabia`, ar: `منذ عام ${stats.founded} · جدة، المملكة العربية السعودية` },
@@ -37,10 +39,9 @@ const content = {
     eyebrow: { en: "The contents", ar: "الفهرس" },
     title: { en: "Explore Printopack", ar: "استكشف برنتوباك" },
     lede: {
-      en: "Seven sections, one factory. Open any part of the company, then move sideways through the rest.",
-      ar: "سبعة أقسام، مصنع واحد. افتح أي جزء من الشركة، ثم تنقّل جانبياً عبر البقية.",
+      en: "Seven sections, one factory. Every part of the company, laid out in full.",
+      ar: "سبعة أقسام، مصنع واحد. أجزاء الشركة كاملةً أمامكم.",
     },
-    swipe: { en: "Swipe to see all seven", ar: "اسحب لعرض الأقسام السبعة" },
     open: { en: "Open section", ar: "افتح القسم" },
     // The seven main sections, in Nasser's order. Each routes to its landing page.
     cards: [
@@ -48,8 +49,8 @@ const content = {
       { href: "/quality",  img: "/images/factory-engraving.jpg",  name: { en: "Quality System",   ar: "نظام الجودة" },      desc: { en: "Certificates, quality assurance and in-house lab testing.", ar: "الشهادات وضمان الجودة والفحص المخبري الداخلي." } },
       { href: "/products", img: "/images/lineup.jpg",             name: { en: "Products",         ar: "المنتجات" },        desc: { en: "Flexible packaging for every category, made to order.", ar: "تغليف مرن لكل فئة، يُصنع حسب الطلب." } },
       { href: "/partners", img: "/images/factory-bagging.jpg",    name: { en: "Success Partners", ar: "شركاء النجاح" },    desc: { en: `The brands we print for, across ${stats.countries} countries.`, ar: `العلامات التي نطبع لها في أكثر من ${stats.countries} دولة.` } },
-      { href: "/careers",  img: "/images/dept-3.jpg",             name: { en: "Careers",          ar: "الوظائف" },         desc: { en: "Open roles and how to join the Printopack team.", ar: "الوظائف المتاحة وكيفية الانضمام إلى فريق برنتوباك." } },
       { href: "/news-gallery", img: "/images/dept-1.jpg",         name: { en: "News & Gallery",   ar: "الأخبار والمعرض" }, desc: { en: "Latest news and events, plus our photo and video gallery.", ar: "أحدث الأخبار والفعاليات ومعرض الصور والفيديو." } },
+      { href: "/careers",  img: "/images/dept-3.jpg",             name: { en: "Careers",          ar: "الوظائف" },         desc: { en: "Open roles and how to join the Printopack team.", ar: "الوظائف المتاحة وكيفية الانضمام إلى فريق برنتوباك." } },
       { href: "/contact",  img: "/images/factory.jpg",            name: { en: "Contact",          ar: "التواصل" },         desc: { en: "Reach our head office and regional offices across the region.", ar: "تواصل مع مقرنا الرئيسي ومكاتبنا الإقليمية في المنطقة." } },
     ],
   },
@@ -58,11 +59,18 @@ const content = {
     { prefix: "+", value: stats.countries, label: "Countries served", labelAr: "دولة حول العالم" },
     { value: stats.offices, label: "Regional offices", labelAr: "مكاتب إقليمية" },
     { prefix: "~", value: stats.employees, label: "Team members", labelAr: "من أفراد الفريق" },
+    { value: stats.avgExp, label: "Avg. years per employee", labelAr: "متوسط سنوات الخبرة للموظف" },
+    // Total experience closes the row, at the client's request.
+    { prefix: "+", value: stats.totalExp, label: "Years of combined experience", labelAr: "سنة خبرة مجتمعة" },
   ],
   partners: {
     eyebrow: { en: "Success partners", ar: "شركاء النجاح" },
     title: { en: "Trusted by leading brands", ar: "موضع ثقة العلامات الرائدة" },
-    logos: Array.from({ length: 20 }, (_, i) => ({ img: `/images/clients/client-${i + 1}.png`, alt: "Client brand" })),
+    // The main partners, logo + name + country, the same card the Success Partners page
+    // uses. This was a hardcoded run of client-1..20.png, so a partner added or removed in
+    // the admin never reached the home page. Which partners count as "main" is the client's
+    // choice, made in the admin; the home page always shows exactly that set.
+    logos: mainPartners.map((p) => ({ img: p.logo, name: p.name, country: p.country })),
     counters: [
       { prefix: "+", value: stats.countries, label: "Countries served", labelAr: "دولة حول العالم" },
       { prefix: "+", value: stats.partners, label: "Brand partners", labelAr: "علامة شريكة" },
@@ -73,13 +81,10 @@ const content = {
     title: { en: "The latest from Printopack", ar: "أحدث ما لدى برنتوباك" },
     link: { en: "All news", ar: "كل الأخبار" },
     read: { en: "Read more", ar: "اقرأ المزيد" },
-    cat: { en: "General Information", ar: "معلومات عامة" },
-    // The three latest real posts from api.printopack.com.sa (blogs), with their real images.
-    items: [
-      { date: "27 Aug 2023", title: { en: "Pioneering Exceptional Packaging Solutions Since 1997: Your Path to Elevated Product Presentation", ar: "ريادة في حلول التغليف الاستثنائية منذ عام 1997: طريقك إلى عرضٍ أرقى لمنتجاتك" }, img: "/images/news/news-1.png", href: "/news" },
-      { date: "14 Aug 2023", title: { en: "Elevate Your Beverage Brand with Our Expertise in Flexible Packaging Solutions", ar: "ارتقِ بعلامتك للمشروبات مع خبرتنا في حلول التغليف المرن" }, img: "/images/news/news-2.jpeg", href: "/news" },
-      { date: "06 May 2023", title: { en: "Discover the Benefits of Flexible Packaging: Durability, Versatility and Eco-Friendliness", ar: "اكتشف مزايا التغليف المرن: المتانة والتنوّع والصداقة البيئية" }, img: "/images/news/news-3.png", href: "/news" },
-    ],
+    // The three most recent posts, straight from the content store, so publishing a post
+    // in the admin changes the home page too. These used to be copied out by hand, which
+    // meant the home page froze on three posts from 2023 no matter what was published.
+    items: posts.slice(0, 3),
   },
   cta: {
     eyebrow: { en: "Let's talk packaging", ar: "لنتحدّث عن التغليف" },
@@ -117,22 +122,14 @@ const pad = (n: number) => String(n).padStart(2, "0");
           <h2 style="margin-top:14px"><Bi en={c.contents.title.en} ar={c.contents.title.ar} /></h2>
           <p class="lede" style="margin-top:16px"><Bi en={c.contents.lede.en} ar={c.contents.lede.ar} /></p>
         </div>
-        <div class="shelf-navs" aria-hidden="false">
-          <button class="shelf-nav prev" aria-label="Previous sections">
-            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5"><path d="M15 5l-7 7 7 7"/></svg>
-          </button>
-          <button class="shelf-nav next" aria-label="More sections">
-            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5"><path d="M9 5l7 7-7 7"/></svg>
-          </button>
-        </div>
       </div>
     </div>
 
-    <!-- Horizontal shelf. User-driven side-scroll (no auto-motion): drag, snap + swipe
-         on touch, arrow buttons, every card tabbable for keyboard routing. The gutter
-         lives on the wrapper so the track's own width fits a whole number of cards. -->
+    <!-- All seven sections on the page at once, as an editorial contents index: a row of
+         four over a row of three, both rows flush to the edges. It replaced a side-scroll
+         shelf, which showed four and hid three behind a swipe. -->
     <div class="shelf-wrap wrap-wide">
-      <ul class="shelf">
+      <ul class="contents-grid">
         {c.contents.cards.map((s, i) => (
           <li>
             <a href={s.href} class="fcard" draggable="false">
@@ -149,7 +146,6 @@ const pad = (n: number) => String(n).padStart(2, "0");
         ))}
       </ul>
     </div>
-    <div class="wrap-wide"><span class="shelf-hint"><Bi en={c.contents.swipe.en} ar={c.contents.swipe.ar} /></span></div>
   </section>
 
   <!-- ============ COUNTERS ============ -->
@@ -166,11 +162,26 @@ const pad = (n: number) => String(n).padStart(2, "0");
         <span class="eyebrow plain" style="color:var(--gold)"><Bi en={c.partners.eyebrow.en} ar={c.partners.eyebrow.ar} /></span>
         <h2 style="margin-top:14px"><Bi en={c.partners.title.en} ar={c.partners.title.ar} /></h2>
       </div>
-      <div class="logo-grid">
+      <!-- Same card as the Success Partners page: logo, then name and country when the
+           admin has filled them, so the two walls never drift apart. -->
+      <ul class="logo-grid">
         {c.partners.logos.map((l) => (
-          <span class="logo"><img src={l.img} alt={l.alt} loading="lazy" /></span>
+          <li class="pcard">
+            <span class="pcard-logo"><img src={l.img} alt={l.name.en || "Client brand"} loading="lazy" decoding="async" /></span>
+            <span class="pcard-meta">
+              {(l.name.en || l.name.ar) && (
+                <span class="pcard-name"><Bi en={l.name.en} ar={l.name.ar} /></span>
+              )}
+              {(l.country.en || l.country.ar) && (
+                <span class="pcard-country">
+                  <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" aria-hidden="true"><path d="M12 21s7-5.4 7-11a7 7 0 1 0-14 0c0 5.6 7 11 7 11z"/><circle cx="12" cy="10" r="2.5"/></svg>
+                  <Bi en={l.country.en} ar={l.country.ar} />
+                </span>
+              )}
+            </span>
+          </li>
         ))}
-      </div>
+      </ul>
       <div class="partner-counters">
         {c.partners.counters.map((n) => <Counter {...n} />)}
       </div>
@@ -189,9 +200,9 @@ const pad = (n: number) => String(n).padStart(2, "0");
       </div>
       <div class="news-grid">
         {c.news.items.map((n) => (
-          <a href={n.href} class="card news-card">
+          <a href="/news" class="card news-card">
             <span class="card-img news-img"><img src={n.img} alt="" loading="lazy" decoding="async" /></span>
-            <span class="news-meta"><Bi en={c.news.cat.en} ar={c.news.cat.ar} /> · <span dir="ltr">{n.date}</span></span>
+            <span class="news-meta"><Bi en={n.cat.en} ar={n.cat.ar} /> · <span dir="ltr">{n.date}</span></span>
             <h3 class="news-title"><Bi en={n.title.en} ar={n.title.ar} /></h3>
             <span class="link-line news-read"><Bi en={c.news.read.en} ar={c.news.read.ar} /></span>
           </a>
@@ -228,33 +239,27 @@ const pad = (n: number) => String(n).padStart(2, "0");
   .contents{padding-bottom:clamp(56px,7vw,90px)}
   .contents-head{display:flex;justify-content:space-between;align-items:flex-end;gap:24px}
   .contents-head .lede{max-width:56ch}
-  .shelf-navs{display:flex;gap:10px;flex:none}
-  .shelf-nav{width:52px;height:52px;border:1px solid var(--line);border-radius:50%;display:inline-flex;align-items:center;justify-content:center;color:var(--navy);background:var(--paper)}
-  .shelf-nav:hover:not(:disabled){background:var(--navy);color:var(--paper);border-color:var(--navy)}
-  .shelf-nav:disabled{opacity:.32;cursor:default}
-  .shelf-nav svg{width:20px;height:20px}
 
   .shelf-wrap{margin-top:clamp(30px,4vw,46px)}
-  /* The track shows a whole number of cards (--n) that EXACTLY fill its width, so a
-     card is never left half-shown: no clipping, no fade needed. Card width is derived
-     from --n and the gap, so the last card always ends flush with the edge. Mandatory
-     snap re-aligns to whole cards after any scroll or drag; grab-drag with a mouse. */
-  .shelf{
-    --n:4;--gap:22px;
-    display:flex;gap:var(--gap);overflow-x:auto;scroll-snap-type:x mandatory;
-    -webkit-overflow-scrolling:touch;scrollbar-width:none;padding-block:6px;cursor:grab;
+  /* Twelve columns so seven cards make two flush rows: four of span 3, then three of
+     span 4. Both rows end level with the page edges, and no card is left half-shown or
+     hidden behind a swipe. */
+  .contents-grid{display:grid;grid-template-columns:repeat(12,1fr);gap:22px}
+  .contents-grid > li{grid-column:span 3}
+  .contents-grid > li:nth-child(n+5){grid-column:span 4}
+  .fcard,.fcard img{-webkit-user-drag:none}
+  /* Two up: six cards pair off and the seventh runs full width to close the block. */
+  @media(max-width:1140px){
+    .contents-grid > li,.contents-grid > li:nth-child(n+5){grid-column:span 6}
+    .contents-grid > li:nth-child(7){grid-column:span 12}
   }
-  .shelf::-webkit-scrollbar{display:none}
-  .shelf.grabbing{cursor:grabbing;user-select:none}
-  .shelf.no-snap{scroll-snap-type:none}
-  .shelf > li{flex:0 0 calc((100% - (var(--n) - 1) * var(--gap)) / var(--n));scroll-snap-align:start}
-  /* keep cards clickable during/after a drag (no pointer-events:none, which would
-     break the click target); just stop the browser's native link/image drag. */
-  .fcard,.fcard img{-webkit-user-drag:none;user-select:none}
-  @media(max-width:1140px){.shelf{--n:3}}
-  @media(max-width:840px){.shelf{--n:2}}
-  @media(max-width:560px){.shelf{--n:1;--gap:16px}}
-  .fcard{position:relative;display:block;height:clamp(420px,42vw,520px);border-radius:var(--radius);overflow:hidden;background:var(--navy-deep);border:1px solid var(--line)}
+  @media(max-width:640px){
+    .contents-grid{gap:16px}
+    .contents-grid > li,.contents-grid > li:nth-child(n+5),.contents-grid > li:nth-child(7){grid-column:span 12}
+  }
+  /* Shorter than the old shelf card: two rows of the previous height would have run to
+     roughly a thousand pixels of contents index before the counters. */
+  .fcard{position:relative;display:block;height:clamp(300px,26vw,380px);border-radius:var(--radius);overflow:hidden;background:var(--navy-deep);border:1px solid var(--line)}
   .fcard-media{position:absolute;inset:0}
   .fcard-media img{width:100%;height:100%;object-fit:cover;filter:brightness(1.1) saturate(1.08)}
   .fcard-scrim{position:absolute;inset:0;background:linear-gradient(0deg,rgba(9,24,41,.94) 0%,rgba(9,24,41,.72) 26%,rgba(9,24,41,.28) 52%,transparent 78%)}
@@ -270,24 +275,37 @@ const pad = (n: number) => String(n).padStart(2, "0");
   .fcard:hover::after{border-color:var(--gold)}
   [dir="rtl"] .fcard-arrow{display:inline-block;transform:scaleX(-1)}
 
-  /* touch-only hint: irrelevant to mouse users, who get the arrows */
-  .shelf-hint{display:none;margin-top:18px;font-family:var(--display);font-size:11px;letter-spacing:.16em;text-transform:uppercase;color:var(--faint)}
-  @media(pointer:coarse){.shelf-hint{display:block}}
-
   /* ---------- counters ---------- */
   .counters{padding-block:clamp(48px,6vw,72px)}
-  .counters-grid{display:grid;grid-template-columns:repeat(4,1fr);gap:30px}
+  /* Three across, so the six counters make two even rows. Four across would have left
+     the last two stranded on a row of their own. */
+  .counters-grid{display:grid;grid-template-columns:repeat(3,1fr);gap:44px 30px}
 
   /* ---------- partners ---------- */
-  .logo{position:relative;background:var(--paper);aspect-ratio:16/9}
-  .logo-grid{display:grid;grid-template-columns:repeat(5,1fr);gap:1px;background:var(--line);border:1px solid var(--line)}
-  .logo img{position:absolute;inset:0;margin:auto;max-width:calc(100% - 52px);max-height:calc(100% - 52px);mix-blend-mode:multiply}
+  /* Partner cards, matching the Success Partners wall: logo, then name and country. The
+     meta block collapses when the admin has filled neither, so an all-logo state still
+     reads as a clean grid. Four across rather than five, because the name and country
+     need the extra width. */
+  .logo-grid{display:grid;grid-template-columns:repeat(4,1fr);gap:1px;background:var(--line);border:1px solid var(--line)}
+  .pcard{background:var(--paper);display:flex;flex-direction:column}
+  .pcard-logo{position:relative;aspect-ratio:16/10;display:block}
+  .pcard-logo img{position:absolute;inset:0;margin:auto;max-width:calc(100% - 24px);max-height:calc(100% - 26px);mix-blend-mode:multiply}
+  .pcard:hover .pcard-logo img{filter:grayscale(1);opacity:.55}
+  .pcard-meta:empty{display:none}
+  .pcard-meta{display:flex;flex-direction:column;gap:5px;padding:0 18px 18px;margin-top:-4px}
+  .pcard-name{font-family:var(--display);font-size:16px;font-weight:400;color:var(--ink);line-height:1.2}
+  .pcard-country{display:inline-flex;align-items:center;gap:7px;font-size:12.5px;letter-spacing:.02em;color:var(--muted)}
+  .pcard-country svg{width:14px;height:14px;color:var(--gold);flex:none}
   .logo:hover img{filter:grayscale(1);opacity:.55}
   .partner-counters{display:flex;justify-content:center;gap:clamp(40px,8vw,120px);margin-top:clamp(44px,6vw,66px)}
 
   /* ---------- news ---------- */
   .split-head{display:flex;justify-content:space-between;align-items:flex-end;max-width:none}
-  .news-grid{display:grid;grid-template-columns:repeat(3,1fr);gap:34px;align-items:stretch}
+  /* Reflows on its own instead of holding three columns down to 920px and then snapping
+     to one. Between roughly 700 and 920px the fixed three-column version squeezed each
+     card to ~200px, which is what the client saw as "not responsive". auto-fit drops to
+     two columns and then one at the widths where the cards actually stop fitting. */
+  .news-grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(290px,1fr));gap:34px;align-items:stretch}
   .news-card{display:flex;flex-direction:column}
   .news-img{aspect-ratio:3/2}
   .news-meta{display:block;margin-top:18px;font-family:var(--display);font-size:12px;letter-spacing:.14em;text-transform:uppercase;color:var(--gold)}
@@ -296,14 +314,16 @@ const pad = (n: number) => String(n).padStart(2, "0");
 
   @media(max-width:1000px){
     .counters-grid{grid-template-columns:repeat(2,1fr);gap:36px 24px}
-    .news-grid{grid-template-columns:1fr;gap:40px}
+    /* no column override here: auto-fit above already drops to two columns and then one,
+       at the widths where the cards stop fitting. Forcing 1fr from 1000px down was what
+       gave tablets one enormous card per row. */
+    .news-grid{gap:40px}
     .split-head{flex-direction:column;align-items:flex-start;gap:16px}
     .logo-grid{grid-template-columns:repeat(3,1fr)}
     /* stack the head, but KEEP the arrows: at these widths there is no visible
        scrollbar and a mouse cannot swipe, so the arrows are the only way to reach
        cards 4-7. They sit just under the intro. */
     .contents-head{flex-direction:column;align-items:flex-start;gap:22px}
-    .shelf-nav{width:48px;height:48px}
   }
   @media(max-width:560px){
     .counters-grid{grid-template-columns:1fr}
@@ -313,75 +333,5 @@ const pad = (n: number) => String(n).padStart(2, "0");
   }
 </style>
 
-<script>
-  // Contents shelf: RTL-aware side-scroll by one card per arrow click. User-driven
-  // only; no auto-play. Smooth scroll is disabled for reduced-motion visitors.
-  const shelf = document.querySelector<HTMLElement>('.shelf');
-  const prev = document.querySelector<HTMLButtonElement>('.shelf-nav.prev');
-  const next = document.querySelector<HTMLButtonElement>('.shelf-nav.next');
-  if (shelf && prev && next) {
-    const reduce = matchMedia('(prefers-reduced-motion: reduce)').matches;
-    const isRtl = () => document.documentElement.dir === 'rtl';
-    const stepAmount = () => {
-      const card = shelf.querySelector<HTMLElement>('li');
-      const gap = parseFloat(getComputedStyle(shelf).columnGap) || 22;
-      return card ? card.getBoundingClientRect().width + gap : 360;
-    };
-    const go = (dir: number) => {
-      const signed = dir * stepAmount() * (isRtl() ? -1 : 1);
-      shelf.scrollBy({ left: signed, behavior: reduce ? 'auto' : 'smooth' });
-    };
-    prev.addEventListener('click', () => go(-1));
-    next.addEventListener('click', () => go(1));
-
-    // Disable the arrow at each true end. scrollLeft is negative in RTL, so abs()===0
-    // is the logical start in both directions.
-    const update = () => {
-      const max = shelf.scrollWidth - shelf.clientWidth - 2;
-      const pos = Math.abs(shelf.scrollLeft);
-      prev.disabled = pos <= 2;
-      next.disabled = pos >= max;
-    };
-    shelf.addEventListener('scroll', update, { passive: true });
-    window.addEventListener('resize', update);
-    document.querySelector('.lang')?.addEventListener('click', () => setTimeout(update, 0));
-    update();
-
-    // Click-and-drag to scroll with a mouse (touch keeps native momentum scroll).
-    // Native snap is disabled while dragging; on release we glide gently onto the
-    // nearest whole card, then re-arm snap once settled, so it never yanks/springs.
-    let down = false, startX = 0, startScroll = 0, moved = false, snapTimer = 0;
-    shelf.addEventListener('pointerdown', (e) => {
-      if (e.pointerType === 'touch') return;
-      clearTimeout(snapTimer);
-      down = true; moved = false; startX = e.clientX; startScroll = shelf.scrollLeft;
-      shelf.classList.add('grabbing', 'no-snap');
-    });
-    window.addEventListener('pointermove', (e) => {
-      if (!down) return;
-      const dx = e.clientX - startX;
-      if (Math.abs(dx) > 4) moved = true;
-      shelf.scrollLeft = startScroll - dx;
-    });
-    const release = () => {
-      if (!down) return;
-      down = false;
-      shelf.classList.remove('grabbing');
-      if (moved) {
-        const step = stepAmount();
-        const target = Math.round(shelf.scrollLeft / step) * step;
-        shelf.scrollTo({ left: target, behavior: reduce ? 'auto' : 'smooth' });
-        // re-arm native snap only once the glide has settled: no second jump
-        snapTimer = window.setTimeout(() => { if (!down) shelf.classList.remove('no-snap'); }, reduce ? 0 : 420);
-      } else {
-        shelf.classList.remove('no-snap');
-      }
-    };
-    window.addEventListener('pointerup', release);
-    window.addEventListener('pointercancel', release);
-    // Swallow the click that follows a real drag so it does not open a section.
-    shelf.addEventListener('click', (e) => {
-      if (moved) { e.preventDefault(); e.stopPropagation(); moved = false; }
-    }, true);
-  }
-</script>
+<!-- The contents index needs no script now that all seven sections are laid out at once:
+     the side-scroll shelf's arrows, drag-to-scroll and snap logic all went with it. -->

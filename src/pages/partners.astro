@@ -3,7 +3,9 @@ import Base from '../layouts/Base.astro';
 import Counter from '../components/Counter.astro';
 import Bi from '../components/Bi.astro';
 import { reachMap } from '../data/reach-map';
-import { collection, stats } from '../lib/content';
+import { officesByCc, activeCcs } from '../data/offices';
+import { partners, partnerCountries } from '../data/partners';
+import { stats } from '../lib/content';
 const year = new Date().getFullYear();
 
 // Success Partners (Nasser's Page 4). His brief: client names + logos + country, a
@@ -17,13 +19,12 @@ const year = new Date().getFullYear();
 // from Printopack's real markets as placeholders and corrected per client via the admin
 // (see `.pnote`, a build-only helper to strip before production).
 
-// The 20 client logos + names/countries come from the content store (admin-managed).
-// The grid renders whatever the admin sets: logo, name and country per card.
-const partners = collection('partners').map((p) => ({
-  logo: p.image,
-  name: { en: p.name, ar: p.nameAr },
-  country: { en: p.country, ar: p.countryAr },
-}));
+// The client logos + names/countries come from the content store (admin-managed), via the
+// shared module the home page's main-partners strip also uses.
+//
+// The map doubles as the wall's country filter: selecting a market highlights it, shows that
+// office, AND narrows the wall to that country's partners. A country with an office but no
+// partners still selects (the office is the point), the wall just says so.
 
 const content = {
   meta: {
@@ -53,6 +54,13 @@ const content = {
       en: "Partner names and countries shown here are placeholders; Printopack fills in each partner through the site's admin.",
       ar: "أسماء الشركاء ودولهم المعروضة هنا عناصر مبدئية؛ وتُدخل برنتوباك بيانات كل شريك عبر لوحة تحكم الموقع.",
     },
+    // Shown once the map filters the wall.
+    filterIn: { en: "in", ar: "في" },
+    showAll: { en: "Show all partners", ar: "عرض جميع الشركاء" },
+    empty: {
+      en: "No partners listed for this market yet. Its office is shown on the map below.",
+      ar: "لا شركاء مدرجين لهذا السوق بعد. ويظهر مكتبه على الخريطة أدناه.",
+    },
   },
   // "Where we deliver": interactive regional map. Click a country (or its chip) to
   // highlight it and see that office, with an optional route through to Contact. The
@@ -67,22 +75,8 @@ const content = {
     },
     hint: { en: "Select a country to see its office", ar: "اختر دولة لعرض مكتبها" },
     contact: { en: "Contact this office", ar: "تواصل مع هذا المكتب" },
-    // Keyed by the map's country codes. HQ carries its real address and phone; the six
-    // regional offices carry their real routing email (phone/address filled via admin).
-    offices: {
-      sa: { name: { en: "Saudi Arabia", ar: "المملكة العربية السعودية" }, role: { en: "Head Office", ar: "المقر الرئيسي" }, place: { en: "Industrial Area 5, Jeddah", ar: "المنطقة الصناعية 5، جدة" }, email: "info@printopack.com.sa", phone: "+966 12 608 1074" },
-      kw: { name: { en: "Kuwait", ar: "الكويت" }, role: { en: "Regional Office", ar: "مكتب إقليمي" }, place: { en: "", ar: "" }, email: "kuwait@printopack.com.sa", phone: "+965 97707578" },
-      jo: { name: { en: "Jordan", ar: "الأردن" }, role: { en: "Regional Office", ar: "مكتب إقليمي" }, place: { en: "Jordan & Iraq office", ar: "مكتب الأردن والعراق" }, email: "jordan@printopack.com.sa", phone: "+962 7 8570 6299" },
-      iq: { name: { en: "Iraq", ar: "العراق" }, role: { en: "Regional Office", ar: "مكتب إقليمي" }, place: { en: "Jordan & Iraq office", ar: "مكتب الأردن والعراق" }, email: "jordan@printopack.com.sa", phone: "+962 7 8570 6299" },
-      eg: { name: { en: "Egypt", ar: "مصر" }, role: { en: "Regional Office", ar: "مكتب إقليمي" }, place: { en: "", ar: "" }, email: "egypt@printopack.com.sa", phone: "+20 111 171 2221" },
-      sd: { name: { en: "Sudan", ar: "السودان" }, role: { en: "Regional Office", ar: "مكتب إقليمي" }, place: { en: "", ar: "" }, email: "sudan@printopack.com.sa", phone: "+966 55 421 9918" },
-      tn: { name: { en: "Tunisia", ar: "تونس" }, role: { en: "Regional Office", ar: "مكتب إقليمي" }, place: { en: "", ar: "" }, email: "tunisia@printopack.com.sa", phone: "+216 28534504" },
-      ly: { name: { en: "Libya", ar: "ليبيا" }, role: { en: "Regional Office", ar: "مكتب إقليمي" }, place: { en: "Tunisia & Libya office", ar: "مكتب تونس وليبيا" }, email: "tunisia@printopack.com.sa", phone: "+216 28534504" },
-      dz: { name: { en: "Algeria", ar: "الجزائر" }, role: { en: "Regional Office", ar: "مكتب إقليمي" }, place: { en: "", ar: "" }, email: "info-algeria@printopack.com.sa", phone: "+213 553038979" },
-      ma: { name: { en: "Morocco", ar: "المغرب" }, role: { en: "Regional Office", ar: "مكتب إقليمي" }, place: { en: "", ar: "" }, email: "moroccooffice@printopack.com.sa", phone: "+966 55 421 9918" },
-      ye: { name: { en: "Yemen", ar: "اليمن" }, role: { en: "Regional Office", ar: "مكتب إقليمي" }, place: { en: "", ar: "" }, email: "yemen@printopack.com.sa", phone: "+967 775299991" },
-      sy: { name: { en: "Syria", ar: "سوريا" }, role: { en: "Regional Office", ar: "مكتب إقليمي" }, place: { en: "", ar: "" }, email: "bsh_moneer@hotmail.com", phone: "+963 933431615" },
-    },
+    // From the shared src/data/offices.ts, built out of the admin-managed collection.
+    offices: officesByCc,
   },
   why: {
     eyebrow: { en: "Why brands stay", ar: "لماذا تبقى العلامات معنا" },
@@ -126,9 +120,19 @@ const c = content;
         <span class="eyebrow plain" style="color:var(--gold)"><Bi en={c.wall.eyebrow.en} ar={c.wall.eyebrow.ar} /></span>
         <h2 style="margin-top:14px"><Bi en={c.wall.title.en} ar={c.wall.title.ar} /></h2>
       </div>
+      <!-- Which country the map has selected, and the way back to the full wall. Hidden
+           until a filter is on, so the default view stays clean. -->
+      <div class="wall-filter" hidden>
+        <span class="wall-filter-text">
+          <span class="wall-filter-count"></span>
+          <span class="wall-filter-in"><Bi en={c.wall.filterIn.en} ar={c.wall.filterIn.ar} /></span>
+          <strong class="wall-filter-country"></strong>
+        </span>
+        <button class="wall-filter-clear" type="button"><Bi en={c.wall.showAll.en} ar={c.wall.showAll.ar} /></button>
+      </div>
       <ul class="pgrid">
         {partners.map((p) => (
-          <li class="pcard">
+          <li class="pcard" data-country={p.country.en}>
             <span class="pcard-logo"><img src={p.logo} alt={p.name.en || "Client brand"} loading="lazy" decoding="async" /></span>
             <span class="pcard-meta">
               {(p.name.en || p.name.ar) && (
@@ -144,6 +148,7 @@ const c = content;
           </li>
         ))}
       </ul>
+      <p class="wall-empty" hidden><Bi en={c.wall.empty.en} ar={c.wall.empty.ar} /></p>
       <!-- build-only helper: remove before production (see PRODUCTION_TODO.md) -->
       <p class="pnote"><Bi en={c.wall.note.en} ar={c.wall.note.ar} /></p>
     </div>
@@ -162,8 +167,14 @@ const c = content;
         <div class="mapwrap">
           <svg class="reach-map" viewBox={reachMap.viewBox} role="group" aria-label="Map of the markets Printopack serves" preserveAspectRatio="xMidYMid meet">
             <path class="rc-ctx" d={reachMap.context} aria-hidden="true" />
-            {Object.entries(reachMap.served).map(([cc, d]) => (
-              <path class="rc" d={d} data-cc={cc} tabindex="0" role="button" aria-label={c.reach.offices[cc].name.en} />
+            {activeCcs.map((cc) => (
+              <path class="rc" d={reachMap.paths[cc]} data-cc={cc} tabindex="0" role="button" aria-label={c.reach.offices[cc].name.en} />
+            ))}
+            {/* Bahrain (1.5px across) and Qatar (7.7px) are too narrow to hit at this scale,
+                so they also get a dot. Everything else, Kuwait included, is 12px or wider on
+                its narrow axis and stands on its own outline. */}
+            {activeCcs.filter((cc) => reachMap.markers[cc]).map((cc) => (
+              <circle class="rc rc-dot" cx={reachMap.markers[cc][0]} cy={reachMap.markers[cc][1]} r="0.85" data-cc={cc} tabindex="0" role="button" aria-label={c.reach.offices[cc].name.en} />
             ))}
           </svg>
           <div class="map-pop" id="map-pop" role="dialog" hidden></div>
@@ -177,9 +188,12 @@ const c = content;
             <svg class="chips-chevron" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" aria-hidden="true"><path d="M6 9l6 6 6-6"/></svg>
           </button>
           <div class="reach-chips" id="reach-chips" role="list">
-            {Object.entries(reachMap.served).map(([cc]) => (
+            {activeCcs.map((cc) => (
               <button class="reach-chip" data-cc={cc} role="listitem"><Bi en={c.reach.offices[cc].name.en} ar={c.reach.offices[cc].name.ar} /></button>
             ))}
+            <!-- International sits after the mapped countries: it is a real office in the
+                 selector, but it has no territory to highlight. -->
+            <button class="reach-chip" data-cc="int" role="listitem"><Bi en={c.reach.offices.int.name.en} ar={c.reach.offices.int.name.ar} /></button>
           </div>
         </div>
       </div>
@@ -219,7 +233,19 @@ const c = content;
      there is name/country text, so an all-logo state stays clean and a filled state
      grows without breaking. */
   .pgrid{display:grid;grid-template-columns:repeat(4,1fr);gap:1px;background:var(--line);border:1px solid var(--line);margin-top:clamp(30px,4vw,48px)}
+  /* filter bar: only present once the map has narrowed the wall */
+  .wall-filter{display:flex;align-items:center;justify-content:space-between;gap:18px;flex-wrap:wrap;margin-top:clamp(26px,3vw,38px);padding:13px 18px;border:1px solid var(--line);background:var(--cream);border-radius:var(--radius)}
+  .wall-filter[hidden]{display:none}
+  .wall-filter-text{font-family:var(--display);font-size:14px;color:var(--muted)}
+  .wall-filter-count{color:var(--navy);font-weight:500}
+  .wall-filter-country{color:var(--navy);font-weight:500}
+  .wall-filter-clear{font-family:var(--display);font-size:12px;letter-spacing:.12em;text-transform:uppercase;color:var(--gold);border-bottom:1px solid currentColor;padding-bottom:2px}
+  .wall-filter-clear:hover{color:var(--navy)}
+  .wall-empty{margin-top:26px;color:var(--muted);font-size:15px}
+  .wall-empty[hidden]{display:none}
+
   .pcard{background:var(--paper);display:flex;flex-direction:column}
+  .pcard[hidden]{display:none}
   .pcard-logo{position:relative;aspect-ratio:16/10;display:block}
   .pcard-logo img{position:absolute;inset:0;margin:auto;max-width:calc(100% - 24px);max-height:calc(100% - 26px);mix-blend-mode:multiply}
   .pcard:hover .pcard-logo img{filter:grayscale(1);opacity:.55}
@@ -243,6 +269,11 @@ const c = content;
   .rc:hover{fill:var(--navy-soft)}
   .rc:focus-visible{stroke:var(--gold);stroke-width:.45}
   .rc.active{fill:var(--gold)}
+  /* Dot markers for the countries that are only a few pixels across at this scale. They
+     inherit .rc's fill, hover and active colours, so a small country highlights exactly
+     like a large one. */
+  .rc-dot{stroke-width:.16}
+  .rc-dot:hover{fill:var(--navy-soft)}
 
   /* office popup: floats by the country on desktop (JS-positioned), sits as a panel
      under the map on small screens (see media query) */
@@ -345,14 +376,56 @@ const c = content;
       if (top < 6) top = (pr.bottom - cr.top) + 12;
       pop.style.left = left + 'px'; pop.style.top = top + 'px';
     };
+    // A selector entry with no territory on the map (International) has nothing to anchor
+    // the popup to, so it is centred over the map instead of keeping the previous
+    // selection's coordinates.
+    const centre = () => {
+      if (isPanel()) { pop.style.left = pop.style.top = ''; return; }
+      const cr = wrap.getBoundingClientRect();
+      pop.style.left = Math.max(8, (cr.width - pop.offsetWidth) / 2) + 'px';
+      pop.style.top = Math.max(8, (cr.height - pop.offsetHeight) / 2) + 'px';
+    };
+    // The map IS the wall's filter: choosing a market narrows the partner wall to that
+    // country as well as showing its office. `int` (International) is a catch-all rather
+    // than a territory, so it shows the office and leaves the wall whole.
+    const cards = Array.from(document.querySelectorAll('.pcard'));
+    const filterBar = document.querySelector('.wall-filter');
+    const filterCount = document.querySelector('.wall-filter-count');
+    const filterCountry = document.querySelector('.wall-filter-country');
+    const wallEmpty = document.querySelector('.wall-empty');
+    const filterWall = (cc) => {
+      const office = cc ? OFFICES[cc] : null;
+      const country = office && cc !== 'int' ? office.name : null;
+      // The wall sits ABOVE the map, so hiding cards removes up to ~970px of page from above
+      // whatever the visitor is looking at. Browsers try to compensate with scroll anchoring,
+      // but it is best-effort and picks its own anchor, which is why the page appeared to jump
+      // only sometimes. Pin the map instead: note where it is, mutate, then put it back. If
+      // the browser already compensated the delta is 0 and this is a no-op.
+      const before = wrap.getBoundingClientRect().top;
+      let shown = 0;
+      cards.forEach((card) => {
+        const match = !country || card.dataset.country === country.en;
+        card.hidden = !match;
+        if (match) shown++;
+      });
+      if (wallEmpty) wallEmpty.hidden = shown !== 0;
+      if (filterBar) filterBar.hidden = !country;
+      if (country && filterCount) filterCount.textContent = String(shown);
+      if (country && filterCountry) filterCountry.textContent = country[lang()];
+      const drift = wrap.getBoundingClientRect().top - before;
+      if (drift) window.scrollBy(0, drift);
+    };
+    document.querySelector('.wall-filter-clear')?.addEventListener('click', () => hide());
+
     const select = (cc) => {
       const path = paths.find((p) => p.dataset.cc === cc);
-      paths.forEach((p) => p.classList.toggle('active', p === path));
+      paths.forEach((p) => p.classList.toggle('active', p.dataset.cc === cc));
       const chip = chips.find((ch) => ch.dataset.cc === cc);
       chips.forEach((ch) => ch.classList.toggle('active', ch === chip));
       render(cc);
+      filterWall(cc);
       pop.hidden = false;
-      if (path) position(path);
+      if (path) position(path); else centre();
       // reflect the choice in the mobile pull-down and close it
       if (chipsToggleLabel && chip) chipsToggleLabel.innerHTML = chip.innerHTML;
       setChipsOpen(false);
@@ -361,6 +434,7 @@ const c = content;
       pop.hidden = true;
       paths.forEach((p) => p.classList.remove('active'));
       chips.forEach((ch) => ch.classList.remove('active'));
+      filterWall(null); // clearing the map clears the wall filter with it
     };
     const bind = (el) => {
       el.addEventListener('click', (e) => { e.stopPropagation(); select(el.dataset.cc); });

@@ -4,6 +4,7 @@ import Bi from '../components/Bi.astro';
 import Counter from '../components/Counter.astro';
 import { reachMap } from '../data/reach-map';
 import { collection, stats } from '../lib/content';
+import { officesByCc, marketOrder, activeCcs } from '../data/offices';
 
 // Offices directory, sourced from the content store (admin-managed), split by group.
 const _offices = collection('offices');
@@ -12,10 +13,19 @@ const saudiOffices = _offices.filter((o) => o.group === 'Saudi Arabia').map((o) 
   staff: { en: o.staffName, ar: o.staffNameAr }, role: { en: o.staffRole, ar: o.staffRoleAr },
   email: o.email, phone: o.phone,
 }));
+/** Initials, used as the photo placeholder until the client uploads one. Falls back to the
+ *  office name when the manager has not been named yet either. */
+const monogram = (name: string, fallback: string) => {
+  const parts = String(name || '').trim().split(/\s+/).filter(Boolean);
+  const real = parts.filter((w) => w.toLowerCase() !== 'name');
+  const src = real.length ? real : String(fallback || '').trim().split(/\s+/);
+  return src.slice(0, 2).map((w) => w[0] || '').join('').toUpperCase();
+};
 const regionalOffices = _offices.filter((o) => o.group === 'Regional & Export').map((o) => ({
   country: { en: o.city, ar: o.cityAr },
   staff: { en: o.staffName, ar: o.staffNameAr }, role: { en: o.staffRole, ar: o.staffRoleAr },
   email: o.email, phone: o.phone,
+  photo: o.photo || '', mono: monogram(o.staffName, o.city),
 }));
 
 // Contact (Nasser's Page 7, التواصل والمراسلات) - the last page.
@@ -36,27 +46,12 @@ const regionalOffices = _offices.filter((o) => o.group === 'Regional & Export').
 // Bilingual EN/AR + RTL, responsive, no motion, template-first (content is the admin surface).
 const year = new Date().getFullYear();
 
-// Offices keyed by the reach-map country codes: drives the map + the market selector + the
-// office card. Real routing emails/phones (Amal's directory); shared desks point at one
-// office (Jordan+Iraq, Tunisia+Libya). Staff names are client-gated (filled via the admin).
-const officesByCc = {
-  sa: { name: { en: "Saudi Arabia", ar: "المملكة العربية السعودية" }, role: { en: "Head Office", ar: "المقر الرئيسي" }, place: { en: "Industrial Area 5, Jeddah", ar: "المنطقة الصناعية 5، جدة" }, email: "info@printopack.com.sa", phone: "+966 12 608 1074" },
-  kw: { name: { en: "Kuwait", ar: "الكويت" }, role: { en: "Regional Office", ar: "مكتب إقليمي" }, place: { en: "", ar: "" }, email: "kuwait@printopack.com.sa", phone: "+965 97707578" },
-  jo: { name: { en: "Jordan", ar: "الأردن" }, role: { en: "Regional Office", ar: "مكتب إقليمي" }, place: { en: "Jordan & Iraq office", ar: "مكتب الأردن والعراق" }, email: "jordan@printopack.com.sa", phone: "+962 7 8570 6299" },
-  iq: { name: { en: "Iraq", ar: "العراق" }, role: { en: "Regional Office", ar: "مكتب إقليمي" }, place: { en: "Jordan & Iraq office", ar: "مكتب الأردن والعراق" }, email: "jordan@printopack.com.sa", phone: "+962 7 8570 6299" },
-  eg: { name: { en: "Egypt", ar: "مصر" }, role: { en: "Regional Office", ar: "مكتب إقليمي" }, place: { en: "", ar: "" }, email: "egypt@printopack.com.sa", phone: "+20 111 171 2221" },
-  sd: { name: { en: "Sudan", ar: "السودان" }, role: { en: "Regional Office", ar: "مكتب إقليمي" }, place: { en: "", ar: "" }, email: "sudan@printopack.com.sa", phone: "+966 55 421 9918" },
-  tn: { name: { en: "Tunisia", ar: "تونس" }, role: { en: "Regional Office", ar: "مكتب إقليمي" }, place: { en: "Tunisia & Libya office", ar: "مكتب تونس وليبيا" }, email: "tunisia@printopack.com.sa", phone: "+216 28534504" },
-  ly: { name: { en: "Libya", ar: "ليبيا" }, role: { en: "Regional Office", ar: "مكتب إقليمي" }, place: { en: "Tunisia & Libya office", ar: "مكتب تونس وليبيا" }, email: "tunisia@printopack.com.sa", phone: "+216 28534504" },
-  dz: { name: { en: "Algeria", ar: "الجزائر" }, role: { en: "Regional Office", ar: "مكتب إقليمي" }, place: { en: "", ar: "" }, email: "info-algeria@printopack.com.sa", phone: "+213 553038979" },
-  ma: { name: { en: "Morocco", ar: "المغرب" }, role: { en: "Regional Office", ar: "مكتب إقليمي" }, place: { en: "", ar: "" }, email: "moroccooffice@printopack.com.sa", phone: "+966 55 421 9918" },
-  ye: { name: { en: "Yemen", ar: "اليمن" }, role: { en: "Regional Office", ar: "مكتب إقليمي" }, place: { en: "", ar: "" }, email: "yemen@printopack.com.sa", phone: "+967 775299991" },
-  sy: { name: { en: "Syria", ar: "سوريا" }, role: { en: "Regional Office", ar: "مكتب إقليمي" }, place: { en: "", ar: "" }, email: "bsh_moneer@hotmail.com", phone: "+963 933431615" },
-};
+// The map offices, the market selector and the office cards all read the shared
+// `src/data/offices.ts`, which builds them from the admin-managed `offices` collection.
+// That used to be a hardcoded object duplicated here and in partners.astro.
+
 // Human Resources office (careers are handled centrally, not per-country).
 const hrOffice = { name: { en: "Human Resources", ar: "الموارد البشرية" }, role: { en: "Recruitment", ar: "التوظيف" }, place: { en: "Head Office, Jeddah", ar: "المقر الرئيسي، جدة" }, email: "hr@printopack.com.sa", phone: "+966 12 608 1074" };
-// Selector order for the "target market" pull-down (Saudi first / default, then the region).
-const marketOrder = ["sa", "kw", "jo", "iq", "eg", "sd", "tn", "ly", "dz", "ma", "ye", "sy"];
 
 const content = {
   meta: {
@@ -231,8 +226,14 @@ const markets = marketOrder.map((cc) => ({ cc, ...officesByCc[cc] }));
       <div class="mapwrap" id="mapwrap">
         <svg class="reach-map" viewBox={reachMap.viewBox} role="group" aria-label="Map of the markets Printopack serves" preserveAspectRatio="xMidYMid meet">
           <path class="rc-ctx" d={reachMap.context} aria-hidden="true" />
-          {Object.entries(reachMap.served).map(([cc, d]) => (
-            <path class="rc" d={d} data-cc={cc} tabindex="0" role="button" aria-label={officesByCc[cc].name.en} />
+          {activeCcs.map((cc) => (
+            <path class="rc" d={reachMap.paths[cc]} data-cc={cc} tabindex="0" role="button" aria-label={officesByCc[cc].name.en} />
+          ))}
+          {/* Bahrain (1.5px across) and Qatar (7.7px) are too narrow to hit at this scale,
+              so they also get a dot. Everything else, Kuwait included, is 12px or wider on
+              its narrow axis and stands on its own outline. */}
+          {activeCcs.filter((cc) => reachMap.markers[cc]).map((cc) => (
+            <circle class="rc rc-dot" cx={reachMap.markers[cc][0]} cy={reachMap.markers[cc][1]} r="0.85" data-cc={cc} tabindex="0" role="button" aria-label={officesByCc[cc].name.en} />
           ))}
         </svg>
       </div>
@@ -394,29 +395,42 @@ const markets = marketOrder.map((cc) => ({ cc, ...officesByCc[cc] }));
       <div class="office-grid">
         {c.offices.saudi.map((o) => (
           <div class="office" data-reveal>
-            <h3><Bi en={o.city.en} ar={o.city.ar} /></h3>
-            <span class="office-area"><Bi en={o.area.en} ar={o.area.ar} /></span>
-            <span class="office-staff">
-              <span class="staff-role"><Bi en={o.role ? o.role.en : c.offices.staffRole.en} ar={o.role ? o.role.ar : c.offices.staffRole.ar} /></span>
-              <span class="staff-name"><Bi en={o.staff.en} ar={o.staff.ar} /></span>
-            </span>
-            <a href={`tel:${o.phone.replace(/\s/g, '')}`} dir="ltr">{o.phone}</a>
-            <a href={`mailto:${o.email}`} dir="ltr">{o.email}</a>
+            <div class="office-info">
+              <h3><Bi en={o.city.en} ar={o.city.ar} /></h3>
+              <span class="office-area"><Bi en={o.area.en} ar={o.area.ar} /></span>
+              <span class="office-staff">
+                <span class="staff-role"><Bi en={o.role ? o.role.en : c.offices.staffRole.en} ar={o.role ? o.role.ar : c.offices.staffRole.ar} /></span>
+                <span class="staff-name"><Bi en={o.staff.en} ar={o.staff.ar} /></span>
+              </span>
+              <a href={`tel:${o.phone.replace(/\s/g, '')}`} dir="ltr">{o.phone}</a>
+              <a href={`mailto:${o.email}`} dir="ltr">{o.email}</a>
+            </div>
           </div>
         ))}
       </div>
 
       <span class="office-group-label" style="margin-top:clamp(30px,4vw,48px)"><Bi en={c.offices.regionalLabel.en} ar={c.offices.regionalLabel.ar} /></span>
+      <!-- Two columns per office: the details on the left, the manager's square photo filling
+           the space on the right. The photo is uploaded and changed in the admin exactly like
+           the email and phone; until one is set the square shows the manager's initials, so an
+           office without a photograph still looks deliberate. -->
       <div class="office-grid">
         {c.offices.regional.map((o) => (
           <div class="office" data-reveal>
-            <h3><Bi en={o.country.en} ar={o.country.ar} /></h3>
-            <span class="office-staff">
-              <span class="staff-role"><Bi en={o.role ? o.role.en : c.offices.staffRole.en} ar={o.role ? o.role.ar : c.offices.staffRole.ar} /></span>
-              <span class="staff-name"><Bi en={o.staff.en} ar={o.staff.ar} /></span>
+            <div class="office-info">
+              <h3><Bi en={o.country.en} ar={o.country.ar} /></h3>
+              <span class="office-staff">
+                <span class="staff-role"><Bi en={o.role ? o.role.en : c.offices.staffRole.en} ar={o.role ? o.role.ar : c.offices.staffRole.ar} /></span>
+                <span class="staff-name"><Bi en={o.staff.en} ar={o.staff.ar} /></span>
+              </span>
+              <a href={`tel:${o.phone.replace(/\s/g, '')}`} dir="ltr">{o.phone}</a>
+              <a href={`mailto:${o.email}`} dir="ltr">{o.email}</a>
+            </div>
+            <span class="staff-photo" aria-hidden="true">
+              {o.photo
+                ? <img src={o.photo} alt="" loading="lazy" decoding="async" />
+                : <span class="staff-mono">{o.mono}</span>}
             </span>
-            <a href={`tel:${o.phone.replace(/\s/g, '')}`} dir="ltr">{o.phone}</a>
-            <a href={`mailto:${o.email}`} dir="ltr">{o.email}</a>
           </div>
         ))}
       </div>
@@ -467,6 +481,11 @@ const markets = marketOrder.map((cc) => ({ cc, ...officesByCc[cc] }));
   .rc:hover{fill:var(--navy-soft)}
   .rc:focus-visible{stroke:var(--gold);stroke-width:.45}
   .rc.active{fill:var(--gold)}
+  /* Dot markers for the countries that are only a few pixels across at this scale. They
+     inherit .rc's fill, hover and active colours, so a small country highlights exactly
+     like a large one. */
+  .rc-dot{stroke-width:.16}
+  .rc-dot:hover{fill:var(--navy-soft)}
 
   /* market pull-down beside the map */
   .map-pick{margin-top:16px;display:flex;align-items:flex-end;flex-wrap:wrap;gap:10px 20px}
@@ -547,10 +566,17 @@ const markets = marketOrder.map((cc) => ({ cc, ...officesByCc[cc] }));
   .offices-band{padding-block:clamp(56px,7vw,96px)}
   .office-group-label{display:block;font-family:var(--display);font-size:12px;font-weight:600;letter-spacing:.18em;text-transform:uppercase;color:var(--gold-bright);margin:clamp(24px,3vw,36px) 0 18px}
   .office-grid{display:grid;grid-template-columns:repeat(3,1fr);gap:clamp(20px,2.6vw,34px)}
-  .office{border-top:1px solid var(--line-dark);padding-top:18px;display:flex;flex-direction:column;gap:5px}
+  /* Office details on the left, the manager's square photo filling the space on the right. */
+  .office{border-top:1px solid var(--line-dark);padding-top:18px;display:flex;align-items:flex-start;justify-content:space-between;gap:18px}
+  .office-info{display:flex;flex-direction:column;gap:5px;min-width:0}
   .office h3{font-size:clamp(18px,1.7vw,23px);color:var(--paper);margin-bottom:2px}
   .office-area{font-family:var(--display);font-size:11px;letter-spacing:.14em;text-transform:uppercase;color:rgba(250,246,238,.5)}
-  .office-staff{display:flex;flex-direction:column;gap:1px;margin-bottom:6px}
+  .office-staff{display:flex;flex-direction:column;gap:1px;margin-bottom:6px;min-width:0}
+  /* Square, not a circle: it sits in the block of empty space beside the details, and its
+     side is driven by the text column so the two line up top and bottom. */
+  .staff-photo{flex:none;width:clamp(84px,7vw,104px);aspect-ratio:1;border-radius:4px;overflow:hidden;display:grid;place-items:center;background:rgba(250,246,238,.09);border:1px solid rgba(250,246,238,.16)}
+  .staff-photo img{width:100%;height:100%;object-fit:cover;display:block}
+  .staff-mono{font-family:var(--display);font-size:26px;font-weight:300;letter-spacing:.06em;color:rgba(250,246,238,.5)}
   .staff-role{font-family:var(--display);font-size:10.5px;letter-spacing:.14em;text-transform:uppercase;color:rgba(250,246,238,.5)}
   .staff-name{font-size:15px;color:var(--gold-bright)}
   .office a{font-size:14px;color:rgba(250,246,238,.72)}

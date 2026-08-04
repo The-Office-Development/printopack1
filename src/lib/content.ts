@@ -33,6 +33,16 @@ export function paragraphs(en: any, ar: any): { en: string; ar: string }[] {
   return e.map((p, i) => ({ en: p, ar: a[i] || p }));
 }
 
+/** Split a list-style admin field into its lines, pairing English and Arabic by position.
+ *  Used where the client types one item per line (job requirements) and the page renders a
+ *  bullet each. Differs from `paragraphs`, which splits on blank lines instead. */
+export function lines(en: any, ar: any): { en: string; ar: string }[] {
+  const split = (t: any) => String(t ?? '').split(/\r?\n/).map((l) => l.trim()).filter(Boolean);
+  const e = split(en);
+  const a = split(ar);
+  return e.map((l, i) => ({ en: l, ar: a[i] || l }));
+}
+
 /** The counter numbers, read from the editable `about` singleton so the client owns
  *  every stat on the site from one place in the admin. `founded` drives the
  *  "since <year>" counters, which climb to the current year, so they never go stale.
@@ -43,12 +53,18 @@ const _num = (v: unknown, fallback: number) => {
   return Number.isFinite(n) && n > 0 ? n : fallback;
 };
 const _about = singleton('about');
+const _employees = _num(_about.statEmployees, 400);
+const _avgExp = _num(_about.statAvgExp, 14);
 export const stats = {
   founded: _num(_about.statFounded, 1997),
   countries: _num(_about.statCountries, 35),
   offices: _num(_about.statOffices, 10),
-  employees: _num(_about.statEmployees, 400),
-  avgExp: _num(_about.statAvgExp, 14),
+  employees: _employees,
+  avgExp: _avgExp,
+  /** Total experience across the team, in years. Derived from the two numbers the client
+   *  already maintains rather than typed as a third, so it can never contradict them:
+   *  change the head count or the average in the admin and this follows. */
+  totalExp: _employees * _avgExp,
   customers: _num(_about.statCustomers, 1000),
   /** Production departments: the factory collection minus the warehouses entry. */
   departments: collection('factory').filter((d) => !/warehouse/i.test(d.name || '')).length || 5,

@@ -33,6 +33,9 @@ const content = {
     { prefix: "+", value: stats.countries, label: { en: "Countries served", ar: "دولة نخدمها" } },
     { prefix: "~", value: stats.employees, label: { en: "Team members", ar: "عضو في الفريق" } },
     { value: stats.offices, label: { en: "Regional offices", ar: "مكاتب إقليمية" } },
+    { value: stats.avgExp, label: { en: "Avg. years per employee", ar: "متوسط سنوات الخبرة للموظف" } },
+    // Total experience closes the row, at the client's request.
+    { prefix: "+", value: stats.totalExp, label: { en: "Years of combined experience", ar: "سنة خبرة مجتمعة" } },
   ],
   history: {
     eyebrow: { en: "Our history", ar: "تاريخنا" },
@@ -155,7 +158,8 @@ const c = content;
   .page-head .lede{max-width:60ch}
 
   .co-stats{padding-block:clamp(52px,6vw,80px)}
-  .counters-row{display:grid;grid-template-columns:repeat(4,1fr);gap:32px}
+  /* Three across so the six counters make two even rows. */
+  .counters-row{display:grid;grid-template-columns:repeat(3,1fr);gap:44px 32px}
   @media(max-width:760px){.counters-row{grid-template-columns:1fr 1fr;gap:40px 24px}}
 
   .story-grid{display:grid;grid-template-columns:1fr 1.05fr;gap:clamp(36px,6vw,84px);align-items:center}
