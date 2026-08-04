@@ -235,3 +235,27 @@ h1,h2,h3,h4{font-family:var(--disp);font-weight:400;letter-spacing:-.01em;line-h
 .icon-btn.mv svg{width:14px;height:14px}
 .icon-btn.mv:disabled{opacity:.28;cursor:default;border-color:var(--line-soft);color:var(--muted)}
 .order-hint{margin:11px 2px 0;font-size:12px;color:var(--faint)}
+
+/* Partners: how many of the home page's main slots are filled. Amber until the count is
+   exactly right, so a wrong count is visible without having to count logos by hand. */
+.tally{margin:0 0 14px;padding:10px 14px;border-radius:8px;font-size:13px;
+  background:#fdf3e2;border:1px solid #e6c98c;color:#7a5a1e}
+.tally.ok{background:#eef7ef;border-color:#bcdcc2;color:#2f6437}
+
+/* Countries on the map: one card per Arab country with a switch. On = there is an office
+   for it, which is also what makes the site draw it. */
+.hint-lead{margin:0 0 16px;font-size:14px;color:#5b6472;line-height:1.6;max-width:74ch}
+.cty-grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(280px,1fr));gap:12px}
+.cty{display:flex;align-items:center;justify-content:space-between;gap:14px;
+  padding:14px 16px;border:1px solid #e3e7ec;border-radius:10px;background:#fff}
+.cty.on{border-color:#c9dcc9;background:#fbfdfb}
+.cty-name{font-weight:600;font-size:14.5px;color:#16202e}
+.cty-ar{font-size:13px;color:#6b7480;margin-top:2px}
+.cty-detail{font-size:12px;color:#8a93a0;margin-top:5px}
+.cty.on .cty-detail{color:#3f7a4a}
+.sw{flex:none;width:46px;height:26px;border-radius:999px;background:#d5dae1;position:relative;
+  cursor:pointer;border:none;padding:0}
+.sw .sw-k{position:absolute;top:3px;left:3px;width:20px;height:20px;border-radius:50%;
+  background:#fff;box-shadow:0 1px 3px rgba(0,0,0,.25)}
+.sw.on{background:#3f7a4a}
+.sw.on .sw-k{left:23px}

@@ -9,8 +9,20 @@
 // image inlined as a literal would fail, while a bound BLOB is allowed up to 2 MB.
 import { json, bad } from './_shared.js';
 
-const MAX_BYTES = 600 * 1024; // the admin targets 400 KB; this is the hard ceiling
+// The client sets the picture limit in Settings > Pictures, and the browser compresses to it.
+// A browser can be bypassed, so the same limit is applied again here, read from the same
+// setting rather than duplicated as a second number that could drift away from it.
+const FLOOR_KB = 40, CEIL_KB = 600, DEFAULT_KB = 400;
 const EXT = { 'image/webp': 'webp', 'image/jpeg': 'jpg', 'image/png': 'png', 'image/gif': 'gif' };
+
+async function maxBytes(env) {
+  try {
+    const row = await env.DB.prepare("SELECT data FROM singletons WHERE key='settings'").first();
+    const kb = parseInt(JSON.parse(row?.data || '{}').maxImageKb, 10);
+    if (Number.isFinite(kb) && kb > 0) return Math.min(CEIL_KB, Math.max(FLOOR_KB, kb)) * 1024;
+  } catch { /* fall through to the default if settings are unreadable */ }
+  return DEFAULT_KB * 1024;
+}
 
 export async function onRequestPost({ env, request }) {
   const { dataUrl } = await request.json();
@@ -21,7 +33,11 @@ export async function onRequestPost({ env, request }) {
   // served from the site's own origin; video never belongs here at all.
   if (!EXT[mime]) return bad('unsupported image type: ' + mime);
   const bytes = Uint8Array.from(atob(m[2]), (c) => c.charCodeAt(0));
-  if (bytes.length > MAX_BYTES) return bad('image is too large: ' + Math.round(bytes.length / 1024) + ' KB');
+  const limit = await maxBytes(env);
+  if (bytes.length > limit) {
+    return bad('image is too large: ' + Math.round(bytes.length / 1024) +
+               ' KB, limit is ' + Math.round(limit / 1024) + ' KB');
+  }
 
   const key = Date.now().toString(36) + Math.random().toString(36).slice(2, 8) + '.' + EXT[mime];
   await env.DB.prepare('INSERT INTO media (key,mime,bytes,size,updated_at) VALUES (?1,?2,?3,?4,?5)')

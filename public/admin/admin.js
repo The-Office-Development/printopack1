@@ -43,9 +43,20 @@ function svg(n){return '<svg viewBox="0 0 24 24" fill="none" stroke="currentColo
    Pictures are resized and re-encoded in this browser before they are ever sent, so an
    untouched phone photo (4-6 MB) cannot reach the site or eat into free storage. The
    recommended size printed on the field is the target box; anything bigger is scaled to
-   fit it, encoded as WebP, and stepped down in quality until it is under IMG_MAX_KB.
+   fit it, encoded as WebP, and stepped down in quality until it is under the picture-size
+   limit the client sets in Settings.
    Nothing but a picture gets through: video belongs on YouTube or Vimeo as a link. */
-var IMG_MAX_KB=400,IMG_BOX=1800;
+/* The ceiling for an uploaded picture, in KB. It is a Setting rather than a constant so the
+   client can tighten it themselves if the storage meter ever climbs: pictures live in the
+   500 MB database, and halving this halves what every future upload costs. The compressor
+   steps quality down until a picture fits; anything that still will not fit is refused with
+   its actual size, rather than silently sailing past the limit. */
+var IMG_MAX_KB_DEFAULT=400,IMG_MAX_KB_FLOOR=40,IMG_MAX_KB_CEIL=600,IMG_BOX=1800;
+function imgMaxKB(){
+ var v=parseInt((CACHE.singletons.settings||{}).maxImageKb,10);
+ if(!isFinite(v)||v<=0)return IMG_MAX_KB_DEFAULT;
+ return Math.min(IMG_MAX_KB_CEIL,Math.max(IMG_MAX_KB_FLOOR,v));
+}
 function recBox(rec){var m=/(\d{3,4})\s*[x×]\s*(\d{3,4})/.exec(rec||'');return m?Math.max(+m[1],+m[2]):IMG_BOX;}
 function dataKB(d){return Math.round((d.length-d.indexOf(',')-1)*0.75/1024);}
 function prepImage(f,box,cb){
@@ -63,14 +74,55 @@ function prepImage(f,box,cb){
   var q=0.82,out=c.toDataURL('image/webp',q);
   var type=out.slice(0,15)==='data:image/webp'?'image/webp':'image/jpeg';
   if(type==='image/jpeg')out=c.toDataURL(type,q);
-  while(dataKB(out)>IMG_MAX_KB&&q>0.4){q=Math.round((q-0.1)*100)/100;out=c.toDataURL(type,q);}
+  var cap=imgMaxKB();
+  while(dataKB(out)>cap&&q>0.4){q=Math.round((q-0.1)*100)/100;out=c.toDataURL(type,q);}
+  if(dataKB(out)>cap){toast('That picture is '+dataKB(out)+' KB and will not compress under the '+cap+' KB limit. Crop it or use a smaller one.','err');return;}
   cb(out,dataKB(out));
  };
  im.src=url;
 }
 
 /* ---------------- data layer ---------------- */
-var KEY='pp_admin_v4';
+var KEY='pp_admin_v18'; /* v11: office manager photo; Measurements kind on groups and sub-items */
+/* How many partners the home page shows. The client's rule: always exactly 20. */
+var MAIN_PARTNERS=20;
+/* How many records each section may hold. The reasoning behind every number, and the storage
+   maths behind them, is in db/CAPS.md. Pictures live in the 500 MB D1 database, so a list
+   that grows without limit is a real risk rather than a tidiness question. When a section is
+   full the client deletes something before adding more, which is what the client asked for. */
+var CAPS={news:500,products:300,gallery:500,partners:1000,team:60,offices:40,productGroups:40,
+ quality:40,responsibility:40,careers:40,factory:30,formats:20,values:12,standard:10};
+function capOf(k){return CAPS[k]||null;}
+function capLeft(k){var c=capOf(k);return c==null?null:Math.max(0,c-coll(k).length);}
+
+/* Every Arab country the map can draw, and the Arabic name that goes with it. Switching one
+   ON in the Countries panel creates its office record; switching it OFF removes it. The site
+   draws a country if, and only if, an office exists for it, so this panel is the map's
+   on/off switch as well as the office list's. `int` is not here: International Sales is a
+   market, not a territory, and never appears on the map. */
+var COUNTRIES=[
+ {cc:'sa',en:'Saudi Arabia',ar:'المملكة العربية السعودية'},
+ {cc:'ae',en:'United Arab Emirates',ar:'الإمارات العربية المتحدة'},
+ {cc:'bh',en:'Bahrain',ar:'البحرين'},
+ {cc:'kw',en:'Kuwait',ar:'الكويت'},
+ {cc:'om',en:'Oman',ar:'عُمان'},
+ {cc:'qa',en:'Qatar',ar:'قطر'},
+ {cc:'iq',en:'Iraq',ar:'العراق'},
+ {cc:'jo',en:'Jordan',ar:'الأردن'},
+ {cc:'lb',en:'Lebanon',ar:'لبنان'},
+ {cc:'ps',en:'Palestine',ar:'فلسطين'},
+ {cc:'sy',en:'Syria',ar:'سوريا'},
+ {cc:'ye',en:'Yemen',ar:'اليمن'},
+ {cc:'eg',en:'Egypt',ar:'مصر'},
+ {cc:'sd',en:'Sudan',ar:'السودان'},
+ {cc:'ly',en:'Libya',ar:'ليبيا'},
+ {cc:'tn',en:'Tunisia',ar:'تونس'},
+ {cc:'dz',en:'Algeria',ar:'الجزائر'},
+ {cc:'ma',en:'Morocco',ar:'المغرب'},
+ {cc:'mr',en:'Mauritania',ar:'موريتانيا'},
+ {cc:'dj',en:'Djibouti',ar:'جيبوتي'}
+];
+
 var IMG={cat:function(i){return '/images/cat-'+i+'.png';},dept:function(i){return '/images/dept-'+i+'.jpg';},client:function(i){return '/images/clients/client-'+i+'.png';}};
 var SEED={
  news:[
@@ -107,19 +159,19 @@ var SEED={
   {id:uid(),name:"",nameAr:"",role:"IT Specialist",roleAr:"أخصائي تقنية المعلومات",email:"it@printopack.com.sa",experience:0,bio:"",bioAr:""}
  ],
  careers:[
-  {id:uid(),title:"Production Engineer",titleAr:"مهندس إنتاج",dept:"Production",type:"Full-time",location:"Jeddah, KSA",requirements:"BSc in mechanical or industrial engineering, 3+ years on rotogravure lines.",requirementsAr:"بكالوريوس هندسة ميكانيكية أو صناعية، وخبرة 3 سنوات فأكثر على خطوط الروتوغرافير.",email:"careers@printopack.com.sa",status:"published"},
-  {id:uid(),title:"Quality Control Specialist",titleAr:"أخصائي ضبط جودة",dept:"Quality",type:"Full-time",location:"Jeddah, KSA",requirements:"Experience with ISO 22000, FSSC and SFDA standards; strong lab background.",requirementsAr:"خبرة بمعايير ISO 22000 وFSSC وهيئة الغذاء والدواء، وخلفية مخبرية قوية.",email:"careers@printopack.com.sa",status:"published"},
-  {id:uid(),title:"Sales Account Manager",titleAr:"مدير حسابات مبيعات",dept:"Sales",type:"Full-time",location:"Jeddah, KSA",requirements:"5+ years B2B packaging sales, existing FMCG relationships preferred.",requirementsAr:"خبرة 5 سنوات فأكثر في مبيعات التغليف للشركات، ويفضّل وجود علاقات مع شركات السلع الاستهلاكية.",email:"careers@printopack.com.sa",status:"draft"}
+  {id:uid(),title:"Production Engineer",titleAr:"مهندس إنتاج",dept:"Production",deptAr:"الإنتاج",type:"Full-time",typeAr:"دوام كامل",location:"Jeddah, KSA",locationAr:"جدة، السعودية",email:"production.jobs@printopack.com.sa",summary:"Run and improve our rotogravure and lamination lines, keeping output on-spec and on-time.",summaryAr:"تشغيل وتحسين خطوط الطباعة الروتوغرافية والتصفيح، مع الحفاظ على مطابقة الإنتاج للمواصفات وتسليمه في وقته.",requirements:"BSc in mechanical or industrial engineering.\n3+ years on rotogravure or flexible-packaging lines.\nA strong grasp of print quality and process control.",requirementsAr:"بكالوريوس في الهندسة الميكانيكية أو الصناعية.\nخبرة 3 سنوات فأكثر على خطوط الطباعة الروتوغرافية أو التغليف المرن.\nإلمام قوي بجودة الطباعة وضبط العمليات.",status:"published"},
+  {id:uid(),title:"Quality Control Specialist",titleAr:"أخصائي مراقبة الجودة",dept:"Quality",deptAr:"الجودة",type:"Full-time",typeAr:"دوام كامل",location:"Jeddah, KSA",locationAr:"جدة، السعودية",email:"quality.jobs@printopack.com.sa",summary:"Check every run against our food-safety and print standards before it ships.",summaryAr:"فحص كل تشغيلة وفق معايير سلامة الغذاء والطباعة قبل شحنها.",requirements:"Background in food-contact materials and lab testing.\nFamiliarity with BRCGS or similar standards.\nA meticulous, documentation-driven approach.",requirementsAr:"خلفية في المواد الملامِسة للأغذية والفحص المخبري.\nمعرفة بمعيار BRCGS أو ما يماثله.\nمنهجية دقيقة قائمة على التوثيق.",status:"published"},
+  {id:uid(),title:"Sales Account Manager",titleAr:"مدير حسابات مبيعات",dept:"Sales",deptAr:"المبيعات",type:"Full-time",typeAr:"دوام كامل",location:"Regional",locationAr:"إقليمي",email:"sales.jobs@printopack.com.sa",summary:"Grow relationships with food, beverage and consumer brands across the region.",summaryAr:"تنمية العلاقات مع علامات الأغذية والمشروبات والمنتجات الاستهلاكية في المنطقة.",requirements:"5+ years of B2B packaging or FMCG sales.\nExisting brand relationships are a plus.\nFluent Arabic and English.",requirementsAr:"خبرة 5 سنوات فأكثر في مبيعات التغليف أو السلع الاستهلاكية (B2B).\nوجود علاقات قائمة مع العلامات ميزة إضافية.\nإتقان العربية والإنجليزية.",status:"draft"}
  ],
  partners:[
-  {id:uid(),name:"",country:"Saudi Arabia",image:IMG.client(1),link:""},
-  {id:uid(),name:"",country:"United Arab Emirates",image:IMG.client(2),link:""},
-  {id:uid(),name:"",country:"Kuwait",image:IMG.client(3),link:""},
-  {id:uid(),name:"",country:"Egypt",image:IMG.client(4),link:""},
-  {id:uid(),name:"",country:"Jordan",image:IMG.client(5),link:""},
-  {id:uid(),name:"",country:"Qatar",image:IMG.client(6),link:""},
-  {id:uid(),name:"",country:"Bahrain",image:IMG.client(7),link:""},
-  {id:uid(),name:"",country:"Sudan",image:IMG.client(8),link:""}
+  {id:uid(),name:"",country:"Saudi Arabia",image:IMG.client(1),featured:"true",link:""},
+  {id:uid(),name:"",country:"United Arab Emirates",image:IMG.client(2),featured:"true",link:""},
+  {id:uid(),name:"",country:"Kuwait",image:IMG.client(3),featured:"true",link:""},
+  {id:uid(),name:"",country:"Egypt",image:IMG.client(4),featured:"true",link:""},
+  {id:uid(),name:"",country:"Jordan",image:IMG.client(5),featured:"true",link:""},
+  {id:uid(),name:"",country:"Qatar",image:IMG.client(6),featured:"true",link:""},
+  {id:uid(),name:"",country:"Bahrain",image:IMG.client(7),featured:"true",link:""},
+  {id:uid(),name:"",country:"Sudan",image:IMG.client(8),featured:"true",link:""}
  ],
  factory:[
   {id:uid(),name:"Rotogravure Printing",nameAr:"الطباعة بالروتوغرافير",kind:"Department",image:IMG.dept(1),description:"Photographic-quality, multi-colour print with tight registration at production speed.",descriptionAr:"طباعة متعددة الألوان بجودة فوتوغرافية ودقّة تسجيل عالية وبسرعة إنتاجية."},
@@ -145,6 +197,16 @@ var SEED={
   {id:uid(),title:"Finished product lineup",titleAr:"تشكيلة المنتجات النهائية",kind:"Photo",image:"/images/lineup.jpg",url:""},
   {id:uid(),title:"Printopack corporate film",titleAr:"الفيلم التعريفي لبرينتوباك",kind:"Video",image:"/images/factory.jpg",url:"https://"}
  ],
+ formats:[
+  {id:uid(),title:"Pillow Bags",titleAr:"أكياس وسادية"},{id:uid(),title:"Gusseted Bags",titleAr:"أكياس بجوانب مطويّة"},
+  {id:uid(),title:"Center Seal Bags",titleAr:"أكياس بلحام مركزي"},{id:uid(),title:"Zipper Bags",titleAr:"أكياس بسحّاب"},
+  {id:uid(),title:"Stand-up Pouches",titleAr:"عبوات واقفة"},{id:uid(),title:"Handle Bags",titleAr:"أكياس بمقبض"}
+ ],
+ standard:[
+  {id:uid(),title:"Developed for your line",titleAr:"مطوّر لخطكم",text:"Structure, barrier and seal engineered around your product.",textAr:"يُهندَس التركيب والحاجز والغلق حول منتجكم."},
+  {id:uid(),title:"Printed in-house",titleAr:"مطبوع داخلياً",text:"Rotogravure print with cylinders engraved under our own roof.",textAr:"طباعة روتوغرافير بأسطوانات تُحفر تحت سقفنا."},
+  {id:uid(),title:"Food-safe by default",titleAr:"آمن غذائياً بطبيعته",text:"Food-grade materials and a quality system on every order.",textAr:"مواد ملائمة للأغذية ونظام جودة يرافق كل طلب."}
+ ],
  values:[
   {id:uid(),title:"Quality without compromise",titleAr:"جودةٌ بلا تنازل",text:"Every reel is held to the Printopack standard, from incoming substrate to final dispatch.",textAr:"كل لفّةٍ تخضع لمعيار برنتوباك، من استلام المواد حتى التسليم النهائي."},
   {id:uid(),title:"Responsible by design",titleAr:"المسؤولية بالتصميم",text:"Food-safe materials, solvent recovery and efficient production run through everything we make.",textAr:"موادٌ آمنة غذائياً واسترجاعٌ للمذيبات وإنتاجٌ كفؤ في كل ما نصنع."},
@@ -152,21 +214,23 @@ var SEED={
   {id:uid(),title:"Built to deliver",titleAr:"التزامٌ بالتسليم",text:"Planned materials and export logistics mean orders land on time, run after run.",textAr:"تخطيطٌ للمواد ولوجستيات التصدير يضمن وصول الطلبات في وقتها، تشغيلةً بعد أخرى."}
  ],
  offices:[
-  {id:uid(),city:"Head Office, Jeddah",cityAr:"المقر الرئيسي، جدة",group:"Saudi Arabia",country:"Western Area",countryAr:"المنطقة الغربية",staffName:"Name Name",staffNameAr:"الاسم الاسم",staffRole:"Office manager",staffRoleAr:"مدير المكتب",phone:"+966 12 608 1074",email:"info@printopack.com.sa"},
-  {id:uid(),city:"Riyadh Office",cityAr:"مكتب الرياض",group:"Saudi Arabia",country:"Central Area",countryAr:"المنطقة الوسطى",staffName:"Name Name",staffNameAr:"الاسم الاسم",staffRole:"Office manager",staffRoleAr:"مدير المكتب",phone:"+966 57 675 8589",email:"riyadoffice@printopack.com.sa"},
-  {id:uid(),city:"Jeddah Office",cityAr:"مكتب جدة",group:"Saudi Arabia",country:"Western Area",countryAr:"المنطقة الغربية",staffName:"Name Name",staffNameAr:"الاسم الاسم",staffRole:"Office manager",staffRoleAr:"مدير المكتب",phone:"+966 566197783",email:"localsales@printopack.com.sa"},
-  {id:uid(),city:"Dammam Office",cityAr:"مكتب الدمام",group:"Saudi Arabia",country:"Eastern Area",countryAr:"المنطقة الشرقية",staffName:"Name Name",staffNameAr:"الاسم الاسم",staffRole:"Office manager",staffRoleAr:"مدير المكتب",phone:"+966 559226498",email:"wak@printopack.com.sa"},
-  {id:uid(),city:"Key Accounts",cityAr:"الحسابات الرئيسية",group:"Saudi Arabia",country:"Kingdom-wide",countryAr:"على مستوى المملكة",staffName:"Name Name",staffNameAr:"الاسم الاسم",staffRole:"Office manager",staffRoleAr:"مدير المكتب",phone:"+966 50 008 0791",email:"a.riaz@printopack.com.sa"},
-  {id:uid(),city:"Yemen",cityAr:"اليمن",group:"Regional & Export",country:"Yemen",countryAr:"اليمن",staffName:"Name Name",staffNameAr:"الاسم الاسم",staffRole:"Office manager",staffRoleAr:"مدير المكتب",phone:"+967 775299991",email:"yemen@printopack.com.sa"},
-  {id:uid(),city:"Tunisia & Libya",cityAr:"تونس وليبيا",group:"Regional & Export",country:"Tunisia & Libya",countryAr:"تونس وليبيا",staffName:"Sami Monser",staffNameAr:"سامي منصر",staffRole:"Regional Sales Manager",staffRoleAr:"مدير المبيعات الإقليمي",phone:"+216 28534504",email:"tunisia@printopack.com.sa"},
-  {id:uid(),city:"Kuwait",cityAr:"الكويت",group:"Regional & Export",country:"Kuwait",countryAr:"الكويت",staffName:"Nader Bilal",staffNameAr:"نادر بلال",staffRole:"Regional Sales Leader",staffRoleAr:"قائد المبيعات الإقليمي",phone:"+965 97707578",email:"kuwait@printopack.com.sa"},
-  {id:uid(),city:"Morocco",cityAr:"المغرب",group:"Regional & Export",country:"Morocco",countryAr:"المغرب",staffName:"Name Name",staffNameAr:"الاسم الاسم",staffRole:"Office manager",staffRoleAr:"مدير المكتب",phone:"+966 55 421 9918",email:"moroccooffice@printopack.com.sa"},
-  {id:uid(),city:"International Sales",cityAr:"المبيعات الدولية",group:"Regional & Export",country:"International",countryAr:"دولي",staffName:"Name Name",staffNameAr:"الاسم الاسم",staffRole:"Office manager",staffRoleAr:"مدير المكتب",phone:"+966 50 873 9828",email:"ibrahim.ismail@printopack.com.sa"},
-  {id:uid(),city:"Algeria",cityAr:"الجزائر",group:"Regional & Export",country:"Algeria",countryAr:"الجزائر",staffName:"Elhaoues Chemseddine",staffNameAr:"الهواس شمس الدين",staffRole:"Regional Sales Leader",staffRoleAr:"قائد المبيعات الإقليمي",phone:"+213 553038979",email:"info-algeria@printopack.com.sa"},
-  {id:uid(),city:"Egypt",cityAr:"مصر",group:"Regional & Export",country:"Egypt",countryAr:"مصر",staffName:"Name Name",staffNameAr:"الاسم الاسم",staffRole:"Office manager",staffRoleAr:"مدير المكتب",phone:"+20 111 171 2221",email:"egypt@printopack.com.sa"},
-  {id:uid(),city:"Sudan",cityAr:"السودان",group:"Regional & Export",country:"Sudan",countryAr:"السودان",staffName:"Name Name",staffNameAr:"الاسم الاسم",staffRole:"Office manager",staffRoleAr:"مدير المكتب",phone:"+966 55 421 9918",email:"sudan@printopack.com.sa"},
-  {id:uid(),city:"Jordan & Iraq",cityAr:"الأردن والعراق",group:"Regional & Export",country:"Jordan & Iraq",countryAr:"الأردن والعراق",staffName:"Name Name",staffNameAr:"الاسم الاسم",staffRole:"Office manager",staffRoleAr:"مدير المكتب",phone:"+962 7 8570 6299",email:"jordan@printopack.com.sa"},
-  {id:uid(),city:"Syria",cityAr:"سوريا",group:"Regional & Export",country:"Syria",countryAr:"سوريا",staffName:"Name Name",staffNameAr:"الاسم الاسم",staffRole:"Office manager",staffRoleAr:"مدير المكتب",phone:"+963 933431615",email:"bsh_moneer@hotmail.com"}
+  {id:uid(),city:"Head Office, Jeddah",cityAr:"المقر الرئيسي، جدة",group:"Saudi Arabia",cc:"sa",country:"Western Area",countryAr:"المنطقة الغربية",staffName:"Name Name",staffNameAr:"الاسم الاسم",staffRole:"Office manager",staffRoleAr:"مدير المكتب",phone:"+966 12 608 1074",email:"info@printopack.com.sa"},
+  {id:uid(),city:"Riyadh Office",cityAr:"مكتب الرياض",group:"Saudi Arabia",cc:"",country:"Central Area",countryAr:"المنطقة الوسطى",staffName:"Name Name",staffNameAr:"الاسم الاسم",staffRole:"Office manager",staffRoleAr:"مدير المكتب",phone:"+966 57 675 8589",email:"riyadoffice@printopack.com.sa"},
+  {id:uid(),city:"Jeddah Office",cityAr:"مكتب جدة",group:"Saudi Arabia",cc:"",country:"Western Area",countryAr:"المنطقة الغربية",staffName:"Name Name",staffNameAr:"الاسم الاسم",staffRole:"Office manager",staffRoleAr:"مدير المكتب",phone:"+966 566197783",email:"localsales@printopack.com.sa"},
+  {id:uid(),city:"Dammam Office",cityAr:"مكتب الدمام",group:"Saudi Arabia",cc:"",country:"Eastern Area",countryAr:"المنطقة الشرقية",staffName:"Name Name",staffNameAr:"الاسم الاسم",staffRole:"Office manager",staffRoleAr:"مدير المكتب",phone:"+966 559226498",email:"wak@printopack.com.sa"},
+  {id:uid(),city:"Key Accounts",cityAr:"الحسابات الرئيسية",group:"Saudi Arabia",cc:"",country:"Kingdom-wide",countryAr:"على مستوى المملكة",staffName:"Name Name",staffNameAr:"الاسم الاسم",staffRole:"Office manager",staffRoleAr:"مدير المكتب",phone:"+966 50 008 0791",email:"a.riaz@printopack.com.sa"},
+  {id:uid(),city:"Yemen",cityAr:"اليمن",group:"Regional & Export",cc:"ye",country:"Yemen",countryAr:"اليمن",staffName:"Name Name",staffNameAr:"الاسم الاسم",staffRole:"Office manager",staffRoleAr:"مدير المكتب",phone:"+967 775299991",email:"yemen@printopack.com.sa"},
+  {id:uid(),city:"Tunisia",cityAr:"تونس",group:"Regional & Export",cc:"tn",country:"Tunisia",countryAr:"تونس",staffName:"Sami Monser",staffNameAr:"سامي منصر",staffRole:"Regional Sales Manager",staffRoleAr:"مدير المبيعات الإقليمي",phone:"+216 28534504",email:"tunisia@printopack.com.sa"},
+  {id:uid(),city:"Libya",cityAr:"ليبيا",group:"Regional & Export",cc:"ly",country:"Libya",countryAr:"ليبيا",staffName:"Sami Monser",staffNameAr:"سامي منصر",staffRole:"Regional Sales Manager",staffRoleAr:"مدير المبيعات الإقليمي",phone:"+216 28534504",email:"tunisia@printopack.com.sa"},
+  {id:uid(),city:"Kuwait",cityAr:"الكويت",group:"Regional & Export",cc:"kw",country:"Kuwait",countryAr:"الكويت",staffName:"Nader Bilal",staffNameAr:"نادر بلال",staffRole:"Regional Sales Leader",staffRoleAr:"قائد المبيعات الإقليمي",phone:"+965 97707578",email:"kuwait@printopack.com.sa"},
+  {id:uid(),city:"Morocco",cityAr:"المغرب",group:"Regional & Export",cc:"ma",country:"Morocco",countryAr:"المغرب",staffName:"Name Name",staffNameAr:"الاسم الاسم",staffRole:"Office manager",staffRoleAr:"مدير المكتب",phone:"+966 55 421 9918",email:"moroccooffice@printopack.com.sa"},
+  {id:uid(),city:"International Sales",cityAr:"المبيعات الدولية",group:"Regional & Export",cc:"int",country:"International",countryAr:"دولي",staffName:"Name Name",staffNameAr:"الاسم الاسم",staffRole:"Office manager",staffRoleAr:"مدير المكتب",phone:"+966 50 873 9828",email:"ibrahim.ismail@printopack.com.sa"},
+  {id:uid(),city:"Algeria",cityAr:"الجزائر",group:"Regional & Export",cc:"dz",country:"Algeria",countryAr:"الجزائر",staffName:"Elhaoues Chemseddine",staffNameAr:"الهواس شمس الدين",staffRole:"Regional Sales Leader",staffRoleAr:"قائد المبيعات الإقليمي",phone:"+213 553038979",email:"info-algeria@printopack.com.sa"},
+  {id:uid(),city:"Egypt",cityAr:"مصر",group:"Regional & Export",cc:"eg",country:"Egypt",countryAr:"مصر",staffName:"Name Name",staffNameAr:"الاسم الاسم",staffRole:"Office manager",staffRoleAr:"مدير المكتب",phone:"+20 111 171 2221",email:"egypt@printopack.com.sa"},
+  {id:uid(),city:"Sudan",cityAr:"السودان",group:"Regional & Export",cc:"sd",country:"Sudan",countryAr:"السودان",staffName:"Name Name",staffNameAr:"الاسم الاسم",staffRole:"Office manager",staffRoleAr:"مدير المكتب",phone:"+966 55 421 9918",email:"sudan@printopack.com.sa"},
+  {id:uid(),city:"Jordan",cityAr:"الأردن",group:"Regional & Export",cc:"jo",country:"Jordan",countryAr:"الأردن",staffName:"Name Name",staffNameAr:"الاسم الاسم",staffRole:"Office manager",staffRoleAr:"مدير المكتب",phone:"+962 7 8570 6299",email:"jordan@printopack.com.sa"},
+  {id:uid(),city:"Iraq",cityAr:"العراق",group:"Regional & Export",cc:"iq",country:"Iraq",countryAr:"العراق",staffName:"Name Name",staffNameAr:"الاسم الاسم",staffRole:"Office manager",staffRoleAr:"مدير المكتب",phone:"+962 7 8570 6299",email:"jordan@printopack.com.sa"},
+  {id:uid(),city:"Syria",cityAr:"سوريا",group:"Regional & Export",cc:"sy",country:"Syria",countryAr:"سوريا",staffName:"Name Name",staffNameAr:"الاسم الاسم",staffRole:"Office manager",staffRoleAr:"مدير المكتب",phone:"+963 933431615",email:"bsh_moneer@hotmail.com"}
  ],
  about:{
   heroTitle:"Where technology meets vision.",heroTitleAr:"حيث تلتقي التقنية بالرؤية.",
@@ -183,7 +247,7 @@ var SEED={
  settings:{
   company:"Printopack - Saudi Modern Packaging Factory Co. Ltd.",companyAr:"برنتوباك - مصنع التغليف السعودي الحديث المحدود",
   phone:"+966 12 608 1074",fax:"+966 12 608 1082",email:"info@printopack.com.sa",
-  hours:"9:00 AM to 5:00 PM",address:"Industrial Area 5, Unit 10, 8508, Jeddah 22428, Saudi Arabia",
+  hours:"9:00 AM to 5:00 PM",maxImageKb:"400",address:"Industrial Area 5, Unit 10, 8508, Jeddah 22428, Saudi Arabia",
   addressAr:"المنطقة الصناعية 5، وحدة 10، 8508، جدة 22428، المملكة العربية السعودية",
   addressShort:"Industrial Area 5, Jeddah, Saudi Arabia",addressShortAr:"المنطقة الصناعية 5، جدة، السعودية"
  }
@@ -202,7 +266,7 @@ function imgSrc(v){
  v=v||'';
  return MODE==='api'&&v.slice(0,9)==='/uploads/'?'/media/'+v.slice(9):v;
 }
-var COLLECTIONS=['news','productGroups','products','team','careers','partners','factory','quality','responsibility','gallery','offices','values'];
+var COLLECTIONS=['news','productGroups','products','team','careers','partners','factory','quality','responsibility','gallery','offices','values','formats','standard'];
 var CACHE={entries:{},singletons:{}};
 
 function coll(k){return CACHE.entries[k]||(CACHE.entries[k]=[]);}
@@ -279,19 +343,19 @@ var MODELS={
   fields:[{name:"image",type:"image",label:"Cover image",rec:"1200 × 800px (landscape, JPG)"},{name:"category",type:"select",label:"Category",half:true,options:["General","Company News","Sustainability","Certifications","Events","Products"]},{name:"date",type:"date",label:"Date",half:true},{name:"status",type:"select",label:"Status",half:true,options:["draft","published"]},{name:"title",type:"text",label:"Title (English)"},{name:"body",type:"textarea",label:"Body (English)"},{name:"titleAr",type:"text",label:"Title",ar:"Arabic",rtl:true},{name:"bodyAr",type:"textarea",label:"Body",ar:"Arabic (review before publishing)",rtl:true}]},
  productGroups:{label:"Product Groups",singular:"Group",icon:"products",group:"Content",
   columns:[{type:"thumb",field:"image",contain:true},{type:"title",field:"name",sub:"description"},{type:"text",field:"nameAr"}],
-  fields:[{name:"image",type:"image",label:"Group image",contain:true,rec:"1000 × 750px (transparent PNG)"},{name:"name",type:"text",label:"Name (English)",half:true},{name:"nameAr",type:"text",label:"Name",ar:"Arabic",rtl:true,half:true},{name:"description",type:"textarea",label:"Description (English)"},{name:"descriptionAr",type:"textarea",label:"Description",ar:"Arabic",rtl:true}]},
+  fields:[{name:"image",type:"image",label:"Group image",contain:true,rec:"1000 × 750px (transparent PNG)"},{name:"name",type:"text",label:"Name (English)",half:true},{name:"nameAr",type:"text",label:"Name",ar:"Arabic",rtl:true,half:true},{name:"kind",type:"select",label:"Type",half:true,options:["Group","Measurements"],rec:"A Measurements group is a size chart rather than a product range: its page shows the drawing at full page width."},{name:"filter",type:"select",label:"Browse family",half:true,options:["snacks","confectionery","bakery","staples","beverage","chilled","specialty"],rec:"Which heading this group sits under in the Browse list on the products page. Snacks · Confectionery · Bakery & Breads · Pantry Staples · Bottles & Liquids · Frozen & Chilled · Specialty."},{name:"description",type:"textarea",label:"Description (English)"},{name:"descriptionAr",type:"textarea",label:"Description",ar:"Arabic",rtl:true}]},
  products:{label:"Products",singular:"Product",icon:"products",group:"Content",
   columns:[{type:"thumb",field:"image",contain:true},{type:"title",field:"name",sub:"category"},{type:"active",field:"active"}],
-  fields:[{name:"image",type:"image",label:"Product image",contain:true,rec:"1000 × 750px (transparent PNG)"},{name:"name",type:"text",label:"Name (English)",half:true},{name:"category",type:"select",label:"Group",half:true,optionsFrom:"productGroups"},{name:"description",type:"textarea",label:"Description (English)"},{name:"nameAr",type:"text",label:"Name",ar:"Arabic",rtl:true,half:true},{name:"active",type:"select",label:"Visible on site",half:true,options:["true","false"]},{name:"descriptionAr",type:"textarea",label:"Description",ar:"Arabic",rtl:true}]},
+  fields:[{name:"image",type:"image",label:"Product image",contain:true,rec:"1000 × 750px (transparent PNG)"},{name:"name",type:"text",label:"Name (English)",half:true},{name:"category",type:"select",label:"Group",half:true,optionsFrom:"productGroups"},{name:"kind",type:"select",label:"Type",half:true,options:["Product","Measurements"],rec:"A Measurements section is shown differently: full width, the chart uncropped, and openable at full size, because the sizes printed on it have to be readable."},{name:"description",type:"textarea",label:"Description (English)"},{name:"nameAr",type:"text",label:"Name",ar:"Arabic",rtl:true,half:true},{name:"active",type:"select",label:"Visible on site",half:true,options:["true","false"]},{name:"descriptionAr",type:"textarea",label:"Description",ar:"Arabic",rtl:true}]},
  team:{label:"Our Team",singular:"Member",icon:"team",group:"Content",
   columns:[{type:"thumb",field:"photo",round:true},{type:"title",field:"name",sub:"role"},{type:"text",field:"experience",prefix:"",suffix:" yrs"},{type:"text",field:"email"}],
   fields:[{name:"photo",type:"image",label:"Photo",rec:"600 × 760px (portrait, JPG)"},{name:"mono",type:"text",label:"Monogram (initials, shown until a photo is added)",half:true},{name:"name",type:"text",label:"Name (English)",half:true},{name:"role",type:"text",label:"Role (English)",half:true},{name:"nameAr",type:"text",label:"Name",ar:"Arabic",rtl:true,half:true},{name:"roleAr",type:"text",label:"Role",ar:"Arabic",rtl:true,half:true},{name:"email",type:"text",label:"Email",half:true},{name:"experience",type:"number",label:"Years of experience",half:true},{name:"bio",type:"textarea",label:"Short note (English)"},{name:"bioAr",type:"textarea",label:"Short note",ar:"Arabic",rtl:true}]},
  careers:{label:"Careers",singular:"Job",icon:"careers",group:"Content",
   columns:[{type:"title",field:"title",sub:"dept"},{type:"text",field:"type"},{type:"text",field:"location"},{type:"pill",field:"status"}],
-  fields:[{name:"title",type:"text",label:"Title (English)",half:true},{name:"titleAr",type:"text",label:"Title",ar:"Arabic",rtl:true,half:true},{name:"dept",type:"select",label:"Department",half:true,options:["Production","Quality","Sales","Engineering","Admin","Logistics","IT"]},{name:"type",type:"select",label:"Type",half:true,options:["Full-time","Part-time","Contract","Internship"]},{name:"location",type:"text",label:"Location",half:true},{name:"status",type:"select",label:"Status",half:true,options:["draft","published"]},{name:"email",type:"text",label:"Application email"},{name:"requirements",type:"textarea",label:"Requirements (English)"},{name:"requirementsAr",type:"textarea",label:"Requirements",ar:"Arabic",rtl:true}]},
+  fields:[{name:"title",type:"text",label:"Title (English)",half:true},{name:"titleAr",type:"text",label:"Title",ar:"Arabic",rtl:true,half:true},{name:"dept",type:"select",label:"Department",half:true,options:["Production","Quality","Sales","Engineering","Admin","Logistics","IT"]},{name:"deptAr",type:"text",label:"Department",ar:"Arabic",rtl:true,half:true},{name:"type",type:"select",label:"Type",half:true,options:["Full-time","Part-time","Contract","Internship"]},{name:"typeAr",type:"text",label:"Type",ar:"Arabic",rtl:true,half:true},{name:"location",type:"text",label:"Location",half:true},{name:"locationAr",type:"text",label:"Location",ar:"Arabic",rtl:true,half:true},{name:"status",type:"select",label:"Status",half:true,options:["draft","published"]},{name:"email",type:"text",label:"Application email",half:true,rec:"Applications for THIS role go here. Send a manager vacancy to that manager rather than to one shared inbox."},{name:"summary",type:"textarea",label:"Summary (English)",rec:"One or two lines, shown under the job title."},{name:"summaryAr",type:"textarea",label:"Summary",ar:"Arabic",rtl:true},{name:"requirements",type:"textarea",label:"Requirements (English)",rec:"One requirement per line. Each line becomes a bullet on the site."},{name:"requirementsAr",type:"textarea",label:"Requirements",ar:"Arabic",rtl:true}]},
  partners:{label:"Success Partners",singular:"Partner",icon:"partners",group:"Content",
   columns:[{type:"thumb",field:"image",contain:true},{type:"title",field:"name",sub:"country",fallback:"country"},{type:"text",field:"country"}],
-  fields:[{name:"image",type:"image",label:"Logo",contain:true,rec:"480 × 300px (transparent PNG)"},{name:"name",type:"text",label:"Client name (English)",half:true},{name:"nameAr",type:"text",label:"Client name",ar:"Arabic",rtl:true,half:true},{name:"country",type:"text",label:"Country (English)",half:true},{name:"countryAr",type:"text",label:"Country",ar:"Arabic",rtl:true,half:true},{name:"link",type:"url",label:"Website (optional)"}]},
+  fields:[{name:"image",type:"image",label:"Logo",contain:true,rec:"480 × 300px (transparent PNG)"},{name:"name",type:"text",label:"Client name (English)",half:true},{name:"nameAr",type:"text",label:"Client name",ar:"Arabic",rtl:true,half:true},{name:"country",type:"text",label:"Country (English)",half:true},{name:"countryAr",type:"text",label:"Country",ar:"Arabic",rtl:true,half:true},{name:"featured",type:"select",label:"Main partner",half:true,options:["false","true"],rec:"Main partners are the ones shown on the home page. There are always exactly "+MAIN_PARTNERS+" of them, so turn one off before turning another on."},{name:"link",type:"url",label:"Website (optional)"}]},
  factory:{label:"Factory Departments",singular:"Department",icon:"factory",group:"Company",
   columns:[{type:"thumb",field:"image"},{type:"title",field:"name",sub:"kind"},{type:"tag",field:"kind"}],
   fields:[{name:"image",type:"image",label:"Photo",rec:"1200 × 800px (landscape, JPG)"},{name:"name",type:"text",label:"Name (English)",half:true},{name:"kind",type:"select",label:"Type",half:true,options:["Department","Warehouse"]},{name:"nameAr",type:"text",label:"Name",ar:"Arabic",rtl:true},{name:"description",type:"textarea",label:"Description (English)"},{name:"descriptionAr",type:"textarea",label:"Description",ar:"Arabic",rtl:true}]},
@@ -307,9 +371,16 @@ var MODELS={
  values:{label:"Our Values",singular:"Value",icon:"about",group:"Company",
   columns:[{type:"title",field:"title",sub:"text"},{type:"text",field:"titleAr"}],
   fields:[{name:"title",type:"text",label:"Value (English)",half:true},{name:"titleAr",type:"text",label:"Value",ar:"Arabic",rtl:true,half:true},{name:"text",type:"textarea",label:"Description (English)"},{name:"textAr",type:"textarea",label:"Description",ar:"Arabic",rtl:true}]},
+ formats:{label:"Bag Formats",singular:"Format",icon:"products",group:"Content",
+  columns:[{field:"title"},{field:"titleAr"}],
+  fields:[{name:"title",type:"text",label:"Format (English)",half:true},{name:"titleAr",type:"text",label:"Format",ar:"Arabic",rtl:true,half:true}]},
+ standard:{label:"The Printopack Standard",singular:"Point",icon:"quality",group:"Content",
+  columns:[{field:"title"},{field:"text"}],
+  fields:[{name:"title",type:"text",label:"Point (English)",half:true},{name:"titleAr",type:"text",label:"Point",ar:"Arabic",rtl:true,half:true},{name:"text",type:"textarea",label:"Text (English)"},{name:"textAr",type:"textarea",label:"Text",ar:"Arabic",rtl:true}],
+  note:"Shown on every product group page under \"What every order includes\"."},
  offices:{label:"Offices & Contact",singular:"Office",icon:"offices",group:"Site",
   columns:[{type:"title",field:"city",sub:"staffName"},{type:"text",field:"phone"},{type:"text",field:"email"}],
-  fields:[{name:"city",type:"text",label:"Office (English)",half:true},{name:"cityAr",type:"text",label:"Office",ar:"Arabic",rtl:true,half:true},{name:"group",type:"select",label:"Group",half:true,options:["Saudi Arabia","Regional & Export"]},{name:"country",type:"text",label:"Country / area (English)",half:true},{name:"countryAr",type:"text",label:"Country / area",ar:"Arabic",rtl:true,half:true},{name:"staffName",type:"text",label:"Manager name (English)",half:true},{name:"staffNameAr",type:"text",label:"Manager name",ar:"Arabic",rtl:true,half:true},{name:"staffRole",type:"text",label:"Manager title (English)",half:true},{name:"staffRoleAr",type:"text",label:"Manager title",ar:"Arabic",rtl:true,half:true},{name:"phone",type:"text",label:"Phone",half:true},{name:"email",type:"text",label:"Email",half:true}]}
+  fields:[{name:"photo",type:"image",label:"Office manager's photo",rec:"420 × 420px, square. Shown beside the office on the contact page; initials stand in until one is added."},{name:"city",type:"text",label:"Office (English)",half:true},{name:"cityAr",type:"text",label:"Office",ar:"Arabic",rtl:true,half:true},{name:"group",type:"select",label:"Group",half:true,options:["Saudi Arabia","Regional & Export"]},{name:"cc",type:"select",label:"Country on the map",half:true,options:["","sa","kw","jo","iq","eg","sd","tn","ly","dz","ma","ye","sy","int"],rec:"Which country this office lights up on the map, and whose details the map shows. Leave blank for a branch inside a country that already has an office (Riyadh, Dammam). 'int' is International Sales, which appears in the selector but has no country to colour."},{name:"country",type:"text",label:"Country / area (English)",half:true},{name:"countryAr",type:"text",label:"Country / area",ar:"Arabic",rtl:true,half:true},{name:"staffName",type:"text",label:"Manager name (English)",half:true},{name:"staffNameAr",type:"text",label:"Manager name",ar:"Arabic",rtl:true,half:true},{name:"staffRole",type:"text",label:"Manager title (English)",half:true},{name:"staffRoleAr",type:"text",label:"Manager title",ar:"Arabic",rtl:true,half:true},{name:"phone",type:"text",label:"Phone",half:true},{name:"email",type:"text",label:"Email",half:true}]}
 };
 
 /* ---------------- auth ---------------- */
@@ -331,7 +402,7 @@ function renderLogin(){
 
 /* ---------------- shell ---------------- */
 var view='dashboard';
-var NAV=[{k:'dashboard',label:'Dashboard',icon:'dash'},{grp:'Content'},{k:'news'},{k:'products'},{k:'team'},{k:'careers'},{k:'partners'},{grp:'Company'},{k:'factory'},{k:'quality'},{k:'responsibility'},{k:'values'},{k:'gallery'},{grp:'Site'},{k:'about',label:'About & Home',icon:'about'},{k:'offices'},{k:'settings',label:'Settings',icon:'settings'}];
+var NAV=[{k:'dashboard',label:'Dashboard',icon:'dash'},{grp:'Content'},{k:'news'},{k:'products'},{k:'team'},{k:'careers'},{k:'partners'},{k:'formats'},{k:'standard'},{grp:'Company'},{k:'factory'},{k:'quality'},{k:'responsibility'},{k:'values'},{k:'gallery'},{grp:'Site'},{k:'about',label:'About & Home',icon:'about'},{k:'offices'},{k:'countries',label:'Countries on the map',icon:'offices'},{k:'settings',label:'Settings',icon:'settings'}];
 function sidebar(){
  var items=NAV.map(function(n){
   if(n.grp)return '<div class="sb-group">'+n.grp+'</div>';
@@ -417,7 +488,7 @@ function render(){
  root.querySelectorAll('[data-nav]').forEach(function(el){el.addEventListener('click',function(){view=el.getAttribute('data-nav');render();});});
  var lo=root.querySelector('[data-logout]');if(lo)lo.addEventListener('click',function(){localStorage.removeItem(SKEY);render();});
 }
-function renderView(){var m=$('#main');if(view==='dashboard')return dashView(m);if(view==='about')return aboutView(m);if(view==='settings')return settingsView(m);if(MODELS[view])return listView(m,view);}
+function renderView(){var m=$('#main');if(view==='dashboard')return dashView(m);if(view==='about')return aboutView(m);if(view==='countries')return countriesView(m);if(view==='settings')return settingsView(m);if(MODELS[view])return listView(m,view);}
 
 /* Picture storage, shown on the dashboard when the Cloudflare backend is live. Local demo
    mode has nothing to measure, so the panel simply stays hidden. */
@@ -468,7 +539,20 @@ function listView(m,key){
  var heads=mdl.columns.map(function(c){return '<th>'+(c.type==='thumb'?'':esc(c.field.charAt(0).toUpperCase()+c.field.slice(1)))+'</th>';}).join('')+'<th></th>';
  var actions='<button class="btn btn-gold" data-open="'+key+':new">'+svg('plus')+'New '+mdl.singular.toLowerCase()+'</button>';
  var toggle=mdl.hasCalendar?'<div class="seg" id="tg"><button class="on" data-mode="list">List</button><button data-mode="cal">Calendar</button></div>':'';
- m.innerHTML=topbar(mdl.label,'Content · '+mdl.label,actions)+'<div class="view"><div class="toolbar"><div class="search">'+svg('search')+'<input id="q" placeholder="Search '+mdl.label.toLowerCase()+'…"></div>'+toggle+'</div><div id="host"></div></div>';
+ /* Partners: say how many of the home page's main slots are filled, so the client is never
+    guessing why a logo did or did not appear there. */
+ var tally='';
+ var left=capLeft(key);
+ if(left!=null&&left<=Math.max(5,Math.round(capOf(key)*0.1))){
+  tally+='<div class="tally'+(left===0?'':'')+'">'+(left===0
+   ? mdl.label+' is full at '+capOf(key)+' '+mdl.singular.toLowerCase()+'s. Delete one before adding another.'
+   : 'Room for '+left+' more '+mdl.singular.toLowerCase()+(left===1?'':'s')+' before this section is full.')+'</div>';
+ }
+ if(key==='partners'){
+  var main=rows.filter(function(x){return String(x.featured)==='true';}).length;
+  tally+='<div class="tally'+(main===MAIN_PARTNERS?' ok':'')+'">'+main+' of '+MAIN_PARTNERS+' main partners selected'+(main===MAIN_PARTNERS?'':', the home page needs exactly '+MAIN_PARTNERS)+'</div>';
+ }
+ m.innerHTML=topbar(mdl.label,'Content · '+mdl.label,actions)+'<div class="view">'+tally+'<div class="toolbar"><div class="search">'+svg('search')+'<input id="q" placeholder="Search '+mdl.label.toLowerCase()+'…"></div>'+toggle+'</div><div id="host"></div></div>';
  bind(m); // wire the topbar "New" button (rows are bound separately in paint(); #host is empty here so no double-binding)
  function paint(f){
   var list=rows.filter(function(r){return !f||JSON.stringify(r).toLowerCase().indexOf(f.toLowerCase())>-1;});
@@ -526,6 +610,18 @@ function openForm(key,id){
   if(key==='products')draft.active=String(draft.active)!=='false';
   if(key==='team'&&draft.experience!=null)draft.experience=parseInt(draft.experience,10)||0;
   if(!draft.title&&!draft.name&&!draft.city&&!draft.staffName){toast('Add a title/name first','err');return;}
+  if(id==='new'&&capLeft(key)===0){toast(MODELS[key].label+' is full at '+capOf(key)+'. Delete one before adding another.','err');return;}
+  /* The home page shows exactly MAIN_PARTNERS main partners. Normalise the flag first: a
+     new partner that was never touched must land as "false", not inherit a rendered default,
+     or adding a partner would silently make it the 21st main one. Then refuse a 21st, rather
+     than letting the site quietly drop someone: the client picks which 20, not the code. */
+  if(key==='partners'){
+   draft.featured=String(draft.featured)==='true'?'true':'false';
+   if(draft.featured==='true'){
+    var others=coll('partners').filter(function(x){return x.id!==draft.id&&String(x.featured)==='true';}).length;
+    if(others>=MAIN_PARTNERS){toast('Already '+MAIN_PARTNERS+' main partners. Turn one off first.','err');return;}
+   }
+  }
   if(id==='new')draft.id=uid();
   saveRecord(key,draft);
   toast(mdl.singular+(id==='new'?' created':' updated'),'ok');
@@ -559,6 +655,48 @@ function renderCal(hostEl){
 function formPanel(title,desc,fields,data){
  return '<div class="panel"><div class="panel-head"><div><h2>'+esc(title)+'</h2>'+(desc?'<p>'+esc(desc)+'</p>':'')+'</div></div><div class="panel-body"><div class="form-grid">'+fields.map(function(f){return fieldHTML(f,data[f.name]);}).join('')+'</div></div></div>';
 }
+/* Countries on the map. Nasser's brief: every Arab country listed with a switch, so that if
+   Printopack opens in Qatar the admin flips Qatar ON, a Qatar office section appears for the
+   details, and Qatar lights up on the map by itself. Switching ON creates the office record
+   (that record IS the switch, so there is no second list to keep in step); switching OFF
+   deletes it, with a warning naming what will be lost. */
+function countriesView(m){
+ var offs=coll('offices');
+ var on=function(cc){return offs.filter(function(o){return o.cc===cc;})[0];};
+ var live=COUNTRIES.filter(function(c){return on(c.cc);}).length;
+ var cards=COUNTRIES.map(function(c){
+  var o=on(c.cc);
+  var detail=o?[o.email,o.phone].filter(Boolean).join(' · '):'Not in the network';
+  return '<div class="cty'+(o?' on':'')+'">'+
+   '<div class="cty-main"><div class="cty-name">'+esc(c.en)+'</div>'+
+   '<div class="cty-ar" dir="rtl">'+esc(c.ar)+'</div>'+
+   '<div class="cty-detail">'+esc(detail||'No contact details yet')+'</div></div>'+
+   '<button class="sw'+(o?' on':'')+'" data-cty="'+c.cc+'" role="switch" aria-checked="'+(!!o)+'" aria-label="'+esc(c.en)+'"><span class="sw-k"></span></button>'+
+   '</div>';
+ }).join('');
+ m.innerHTML=topbar('Countries on the map','Site · Countries','')+
+  '<div class="view"><p class="hint-lead">Switch a country on and it joins the network: a new office appears under Offices &amp; Contact for its email, phone and manager, and the country lights up on both maps. Switch it off and that office is removed.</p>'+
+  '<div class="tally'+(live?' ok':'')+'">'+live+' of '+COUNTRIES.length+' countries switched on</div>'+
+  '<div class="cty-grid">'+cards+'</div></div>';
+ m.querySelectorAll('[data-cty]').forEach(function(btn){
+  btn.addEventListener('click',function(){
+   var cc=btn.getAttribute('data-cty');
+   var c=COUNTRIES.filter(function(x){return x.cc===cc;})[0];
+   var existing=on(cc);
+   if(existing){
+    if(!confirm('Switch '+c.en+' off? Its office, including the email and phone, is deleted and the country is removed from the map.'))return;
+    deleteRecord('offices',existing.id);
+    toast(c.en+' switched off','ok');
+   }else{
+    saveRecord('offices',{id:uid(),group:'Regional & Export',cc:cc,city:c.en,cityAr:c.ar,
+     country:c.en,countryAr:c.ar,staffName:'',staffNameAr:'',staffRole:'',staffRoleAr:'',
+     phone:'',email:''});
+    toast(c.en+' switched on. Add its details under Offices & Contact.','ok');
+   }
+   render();
+  });
+ });
+}
 function aboutView(m){
  var p=obj('about');
  m.innerHTML=topbar('About & Home','Site','<button class="btn btn-ok" id="save">Save changes</button>')+'<div class="view">'+
@@ -572,7 +710,7 @@ function aboutView(m){
 function settingsView(m){
  var s=obj('settings');
  m.innerHTML=topbar('Settings','Site','<button class="btn btn-ok" id="save">Save changes</button>')+'<div class="view">'+
-  formPanel('Company details','Shown in the footer of every page and on the contact page.',[{name:'company',type:'text',label:'Company name (English)'},{name:'companyAr',type:'text',label:'Company name',ar:'Arabic',rtl:true},{name:'phone',type:'text',label:'Phone',half:true},{name:'fax',type:'text',label:'Fax',half:true},{name:'email',type:'text',label:'Email',half:true},{name:'hours',type:'text',label:'Office hours',half:true},{name:'address',type:'textarea',label:'Address (English)'},{name:'addressAr',type:'textarea',label:'Address',ar:'Arabic',rtl:true},{name:'addressShort',type:'text',label:'Short address (English)',rec:'The compact version shown in the bar at the very top of every page.'},{name:'addressShortAr',type:'text',label:'Short address',ar:'Arabic',rtl:true}],s)+'</div>';
+  formPanel('Company details','Shown in the footer of every page and on the contact page.',[{name:'company',type:'text',label:'Company name (English)'},{name:'companyAr',type:'text',label:'Company name',ar:'Arabic',rtl:true},{name:'phone',type:'text',label:'Phone',half:true},{name:'fax',type:'text',label:'Fax',half:true},{name:'email',type:'text',label:'Email',half:true},{name:'hours',type:'text',label:'Office hours',half:true},{name:'address',type:'textarea',label:'Address (English)'},{name:'addressAr',type:'textarea',label:'Address',ar:'Arabic',rtl:true},{name:'addressShort',type:'text',label:'Short address (English)',rec:'The compact version shown in the bar at the very top of every page.'},{name:'addressShortAr',type:'text',label:'Short address',ar:'Arabic',rtl:true}],s)+formPanel('Pictures','How large an uploaded picture may be. Every picture is shrunk and re-encoded in your browser before it is sent, so most land far under this on their own. Lower it if the storage meter on the dashboard climbs; anything that will not fit is refused rather than quietly accepted.',[{name:'maxImageKb',type:'number',label:'Largest picture (KB)',half:true,rec:'Between 40 and 600. The default is 400 KB. A phone photo normally lands around 65 KB.'}],s)+'</div>';
  var d={};m.querySelectorAll('[data-f]').forEach(function(el){el.addEventListener('input',function(){d[el.getAttribute('data-f')]=el.value;});});
  $('#save').addEventListener('click',function(){var cur=obj('settings');Object.keys(d).forEach(function(k){cur[k]=d[k];});setObj('settings',cur);toast('Saved','ok');});
 }
