@@ -249,6 +249,29 @@ These are not one page. Each one changes something every page renders.
 - [ ] **3a. Certificates take many photos with descriptions.** Named explicitly by the client.
       The `quality` and `responsibility` collections both have a single `image` field today.
       This is G8 applied to the two certificate collections, plus the admin fields for it.
+
+      > **Audit + decision, 2026-08-05.** Asked to make sure every certificate is admin-wired
+      > and uniform. **They already are, verified against the code:** every certificate on the
+      > site renders from a collection through the one shared `.cert-card` grid, nothing is
+      > hardcoded. Quality certificates come from `collection('quality')` filtered to
+      > `kind==='Certificate'` (`quality/certificates.astro:33`, qual-01 BRCGS, qual-02 ISO
+      > 22000); the six Social-Responsibility certificates come from `collection('responsibility')`
+      > (`responsibility.astro:61`, resp-01..06). The grid is "any number, any shape", so adding a
+      > certificate in the admin adds another identical card.
+      >
+      > **Bader's steer:** keep exactly this layout, nothing different, no per-certificate photo
+      > gallery. So 3a's "many photos" is met at the section level (add more certificate cards),
+      > not by a per-record repeater. **The G8 repeater is therefore NOT being built for
+      > certificates.** If the client later wants several images inside a single certificate card,
+      > revisit then.
+      >
+      > **One real inconsistency found and left as-is on Bader's instruction:** the `quality`
+      > collection also holds `qual-03` (kind `Assurance`) and `qual-04` (kind `Lab`), and the
+      > admin lets you edit both, but no page reads them: `quality/assurance.astro` and
+      > `quality/lab.astro` render hardcoded 4-step process lists and ignore the collection. Same
+      > "admin edits something the page ignores" class as the old careers/products bugs. Not fixed
+      > now because the hardcoded pages carry richer copy than the single record, so reconciling it
+      > is a design choice, not a rote wiring. Logged here for whoever picks it up.
 - [ ] **3b.** Remove the visitor-facing `.qnote` helper line (already tracked in
       `PRODUCTION_TODO.md`).
 
