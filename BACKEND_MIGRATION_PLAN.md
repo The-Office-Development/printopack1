@@ -173,19 +173,25 @@ these endpoints. The rest of the admin UI is unchanged.
 
 ---
 
-## 6. Login (client experience)
+## 6. Login (client experience) — SETTLED: self-hosted, not Access
 
-**Open question, must be settled in Phase 0:** the plan below assumes Cloudflare Access, but
-selecting the free Zero Trust plan is reported to ask for a payment method. If it does, Access is
-out on the same grounds as R2, and the alternative is a login we run ourselves in a Pages
-Function: a password the client sets, checked against a hash held as a Pages secret, issuing a
-signed session cookie. That is more code in the live path and worth avoiding if Access turns out
-to be genuinely card-free, so check the real account first.
+Cloudflare Access is **out**: its free Zero Trust plan asks for a payment card on file (confirmed
+on the real account, 2026-08), and the client is promised no card and no fees. So the login is a
+small, self-hosted gate in the Pages Functions, and it is the sole auth layer:
 
-Cloudflare Access protects `/admin` and the write API. Method: **one-time email PIN**.
-The client opens the admin, types their email, receives a 6-digit code, enters it, and is in for
-the session. No password to forget or reset. Fully self-service. We add the GM's email (and any
-others he names) to the Access allow-list. The old demo login screen is removed.
+- **One account, the marketing department's.** A single password (no username to enumerate).
+- **`/api/login`** checks the password against a PBKDF2 hash and issues an HMAC-signed,
+  `HttpOnly; Secure; SameSite=Strict` session cookie (12 h). `SESSION_SECRET` (the cookie key) is
+  a Pages secret.
+- **`functions/_middleware.js`** gates every `/api/*` route except login/logout, and **fails
+  closed** if `SESSION_SECRET` is unset. `/content` and `/media/*` stay public (build-read,
+  published content only).
+- **Rotatable in-app.** The password hash lives in the D1 `auth` table, so the client changes it
+  from **Settings > Password** with no developer and no redeploy. The `ADMIN_PASS_HASH` Pages
+  secret is only the *initial* bootstrap password; the first in-app change writes the D1 row and
+  takes over. Recovery if lost: `DELETE FROM auth WHERE key='pass_hash'` reverts to the bootstrap
+  secret.
+- Generate the hash with `scripts/hash-password.mjs`; the plaintext never reaches Cloudflare.
 
 Customer login (the existing button that points to their Azure POS portal) is unchanged; it is an
 external link, not part of this backend.

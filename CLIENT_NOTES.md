@@ -1,3 +1,43 @@
+# Decisions and content requests (2026-08-05)
+
+Direction from Bader in this session. Two buckets: (a) locked decisions we act on, and
+(b) items to request from the client, which will be assembled into ONE email built together
+(Bader is supplying the full list; do not send anything yet).
+
+**Locked palette.** Three colours plus white, and nothing else, ever. Full spec in `BRAND.md`
+(red `#a60006`, blue `#0046a2`, orange `#f89900`, white). The current `global.css` still uses
+navy/gold/cream and must be migrated; that re-skin is a separate pending task.
+
+**Home cover image:** approved, stays as-is.
+
+**Fonts:** requested from the client (they are getting us the approved fonts).
+
+**The seven main-page section images:** these are deliberately NOT editable from the admin
+dashboard and must stay that way. They are fixed brand furniture. We ASK the client to supply
+them. (Separate from the home cover, which is already approved.)
+
+**Partners (the 20 logos on the home page):** every partner name, country, and logo must be
+fully editable from the admin, including adding, removing, and replacing any logo or the main
+logo. So there is no need to lock in "real" partner data now: the client maintains it all
+themselves.
+
+**Offices and their managers:** same rule, everything editable AND add-able from the admin
+(office details, manager names/titles/phones/emails, new offices). No need to chase final
+office data from the client.
+
+**Certificates:** no need to obtain the full certificate document files. What is required is
+the admin ABILITY to add and edit certificates, following the existing image-and-description
+house layout (see the house-layout section below). Confirm current cert entries expose an
+add/edit path in the admin.
+
+**Mr Printo (mascot):** deferred, do this last.
+
+**Texts to confirm with the client** (Bader will ask them to confirm the current wording):
+vision, mission, and any other section carrying drafted/placeholder copy we wrote. Sections to
+name in that request: About (history/owners/values), the vision and mission bands, Social
+Responsibility intro, Quality System intro, and any factory-department or product descriptions
+that are our draft text rather than client-supplied.
+
 # Client notes, round 2 (2026-08-02)
 
 Every note from the client's list, sorted onto the page it touches. Work top to bottom:
