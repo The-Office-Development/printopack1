@@ -24,8 +24,8 @@ const content = {
   cover: {
     eyebrow: { en: `Since ${stats.founded} · Jeddah, Saudi Arabia`, ar: `منذ عام ${stats.founded} · جدة، المملكة العربية السعودية` },
     titleHtml: {
-      en: 'Where technology<br>meets <span class="serif-note" style="color:var(--gold-bright)">vision.</span>',
-      ar: 'حيث تلتقي التقنية<br>مع <span class="serif-note" style="color:var(--gold-bright)">الرؤية.</span>',
+      en: 'Pioneers in <span class="serif-note" style="color:var(--gold-bright)">flexible packaging</span><br>solutions and applications',
+      ar: 'الرواد في حلول وتطبيقات <span class="serif-note" style="color:var(--gold-bright)">التغليف المرن</span>',
     },
     lede: {
       en: "A global leader in developing and producing responsible packaging for food, beverage, pharmaceutical, medical, home and personal-care brands.",
@@ -228,7 +228,10 @@ const pad = (n: number) => String(n).padStart(2, "0");
   .cover-bg img{width:100%;height:100%;object-fit:cover}
   .cover-bg::after{content:"";position:absolute;inset:0;background:linear-gradient(105deg,rgba(9,24,41,.82) 0%,rgba(9,24,41,.46) 44%,rgba(9,24,41,.12) 74%),linear-gradient(0deg,rgba(9,24,41,.9) 0%,rgba(9,24,41,.15) 46%,transparent 70%)}
   .cover-inner{position:relative;z-index:2;padding-bottom:clamp(64px,9vw,120px)}
-  .cover h1{margin:20px 0 24px;max-width:16ch}
+  /* Sized for a full sentence rather than the old two-word headline: a smaller clamp and a
+     wider measure so "Pioneers in flexible packaging / solutions and applications" sits on
+     two clean lines instead of towering through a 16ch box at display-xl size. */
+  .cover h1{margin:20px 0 24px;max-width:30ch;font-size:clamp(36px,5.2vw,74px);line-height:1.05}
   .cover-lede{font-size:clamp(16px,1.5vw,20px);color:rgba(250,246,238,.84);max-width:54ch;font-weight:300;line-height:1.6}
   .cover-scroll{position:absolute;z-index:3;left:50%;transform:translateX(-50%);bottom:22px;display:flex;flex-direction:column;align-items:center;gap:8px;color:rgba(250,246,238,.78);font-family:var(--display);font-size:11px;letter-spacing:.2em;text-transform:uppercase}
   .cover-scroll:hover{color:var(--gold-bright)}
@@ -261,18 +264,18 @@ const pad = (n: number) => String(n).padStart(2, "0");
      roughly a thousand pixels of contents index before the counters. */
   .fcard{position:relative;display:block;height:clamp(300px,26vw,380px);border-radius:var(--radius);overflow:hidden;background:var(--navy-deep);border:1px solid var(--line)}
   .fcard-media{position:absolute;inset:0}
-  .fcard-media img{width:100%;height:100%;object-fit:cover;filter:brightness(1.1) saturate(1.08)}
-  .fcard-scrim{position:absolute;inset:0;background:linear-gradient(0deg,rgba(9,24,41,.94) 0%,rgba(9,24,41,.72) 26%,rgba(9,24,41,.28) 52%,transparent 78%)}
-  .fcard:hover .fcard-media img{filter:brightness(1.2) saturate(1.12)}
+  .fcard-media img{width:100%;height:100%;object-fit:cover;filter:brightness(.86) saturate(1.08)}
+  .fcard-scrim{position:absolute;inset:0;background:linear-gradient(0deg,rgba(9,24,41,.95) 0%,rgba(9,24,41,.86) 30%,rgba(9,24,41,.62) 50%,rgba(9,24,41,.3) 68%,transparent 88%)}
+  .fcard:hover .fcard-media img{filter:brightness(1) saturate(1.12)}
   .fcard-body{position:absolute;inset:auto 0 0 0;z-index:2;display:flex;flex-direction:column;padding:clamp(22px,2vw,28px);color:var(--paper)}
   .fcard-num{font-family:var(--display);font-size:13px;font-weight:500;letter-spacing:.18em;color:var(--gold-bright);margin-bottom:12px}
-  .fcard-of{color:rgba(250,246,238,.5)}
+  .fcard-of{color:#fff}
   .fcard-name{font-family:var(--display);font-weight:300;font-size:clamp(26px,2.4vw,32px);line-height:1.06}
-  .fcard-desc{margin-top:10px;font-size:14px;line-height:1.55;color:rgba(250,246,238,.82);max-width:34ch}
+  .fcard-desc{margin-top:10px;font-size:14px;line-height:1.55;color:#fff;max-width:34ch}
   .fcard-open{margin-top:16px;font-family:var(--display);font-size:12px;font-weight:500;letter-spacing:.14em;text-transform:uppercase;color:var(--paper);display:inline-flex;align-items:center;gap:9px}
   .fcard:hover .fcard-open{color:var(--gold-bright)}
   .fcard::after{content:"";position:absolute;inset:0;z-index:3;border:2px solid transparent;border-radius:var(--radius)}
-  .fcard:hover::after{border-color:var(--gold)}
+  .fcard:hover::after{border-color:var(--gold-bright)}
   [dir="rtl"] .fcard-arrow{display:inline-block;transform:scaleX(-1)}
 
   /* ---------- counters ---------- */

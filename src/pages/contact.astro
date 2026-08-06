@@ -358,7 +358,7 @@ const markets = marketOrder.map((cc) => ({ cc, ...officesByCc[cc] }));
             </label>
           </div>
 
-          <button type="submit" class="btn btn-gold enquire-submit"><Bi en={c.enquire.submit.en} ar={c.enquire.submit.ar} /></button>
+          <button type="submit" class="btn btn-solid enquire-submit"><Bi en={c.enquire.submit.en} ar={c.enquire.submit.ar} /></button>
 
           <!-- open a pre-filled draft in the visitor's own mail app -->
           <div class="compose">
@@ -459,13 +459,13 @@ const markets = marketOrder.map((cc) => ({ cc, ...officesByCc[cc] }));
   .chan p{font-size:15px;color:var(--muted);line-height:1.7;margin-bottom:18px;max-width:38ch}
   .chan-addr{line-height:1.8}
   .chan-line{display:block;font-family:var(--display);font-size:16px;color:var(--navy);padding:4px 0}
-  .chan-line:hover{color:var(--gold)}
+  .chan-line:hover{color:var(--gold-bright)}
   .chan-cta{margin-top:auto}
   .chan-list{display:flex;flex-direction:column;gap:16px;width:100%}
   .chan-list li{display:flex;flex-direction:column;gap:2px}
   .chan-list-label{font-family:var(--display);font-size:12px;font-weight:500;letter-spacing:.08em;color:var(--muted)}
   .chan-list a{font-size:15px;color:var(--navy)}
-  .chan-list a:hover{color:var(--gold)}
+  .chan-list a:hover{color:var(--gold-bright)}
 
   /* enquiry window: vertical stack, comfortably centred */
   .enquire{padding-block:clamp(52px,7vw,92px);border-top:1px solid var(--line);border-bottom:1px solid var(--line)}
@@ -478,14 +478,14 @@ const markets = marketOrder.map((cc) => ({ cc, ...officesByCc[cc] }));
   .reach-map path{stroke-linejoin:round;stroke-linecap:round}
   .rc-ctx{fill:var(--sand);stroke:var(--paper);stroke-width:.14;pointer-events:none}
   .rc{fill:var(--blue);stroke:var(--paper);stroke-width:.18;cursor:pointer;outline:none}
-  .rc:hover{fill:var(--navy-soft)}
+  .rc:hover{fill:var(--gold-bright)}
   .rc:focus-visible{stroke:var(--gold);stroke-width:.45}
   .rc.active{fill:var(--gold)}
   /* Dot markers for the countries that are only a few pixels across at this scale. They
      inherit .rc's fill, hover and active colours, so a small country highlights exactly
      like a large one. */
   .rc-dot{stroke-width:.16}
-  .rc-dot:hover{fill:var(--navy-soft)}
+  .rc-dot:hover{fill:var(--gold-bright)}
 
   /* market pull-down beside the map */
   .map-pick{margin-top:16px;display:flex;align-items:flex-end;flex-wrap:wrap;gap:10px 20px}
@@ -540,7 +540,7 @@ const markets = marketOrder.map((cc) => ({ cc, ...officesByCc[cc] }));
   .career-fields[hidden]{display:none}
   .career-note{background:var(--gold-soft);border:1px solid var(--gold);color:var(--navy);padding:12px 14px;border-radius:var(--radius);font-size:13.5px}
   .file-drop{position:relative;display:flex;align-items:center;gap:14px;border:1.5px dashed var(--line);border-radius:var(--radius);padding:15px 18px;background:var(--white);cursor:pointer}
-  .file-drop:hover{border-color:var(--navy);background:var(--cream)}
+  .file-drop:hover{border-color:var(--gold-bright);background:var(--cream)}
   .file-native{position:absolute;inset:0;width:100%;height:100%;opacity:0;cursor:pointer}
   .file-icon{flex:none;display:grid;place-items:center;width:40px;height:40px;border-radius:50%;background:var(--cream);color:var(--navy)}
   .file-icon svg{width:20px;height:20px}
@@ -560,7 +560,7 @@ const markets = marketOrder.map((cc) => ({ cc, ...officesByCc[cc] }));
   .compose-btns{display:flex;flex-wrap:wrap;gap:10px}
   .compose-btn{display:inline-flex;align-items:center;gap:9px;border:1px solid var(--line);border-radius:var(--radius);padding:10px 16px;font-family:var(--display);font-size:13.5px;color:var(--navy);background:var(--white);cursor:pointer}
   .compose-btn svg{width:17px;height:17px;color:var(--gold)}
-  .compose-btn:hover{border-color:var(--navy);background:var(--cream)}
+  .compose-btn:hover{border-color:var(--gold-bright);background:var(--cream)}
 
   /* offices directory */
   .offices-band{padding-block:clamp(56px,7vw,96px)}

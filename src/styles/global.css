@@ -5,25 +5,34 @@
 :root{
   /* --- brand palette --- */
   --ink:        #17191d;   /* primary text */
-  --navy:       #16457f;   /* brand blue (from the Printopack logo) */
-  --navy-deep:  #0e2b52;   /* darkest blue band */
-  --navy-soft:  #1f5aa0;   /* raised blue */
-  --blue:       #1a4fa0;   /* logo-exact interactive blue */
+  --navy:       #0046a2;   /* brand blue (exact Printopack logo blue) */
+  --navy-deep:  #0046a2;   /* dark band (same exact logo blue) */
+  --navy-soft:  #0046a2;   /* raised (same exact logo blue) */
+  --blue:       #0046a2;   /* logo-exact interactive blue */
 
   --paper:      #faf6ee;   /* warm ivory base (never stark white) */
   --cream:      #f2ebdc;   /* soft surface */
   --sand:       #e8ddc8;   /* deeper surface */
   --white:      #ffffff;
 
-  --gold:       #ef8b1f;   /* brand orange accent (from the logo) */
-  --gold-bright:#f7a53c;   /* orange hover / on-dark */
-  --gold-soft:  rgba(239,139,31,.14);
+  --gold:       #f89900;   /* brand orange accent (exact Printopack logo orange) */
+  --gold-bright:#f89900;   /* orange hover / on-dark (same exact logo orange) */
+  --gold-soft:  rgba(248,153,0,.14);
 
   --muted:      #6d685c;   /* secondary text */
   --faint:      #9a9385;
   --line:       rgba(23,25,29,.14);   /* hairline */
   --line-soft:  rgba(23,25,29,.08);
   --line-dark:  rgba(250,246,238,.18);/* hairline on navy */
+
+  /* --- interaction (see DESIGN_STANDARD.md) ---
+     One rule across the whole site: a clickable thing is client blue and turns client
+     yellow on hover. On dark surfaces it inverts (yellow at rest, white on hover) so it
+     stays visible. These are the only tokens interactive states should reference. */
+  --link:              var(--blue);   /* clickable, on light surfaces */
+  --link-hover:        var(--gold);   /* the unified hover colour: client yellow */
+  --link-on-dark:      var(--gold);   /* clickable, on navy / photo surfaces */
+  --link-on-dark-hover:var(--white);  /* hover, on dark surfaces */
 
   /* --- type --- */
   --display: "Jost", "Futura", "Helvetica Neue", sans-serif;
@@ -113,14 +122,19 @@ section{padding-block:var(--section-y)}
 .btn-outline{border:1px solid var(--line);color:var(--ink)}
 .btn-outline:hover{border-color:var(--navy);background:var(--navy);color:var(--paper)}
 .btn-outline-light{border:1px solid rgba(250,246,238,.5);color:var(--paper)}
-.btn-outline-light:hover{background:var(--paper);color:var(--navy);border-color:var(--paper)}
+.btn-outline-light:hover{background:var(--paper);color:var(--gold-bright);border-color:var(--paper)}
+/* The site-wide action link. Blue signals "clickable" and turns client yellow on hover,
+   the same instant colour change used everywhere else on this still site. No motion. */
 .link-line{
   display:inline-flex;align-items:center;gap:9px;
   font-family:var(--display);font-size:13px;font-weight:var(--w-med);
   letter-spacing:.12em;text-transform:uppercase;
-  padding-bottom:4px;border-bottom:1px solid currentColor;
+  color:var(--link);padding-bottom:4px;border-bottom:1px solid currentColor;
 }
-.link-line:hover{color:var(--gold)}
+.link-line:hover{color:var(--link-hover)}
+/* Dark surfaces (navy bands, photo overlays): yellow at rest, white on hover. */
+.link-line.on-dark{color:var(--link-on-dark)}
+.link-line.on-dark:hover{color:var(--link-on-dark-hover)}
 
 /* ---------- cards ---------- */
 .card-img{position:relative;overflow:hidden;background:var(--cream)}

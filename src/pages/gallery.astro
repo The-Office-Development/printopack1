@@ -176,7 +176,7 @@ const c = content;
 
   .gal-tabs{display:flex;gap:6px;border-bottom:1px solid var(--line);margin-bottom:clamp(28px,3.4vw,44px)}
   .gal-tab{font-family:var(--display);font-size:13px;font-weight:500;letter-spacing:.12em;text-transform:uppercase;color:var(--muted);padding:14px 20px;border-bottom:2px solid transparent;margin-bottom:-1px}
-  .gal-tab:hover{color:var(--ink)}
+  .gal-tab:hover{color:var(--gold-bright)}
   .gal-tab.active{color:var(--navy);border-bottom-color:var(--gold)}
   .gal-panel[hidden]{display:none}
 
@@ -189,7 +189,7 @@ const c = content;
   .tile-scrim{position:absolute;inset:0;background:linear-gradient(0deg,rgba(9,24,41,.66) 0%,rgba(9,24,41,.12) 34%,transparent 60%)}
   .gtile:hover img{filter:brightness(1.08)}
   .gtile::after{content:"";position:absolute;inset:0;border:2px solid transparent}
-  .gtile:hover::after,.gtile:focus-visible::after{border-color:var(--gold)}
+  .gtile:hover::after,.gtile:focus-visible::after{border-color:var(--gold-bright)}
   .tile-cap{position:absolute;inset-inline-start:0;bottom:0;z-index:2;padding:14px 16px;font-family:var(--display);font-size:13px;letter-spacing:.06em;color:var(--paper);text-align:start}
   .tile-status{position:absolute;top:13px;inset-inline-end:13px;z-index:3;padding:7px 9px;background:rgba(9,24,41,.64);color:var(--paper);font-family:var(--display);font-size:10px;font-weight:500;letter-spacing:.14em;text-transform:uppercase}
   .tile-play{position:absolute;inset:0;z-index:2;display:flex;align-items:center;justify-content:center}
@@ -204,7 +204,7 @@ const c = content;
   .lightbox{position:fixed;inset:0;z-index:200;background:rgba(9,24,41,.9);display:flex;align-items:center;justify-content:center;padding:clamp(20px,5vw,64px)}
   .lightbox[hidden]{display:none}
   .lb-close{position:absolute;top:clamp(16px,3vw,28px);inset-inline-end:clamp(16px,3vw,28px);width:46px;height:46px;display:inline-flex;align-items:center;justify-content:center;color:var(--paper);border:1px solid var(--line-dark);border-radius:50%}
-  .lb-close:hover{background:var(--paper);color:var(--navy)}
+  .lb-close:hover{background:var(--paper);color:var(--gold-bright)}
   .lb-close svg{width:20px;height:20px}
   /* image is capped with room reserved so the caption always sits BELOW it, never over
      it, for any aspect ratio */
