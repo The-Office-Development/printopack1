@@ -1,3 +1,10 @@
+# local secrets for wrangler pages dev (never commit)
+.dev.vars
+.env
+
+# private handoff / internal brief: commercial strategy + credential notes. NEVER commit.
+CLAUDE.md
+
 # dependencies / build
 node_modules/
 dist/
