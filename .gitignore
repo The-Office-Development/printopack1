@@ -9,11 +9,9 @@ CLAUDE.md
 node_modules/
 dist/
 .astro/
-.vercel/
 .DS_Store
 *.log
 npm-debug.log*
-.vercel
 
 # Local content reference scraped from the live site (not shipped)
 reference/
