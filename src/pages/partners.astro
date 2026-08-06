@@ -113,48 +113,8 @@ const c = content;
     </div>
   </section>
 
-  <!-- PARTNERS WALL: logo + (name) + country. Renders whatever the admin puts in. -->
-  <section class="partners-wall">
-    <div class="wrap-wide">
-      <div class="section-head center">
-        <span class="eyebrow plain" style="color:var(--gold)"><Bi en={c.wall.eyebrow.en} ar={c.wall.eyebrow.ar} /></span>
-        <h2 style="margin-top:14px"><Bi en={c.wall.title.en} ar={c.wall.title.ar} /></h2>
-      </div>
-      <!-- Which country the map has selected, and the way back to the full wall. Hidden
-           until a filter is on, so the default view stays clean. -->
-      <div class="wall-filter" hidden>
-        <span class="wall-filter-text">
-          <span class="wall-filter-count"></span>
-          <span class="wall-filter-in"><Bi en={c.wall.filterIn.en} ar={c.wall.filterIn.ar} /></span>
-          <strong class="wall-filter-country"></strong>
-        </span>
-        <button class="wall-filter-clear" type="button"><Bi en={c.wall.showAll.en} ar={c.wall.showAll.ar} /></button>
-      </div>
-      <ul class="pgrid">
-        {partners.map((p) => (
-          <li class="pcard" data-country={p.country.en}>
-            <span class="pcard-logo"><img src={p.logo} alt={p.name.en || "Client brand"} loading="lazy" decoding="async" /></span>
-            <span class="pcard-meta">
-              {(p.name.en || p.name.ar) && (
-                <span class="pcard-name"><Bi en={p.name.en} ar={p.name.ar} /></span>
-              )}
-              {(p.country.en || p.country.ar) && (
-                <span class="pcard-country">
-                  <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" aria-hidden="true"><path d="M12 21s7-5.4 7-11a7 7 0 1 0-14 0c0 5.6 7 11 7 11z"/><circle cx="12" cy="10" r="2.5"/></svg>
-                  <Bi en={p.country.en} ar={p.country.ar} />
-                </span>
-              )}
-            </span>
-          </li>
-        ))}
-      </ul>
-      <p class="wall-empty" hidden><Bi en={c.wall.empty.en} ar={c.wall.empty.ar} /></p>
-      <!-- build-only helper: remove before production (see PRODUCTION_TODO.md) -->
-      <p class="pnote"><Bi en={c.wall.note.en} ar={c.wall.note.ar} /></p>
-    </div>
-  </section>
-
-  <!-- WHERE WE DELIVER: interactive regional map -->
+  <!-- WHERE WE DELIVER: interactive regional map. It is the wall's country filter, so it
+       sits directly above the wall: pick a market here and the brands below narrow to it. -->
   <section class="reach">
     <div class="wrap">
       <div class="reach-head">
@@ -201,12 +161,53 @@ const c = content;
     </div>
   </section>
 
+  <!-- PARTNERS WALL: logo + (name) + country. Filtered by the map above. -->
+  <section class="partners-wall">
+    <div class="wrap-wide">
+      <div class="section-head center">
+        <span class="eyebrow plain" style="color:var(--gold)"><Bi en={c.wall.eyebrow.en} ar={c.wall.eyebrow.ar} /></span>
+        <h2 style="margin-top:14px"><Bi en={c.wall.title.en} ar={c.wall.title.ar} /></h2>
+      </div>
+      <!-- Which country the map has selected, and the way back to the full wall. Hidden
+           until a filter is on, so the default view stays clean. -->
+      <div class="wall-filter" hidden>
+        <span class="wall-filter-text">
+          <span class="wall-filter-count"></span>
+          <span class="wall-filter-in"><Bi en={c.wall.filterIn.en} ar={c.wall.filterIn.ar} /></span>
+          <strong class="wall-filter-country"></strong>
+        </span>
+        <button class="wall-filter-clear" type="button"><Bi en={c.wall.showAll.en} ar={c.wall.showAll.ar} /></button>
+      </div>
+      <ul class="pgrid">
+        {partners.map((p) => (
+          <li class="pcard" data-country={p.country.en}>
+            <span class="pcard-logo"><img src={p.logo} alt={p.name.en || "Client brand"} loading="lazy" decoding="async" /></span>
+            <span class="pcard-meta">
+              {(p.name.en || p.name.ar) && (
+                <span class="pcard-name"><Bi en={p.name.en} ar={p.name.ar} /></span>
+              )}
+              {(p.country.en || p.country.ar) && (
+                <span class="pcard-country">
+                  <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" aria-hidden="true"><path d="M12 21s7-5.4 7-11a7 7 0 1 0-14 0c0 5.6 7 11 7 11z"/><circle cx="12" cy="10" r="2.5"/></svg>
+                  <Bi en={p.country.en} ar={p.country.ar} />
+                </span>
+              )}
+            </span>
+          </li>
+        ))}
+      </ul>
+      <p class="wall-empty" hidden><Bi en={c.wall.empty.en} ar={c.wall.empty.ar} /></p>
+      <!-- build-only helper: remove before production (see PRODUCTION_TODO.md) -->
+      <p class="pnote"><Bi en={c.wall.note.en} ar={c.wall.note.ar} /></p>
+    </div>
+  </section>
+
   <!-- WHY BRANDS STAY -->
   <section class="on-navy editorial">
     <div class="wrap editorial-inner">
       <span class="eyebrow"><Bi en={c.why.eyebrow.en} ar={c.why.eyebrow.ar} /></span>
       <p class="editorial-quote"><Bi en={c.why.quote.en} ar={c.why.quote.ar} /></p>
-      <a href="/contact" class="link-line" style="color:var(--gold-bright);border-color:var(--gold-bright)"><Bi en={c.why.link.en} ar={c.why.link.ar} /></a>
+      <a href="/contact" class="link-line on-dark"><Bi en={c.why.link.en} ar={c.why.link.ar} /></a>
     </div>
   </section>
 
@@ -232,19 +233,24 @@ const c = content;
   /* partners wall: logo + name + country cards. The card body is only rendered when
      there is name/country text, so an all-logo state stays clean and a filled state
      grows without breaking. */
-  .pgrid{display:grid;grid-template-columns:repeat(4,1fr);gap:1px;background:var(--line);border:1px solid var(--line);margin-top:clamp(30px,4vw,48px)}
+  /* Hairline dividers come from each card's own right/bottom border, not a line-coloured
+     grid background showing through gaps. That way a partial row (e.g. a country filter
+     leaving 3 of 4 columns) shows paper in the empty cells instead of a grey block. */
+  .pgrid{display:grid;grid-template-columns:repeat(4,1fr);border-top:1px solid var(--line);border-inline-start:1px solid var(--line);background:var(--paper);margin-top:clamp(30px,4vw,48px)}
   /* filter bar: only present once the map has narrowed the wall */
   .wall-filter{display:flex;align-items:center;justify-content:space-between;gap:18px;flex-wrap:wrap;margin-top:clamp(26px,3vw,38px);padding:13px 18px;border:1px solid var(--line);background:var(--cream);border-radius:var(--radius)}
   .wall-filter[hidden]{display:none}
   .wall-filter-text{font-family:var(--display);font-size:14px;color:var(--muted)}
   .wall-filter-count{color:var(--navy);font-weight:500}
   .wall-filter-country{color:var(--navy);font-weight:500}
-  .wall-filter-clear{font-family:var(--display);font-size:12px;letter-spacing:.12em;text-transform:uppercase;color:var(--gold);border-bottom:1px solid currentColor;padding-bottom:2px}
-  .wall-filter-clear:hover{color:var(--navy)}
+  /* Follows the site action-link standard: blue at rest, yellow on hover, underline wipes
+     in (see DESIGN_STANDARD.md). !important + class specificity clears the no-motion switch. */
+  .wall-filter-clear{font-family:var(--display);font-size:12px;letter-spacing:.12em;text-transform:uppercase;color:var(--link);padding-bottom:3px;border-bottom:1px solid currentColor}
+  .wall-filter-clear:hover{color:var(--link-hover)}
   .wall-empty{margin-top:26px;color:var(--muted);font-size:15px}
   .wall-empty[hidden]{display:none}
 
-  .pcard{background:var(--paper);display:flex;flex-direction:column}
+  .pcard{background:var(--paper);display:flex;flex-direction:column;border-inline-end:1px solid var(--line);border-bottom:1px solid var(--line)}
   .pcard[hidden]{display:none}
   .pcard-logo{position:relative;aspect-ratio:16/10;display:block}
   .pcard-logo img{position:absolute;inset:0;margin:auto;max-width:calc(100% - 24px);max-height:calc(100% - 26px);mix-blend-mode:multiply}
@@ -266,30 +272,30 @@ const c = content;
   .reach-map path{stroke-linejoin:round;stroke-linecap:round}
   .rc-ctx{fill:var(--sand);stroke:var(--cream);stroke-width:.14;pointer-events:none}
   .rc{fill:var(--blue);stroke:var(--paper);stroke-width:.18;cursor:pointer;outline:none}
-  .rc:hover{fill:var(--navy-soft)}
+  .rc:hover{fill:var(--gold-bright)}
   .rc:focus-visible{stroke:var(--gold);stroke-width:.45}
   .rc.active{fill:var(--gold)}
   /* Dot markers for the countries that are only a few pixels across at this scale. They
      inherit .rc's fill, hover and active colours, so a small country highlights exactly
      like a large one. */
   .rc-dot{stroke-width:.16}
-  .rc-dot:hover{fill:var(--navy-soft)}
+  .rc-dot:hover{fill:var(--gold-bright)}
 
   /* office popup: floats by the country on desktop (JS-positioned), sits as a panel
      under the map on small screens (see media query) */
-  .map-pop{position:absolute;z-index:6;width:min(266px,80vw);background:var(--paper);border:1px solid var(--line);box-shadow:0 24px 46px rgba(14,35,64,.20);border-radius:var(--radius);padding:16px 18px;display:flex;flex-direction:column;gap:4px}
+  .map-pop{position:absolute;z-index:6;width:min(266px,80vw);background:var(--paper);border:1px solid var(--line);box-shadow:0 24px 46px rgba(0,70,162,.20);border-radius:var(--radius);padding:16px 18px;display:flex;flex-direction:column;gap:4px}
   .map-pop[hidden]{display:none}
   /* The popup's inner nodes are injected via innerHTML at runtime, so they never
      receive Astro's scope attribute. These rules are :global (kept contained under
      .map-pop) so they actually apply to that dynamic content. */
   .map-pop :global(.pop-close){position:absolute;top:6px;inset-inline-end:9px;font-size:19px;line-height:1;color:var(--faint)}
-  .map-pop :global(.pop-close:hover){color:var(--ink)}
+  .map-pop :global(.pop-close:hover){color:var(--gold-bright)}
   .map-pop :global(.pop-role){font-family:var(--display);font-size:11px;letter-spacing:.16em;text-transform:uppercase;color:var(--gold)}
   .map-pop :global(.pop-name){font-family:var(--display);font-size:19px;color:var(--ink);line-height:1.15;margin-bottom:2px}
   .map-pop :global(.pop-line){font-size:13.5px;color:var(--muted);line-height:1.5}
-  .map-pop :global(a.pop-line:hover){color:var(--gold)}
+  .map-pop :global(a.pop-line:hover){color:var(--gold-bright)}
   .map-pop :global(.pop-cta){margin-top:11px;font-family:var(--display);font-size:11.5px;font-weight:500;letter-spacing:.1em;text-transform:uppercase;color:var(--navy);border-top:1px solid var(--line);padding-top:12px;width:fit-content}
-  .map-pop :global(.pop-cta:hover){color:var(--gold)}
+  .map-pop :global(.pop-cta:hover){color:var(--gold-bright)}
   .map-pop :global(.pop-arrow){display:inline-block}
   [dir="rtl"] .map-pop :global(.pop-arrow){transform:scaleX(-1)}
 
@@ -297,7 +303,7 @@ const c = content;
   /* desktop: an ordered two-column grid of square-cornered office buttons */
   .reach-chips{display:grid;grid-template-columns:1fr 1fr;gap:8px}
   .reach-chip{font-family:var(--display);font-size:14px;letter-spacing:.02em;color:var(--ink);border:1px solid var(--line);background:var(--paper);padding:12px 16px;border-radius:var(--radius);text-align:start}
-  .reach-chip:hover{border-color:var(--navy);color:var(--navy)}
+  .reach-chip:hover{border-color:var(--gold-bright);color:var(--gold-bright)}
   .reach-chip.active{background:var(--gold);border-color:var(--gold);color:var(--navy)}
 
   .map-hint{display:block;margin-top:16px;font-family:var(--display);font-size:11px;letter-spacing:.16em;text-transform:uppercase;color:var(--faint)}
@@ -396,12 +402,7 @@ const c = content;
     const filterWall = (cc) => {
       const office = cc ? OFFICES[cc] : null;
       const country = office && cc !== 'int' ? office.name : null;
-      // The wall sits ABOVE the map, so hiding cards removes up to ~970px of page from above
-      // whatever the visitor is looking at. Browsers try to compensate with scroll anchoring,
-      // but it is best-effort and picks its own anchor, which is why the page appeared to jump
-      // only sometimes. Pin the map instead: note where it is, mutate, then put it back. If
-      // the browser already compensated the delta is 0 and this is a no-op.
-      const before = wrap.getBoundingClientRect().top;
+      // The map sits above the wall, so narrowing the wall below never shifts the map.
       let shown = 0;
       cards.forEach((card) => {
         const match = !country || card.dataset.country === country.en;
@@ -412,8 +413,6 @@ const c = content;
       if (filterBar) filterBar.hidden = !country;
       if (country && filterCount) filterCount.textContent = String(shown);
       if (country && filterCountry) filterCountry.textContent = country[lang()];
-      const drift = wrap.getBoundingClientRect().top - before;
-      if (drift) window.scrollBy(0, drift);
     };
     document.querySelector('.wall-filter-clear')?.addEventListener('click', () => hide());
 
@@ -430,11 +429,16 @@ const c = content;
       if (chipsToggleLabel && chip) chipsToggleLabel.innerHTML = chip.innerHTML;
       setChipsOpen(false);
     };
+    // Close just the office tooltip. The country stays selected and the wall stays
+    // filtered, so clicking the brands (or anywhere off the map) never resets the filter.
+    const closePopup = () => { pop.hidden = true; };
+    // Full reset: clear the selection and the wall filter. Only "Show all partners"
+    // (and re-selecting the same country) does this.
     const hide = () => {
       pop.hidden = true;
       paths.forEach((p) => p.classList.remove('active'));
       chips.forEach((ch) => ch.classList.remove('active'));
-      filterWall(null); // clearing the map clears the wall filter with it
+      filterWall(null);
     };
     const bind = (el) => {
       el.addEventListener('click', (e) => { e.stopPropagation(); select(el.dataset.cc); });
@@ -445,10 +449,10 @@ const c = content;
     // click anywhere outside the map closes the popup, except the language toggle
     // (switching language keeps the selection and re-renders it in the new language)
     document.addEventListener('click', (e) => {
-      if (!e.target.closest('.reach-map-wrap') && !e.target.closest('.lang')) hide();
+      if (!e.target.closest('.reach-map-wrap') && !e.target.closest('.lang')) closePopup();
       if (!e.target.closest('.reach-select')) setChipsOpen(false);
     });
-    document.addEventListener('keydown', (e) => { if (e.key === 'Escape') hide(); });
+    document.addEventListener('keydown', (e) => { if (e.key === 'Escape') closePopup(); });
     // keep the popup correct when the language flips or the viewport resizes.
     // Observe the real dir/lang change (not the toggle click) so it never races.
     const active = () => paths.find((p) => p.classList.contains('active'));
