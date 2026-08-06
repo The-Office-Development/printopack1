@@ -35,7 +35,8 @@ var ICON={
  link:'<path d="M10 13a5 5 0 0 0 7 0l3-3a5 5 0 0 0-7-7l-1 1"/><path d="M14 11a5 5 0 0 0-7 0l-3 3a5 5 0 0 0 7 7l1-1"/>',
  publish:'<path d="M12 19V5"/><path d="M6 11l6-6 6 6"/><path d="M4 21h16"/>',
  up:'<path d="M18 15l-6-6-6 6"/>',
- down:'<path d="M6 9l6 6 6-6"/>'
+ down:'<path d="M6 9l6 6 6-6"/>',
+ external:'<path d="M18 13v6a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V8a2 2 0 0 1 2-2h6"/><path d="M15 3h6v6"/><path d="M10 14L21 3"/>'
 };
 function svg(n){return '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-linecap="round" stroke-linejoin="round">'+(ICON[n]||'')+'</svg>';}
 
@@ -406,7 +407,7 @@ function loggedIn(){return localStorage.getItem(SKEY)==='1';}
    backend with `wrangler pages dev` (which serves /api and enforces the password). */
 function renderLogin(msg){
  root.innerHTML='<div class="login"><form class="login-card" id="lf">'+
-  '<div class="login-brand">PRINTO<span>·</span>PACK</div>'+
+  '<img class="login-logo" src="/images/printopack-logo.png" alt="Printopack">'+
   '<p class="login-sub">Site administration · Marketing</p>'+
   '<h1>Admin sign in</h1>'+
   '<div class="field"><label>Password</label><input type="password" id="lpw" autocomplete="current-password" required autofocus></div>'+
@@ -415,6 +416,7 @@ function renderLogin(msg){
   '<button class="btn btn-primary" id="lbtn" style="width:100%;justify-content:center;padding:13px" type="submit">Sign in</button>'+
   '<p class="login-note">Restricted area for Printopack marketing. Customer accounts are managed in the customer portal.</p>'+
   '<a class="login-portal" href="https://printopack.azurewebsites.net/">Are you a customer? Go to the customer portal &rarr;</a>'+
+  '<a class="login-back" href="/">&larr; Back to the website</a>'+
  '</form></div>';
  var err=$('#lerr'),btn=$('#lbtn');
  if(msg){err.textContent=msg;err.hidden=false;}
@@ -463,10 +465,11 @@ function sidebar(){
   var badge=m?'<span class="badge">'+coll(n.k).length+'</span>':'';
   return '<div class="sb-item'+(view===n.k?' on':'')+'" data-nav="'+n.k+'">'+svg(icon)+'<span>'+label+'</span>'+badge+'</div>';
  }).join('');
- return '<aside class="sidebar"><div class="sb-brand"><b>PRINTO<span>·</span>PACK</b><small>System · Admin</small></div>'+
+ return '<aside class="sidebar"><div class="sb-brand"><img class="sb-logo" src="/images/printopack-logo-white.png" alt="Printopack"><small>System · Admin</small></div>'+
   '<nav class="sb-nav">'+items+'</nav>'+
   '<div class="sb-pub" id="pub"></div>'+
   '<div class="sb-foot"><div class="sb-user"><div class="av">MK</div><div><div class="nm">Marketing</div><div class="rl">Site administrator</div></div></div>'+
+  '<a class="sb-site" href="/" target="_blank" rel="noopener">'+svg('external')+'View website</a>'+
   '<button class="sb-logout" data-logout>'+svg('logout')+'Sign out</button></div></aside>';
 }
 
@@ -475,7 +478,7 @@ function sidebar(){
    which one they just did. Every edit is saved instantly and privately; this panel is the
    only thing that puts it in front of the public, and it sits in the sidebar so it is
    reachable from every screen. */
-var PUB={pending:false,publishedAt:null,canDeploy:true,busy:false};
+var PUB={pending:false,publishedAt:null,canDeploy:true,busy:false,changes:[],firstPublish:false};
 function agoText(ts){
  if(!ts)return 'never';
  var s=Math.floor((Date.now()-ts)/1000);
@@ -496,14 +499,44 @@ function pubRender(){
   return;
  }
  el.className='sb-pub'+(PUB.pending?' pending':'');
- var state=PUB.pending?'<i></i>Changes not live yet':'<i></i>Everything is live';
+ var cnt=pendingCount(),label;
+ if(!PUB.pending)label='Everything is live';
+ else if(PUB.firstPublish)label='Ready for first publish';
+ else if(cnt>0)label=cnt+' change'+(cnt===1?'':'s')+' not live yet';
+ else label='Changes not live yet';
  /* Say this before they press the button, not after: without the deploy hook a publish saves
     the snapshot and the website does not change. */
  var warn=PUB.canDeploy?'':'<p class="pub-note warn">Automatic rebuild is not set up yet, so publishing will not update the website.</p>';
  el.innerHTML='<button class="pub-btn" id="pubgo"'+(PUB.pending?'':' disabled')+'>'+svg('publish')+'Publish to live site</button>'+
   warn+
-  '<p class="pub-note">'+state+' · last published '+esc(agoText(PUB.publishedAt))+'.</p>';
- var b=$('#pubgo');if(b)b.addEventListener('click',doPublish);
+  '<p class="pub-note"><i></i>'+label+' · last published '+esc(agoText(PUB.publishedAt))+'.</p>';
+ var b=$('#pubgo');if(b)b.addEventListener('click',openPubModal);
+}
+/* Total individual edits waiting to go live, across every section. */
+function pendingCount(){
+ var n=0;(PUB.changes||[]).forEach(function(c){n+=(c.kind==='singleton')?1:(c.added+c.edited+c.removed);});
+ return n;
+}
+/* A section's friendly name, reusing the same labels shown in the nav. */
+function secLabel(key){
+ if(MODELS[key]&&MODELS[key].label)return MODELS[key].label;
+ for(var i=0;i<NAV.length;i++)if(NAV[i].k===key&&NAV[i].label)return NAV[i].label;
+ return key;
+}
+/* The human-readable list of what a publish would put live. */
+function changeRows(){
+ if(PUB.firstPublish)return '<p class="pubm-first">This is the first publish. Your entire website will be built and go live for the first time.</p>';
+ if(!PUB.changes||!PUB.changes.length)return '<p class="pubm-first">Your saved changes are ready to go live.</p>';
+ return '<ul class="pubm-list">'+PUB.changes.map(function(c){
+  var parts=[];
+  if(c.kind==='singleton')parts.push('updated');
+  else{
+   if(c.added)parts.push(c.added+' added');
+   if(c.edited)parts.push(c.edited+' edited');
+   if(c.removed)parts.push(c.removed+' removed');
+  }
+  return '<li><span class="pubm-sec">'+esc(secLabel(c.key))+'</span><span class="pubm-det">'+parts.join(' · ')+'</span></li>';
+ }).join('')+'</ul>';
 }
 /* Called after every save so the sidebar reacts immediately, without waiting for the server
    to be asked again. */
@@ -513,21 +546,66 @@ function pubRefresh(){
  fetch(API+'/publish').then(function(r){return r.json();}).then(function(s){
   if(!s)return;
   PUB.pending=!!s.pending;PUB.publishedAt=s.publishedAt;PUB.canDeploy=s.canDeploy!==false;
+  PUB.changes=s.changes||[];PUB.firstPublish=!!s.firstPublish;
   pubRender();
  }).catch(function(){});
 }
-function doPublish(){
+/* The publish dialog. Rather than a bare "are you sure?", it shows exactly what will go live
+   and, once done, spells out what happens next and when the site will actually update, so the
+   client is never left guessing whether the website changed. */
+function openPubModal(){
  if(MODE!=='api'){toast('This is a preview copy. Publishing works on the live site.','err');return;}
- if(!confirm('Publish everything you have edited to the public website?'))return;
+ var warn=PUB.canDeploy?'':'<p class="pubm-warn">The automatic rebuild is not set up, so publishing will save your changes but will not update the public website yet.</p>';
+ var host=document.createElement('div');host.id='pubmHost';
+ host.innerHTML='<div class="overlay show" id="pubmOv"></div>'+
+  '<div class="pubm" role="dialog" aria-modal="true">'+
+   '<div class="pubm-head"><h2>Publish to the live website</h2><button class="x" id="pubmX" aria-label="Close">✕</button></div>'+
+   '<div class="pubm-body" id="pubmBody">'+
+    warn+
+    '<p class="pubm-intro">These changes will go live on your public website:</p>'+
+    changeRows()+
+    '<div class="pubm-next"><h3>What happens when you publish</h3><ol>'+
+     '<li>Your changes are saved to the site straight away.</li>'+
+     '<li>The website rebuilds itself automatically, with no developer needed.</li>'+
+     '<li>The new version appears online, usually within 1 to 2 minutes.</li>'+
+    '</ol><p class="pubm-hint">You can keep working while it rebuilds. Nothing else on the site is affected.</p></div>'+
+   '</div>'+
+   '<div class="pubm-foot"><button class="btn btn-ghost" id="pubmCancel">Cancel</button>'+
+    '<button class="btn btn-ok" id="pubmGo">'+svg('publish')+'Publish now</button></div>'+
+  '</div>';
+ document.body.appendChild(host);
+ function close(){host.remove();}
+ host.querySelector('#pubmX').addEventListener('click',close);
+ host.querySelector('#pubmCancel').addEventListener('click',close);
+ host.querySelector('#pubmOv').addEventListener('click',close);
+ host.querySelector('#pubmGo').addEventListener('click',function(){runPublish(host);});
+}
+function runPublish(host){
+ var body=host.querySelector('#pubmBody'),foot=host.querySelector('.pubm-foot');
+ var go=host.querySelector('#pubmGo'),cancel=host.querySelector('#pubmCancel');
+ go.disabled=true;go.innerHTML=svg('publish')+'Publishing...';cancel.disabled=true;
  PUB.busy=true;pubRender();
  fetch(API+'/publish',{method:'POST'}).then(function(r){if(!r.ok)throw 0;return r.json();}).then(function(o){
-  PUB.busy=false;PUB.pending=false;PUB.publishedAt=Date.now();pubRender();
+  PUB.busy=false;PUB.pending=false;PUB.publishedAt=Date.now();PUB.changes=[];PUB.firstPublish=false;pubRender();
+  var deployed=!(o&&o.deployed===false);
   /* A snapshot with no rebuild behind it looks identical from in here, so say so plainly
      rather than let the client believe the website changed. */
-  if(o&&o.deployed===false)toast('Saved for publishing, but the site rebuild was not triggered. Tell your developer.','err');
-  else toast('Published. The site rebuilds in a minute or two.','ok');
+  body.innerHTML='<div class="pubm-done"><div class="pubm-check'+(deployed?'':' warnc')+'">'+svg(deployed?'publish':'edit')+'</div>'+
+   '<h3>'+(deployed?'Published':'Saved, not yet building')+'</h3>'+
+   (deployed
+    ? '<p>Your changes are saved and the website is rebuilding now.</p>'+
+      '<ul class="pubm-steps"><li><b>Now</b><span>changes saved</span></li>'+
+      '<li><b>~1 to 2 min</b><span>the new version goes live at your web address</span></li></ul>'+
+      '<p class="pubm-hint">You can close this and keep editing. Open your website in a minute or two, and refresh the page, to see the update.</p>'
+    : '<p>Your changes were saved, but the automatic rebuild is not switched on, so the public website will not change yet. Please let your developer know.</p>')+
+   '</div>';
+  foot.innerHTML='<button class="btn btn-ok" id="pubmDone">Done</button>';
+  host.querySelector('#pubmDone').addEventListener('click',function(){host.remove();});
+  toast(deployed?'Published. The site rebuilds in a minute or two.':'Saved, but the rebuild was not triggered.',deployed?'ok':'err');
  }).catch(function(){
   PUB.busy=false;pubRender();
+  go.disabled=false;go.innerHTML=svg('publish')+'Publish now';cancel.disabled=false;
+  if(!body.querySelector('.pubm-err')){var e=document.createElement('p');e.className='pubm-err';e.textContent='Publish failed. Nothing was changed on the live site. Please check your connection and try again.';body.appendChild(e);}
   toast('Publish failed. Nothing was changed on the live site.','err');
  });
 }

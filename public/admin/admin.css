@@ -22,6 +22,7 @@ h1,h2,h3,h4{font-family:var(--disp);font-weight:400;letter-spacing:-.01em;line-h
 .login-card{background:var(--paper);border-radius:14px;padding:46px 42px;width:100%;max-width:410px;box-shadow:0 40px 90px rgba(0,0,0,.4)}
 .login-brand{font-family:var(--disp);font-size:22px;font-weight:500;letter-spacing:.24em;color:var(--navy);padding-left:.24em}
 .login-brand span{color:var(--gold)}
+.login-logo{display:block;height:52px;width:auto;max-width:230px;object-fit:contain}
 .login-sub{color:var(--muted);font-size:13.5px;margin:6px 0 30px;letter-spacing:.02em}
 .login h1{font-size:26px;margin-bottom:24px}
 .login .field{margin-bottom:16px}
@@ -48,7 +49,11 @@ h1,h2,h3,h4{font-family:var(--disp);font-weight:400;letter-spacing:-.01em;line-h
 .sb-user .av{width:36px;height:36px;border-radius:50%;background:linear-gradient(140deg,var(--gold),var(--gold-bright));display:grid;place-items:center;font-family:var(--disp);font-weight:600;color:var(--navy);font-size:14px;flex:none}
 .sb-user .nm{font-size:13.5px;color:#fff;font-weight:500}
 .sb-user .rl{font-size:11.5px;color:#6f7c96}
-.sb-logout{margin-top:6px;width:100%;text-align:left;display:flex;align-items:center;gap:10px;padding:9px 12px;border-radius:8px;background:none;border:none;color:#93a0b7;font-size:13.5px;cursor:pointer;transition:.2s}
+.sb-logo{display:block;height:34px;width:auto;max-width:170px;object-fit:contain}
+.sb-site{text-decoration:none;width:100%;display:flex;align-items:center;gap:10px;padding:9px 12px;border-radius:8px;color:#93a0b7;font-size:13.5px;transition:.2s}
+.sb-site:hover{background:rgba(255,255,255,.05);color:#fff}
+.sb-site svg{width:17px;height:17px}
+.sb-logout{margin-top:2px;width:100%;text-align:left;display:flex;align-items:center;gap:10px;padding:9px 12px;border-radius:8px;background:none;border:none;color:#93a0b7;font-size:13.5px;cursor:pointer;transition:.2s}
 .sb-logout:hover{background:rgba(255,255,255,.05);color:#fff}
 .sb-logout svg{width:17px;height:17px}
 
@@ -203,6 +208,8 @@ h1,h2,h3,h4{font-family:var(--disp);font-weight:400;letter-spacing:-.01em;line-h
 }
 .login-portal{display:block;margin-top:14px;padding-top:16px;border-top:1px solid var(--line,rgba(23,25,29,.12));text-align:center;font-size:13px;color:var(--gold,#b1873a);letter-spacing:.02em;transition:.3s}
 .login-portal:hover{color:var(--navy,#0e2340)}
+.login-back{display:block;margin-top:10px;text-align:center;font-size:12.5px;color:var(--muted,#6b7280);text-decoration:none;letter-spacing:.02em;transition:.3s}
+.login-back:hover{color:var(--navy,#0e2340)}
 /* No-animation policy: the dashboard renders and switches instantly, matching the
    still public site. The only exception is the loading spinner, kept as functional
    progress feedback during network fetches. */
@@ -229,6 +236,38 @@ h1,h2,h3,h4{font-family:var(--disp);font-weight:400;letter-spacing:-.01em;line-h
 .sb-pub.busy .pub-btn svg{animation:pubup 1.1s var(--ease) infinite}
 @keyframes pubup{0%{transform:translateY(2px);opacity:.5}50%{transform:translateY(-2px);opacity:1}100%{transform:translateY(2px);opacity:.5}}
 @media(prefers-reduced-motion:reduce){.sb-pub.busy .pub-btn svg{animation:none}}
+
+/* ---------- PUBLISH DIALOG ---------- */
+.pubm{position:fixed;top:50%;left:50%;transform:translate(-50%,-50%);width:470px;max-width:94vw;max-height:88vh;background:var(--paper);border-radius:14px;z-index:62;box-shadow:0 40px 90px rgba(0,0,0,.42);display:flex;flex-direction:column;overflow:hidden}
+.pubm-head{display:flex;align-items:center;justify-content:space-between;padding:20px 24px;border-bottom:1px solid var(--line)}
+.pubm-head h2{font-size:19px}
+.pubm-head .x{width:34px;height:34px;border-radius:8px;border:1px solid var(--line);background:none;cursor:pointer;display:grid;place-items:center;font-size:16px;color:var(--muted)}
+.pubm-head .x:hover{border-color:var(--ink);color:var(--ink)}
+.pubm-body{padding:22px 24px;overflow-y:auto}
+.pubm-foot{padding:16px 24px;border-top:1px solid var(--line);background:var(--paper);display:flex;gap:10px;justify-content:flex-end}
+.pubm-intro{font-size:14px;color:var(--ink);margin-bottom:13px}
+.pubm-first{font-size:14px;color:var(--ink);background:var(--cream);border-radius:10px;padding:14px 16px;margin-bottom:18px;line-height:1.5}
+.pubm-warn{font-size:13px;color:#7a5a1e;background:#fdf3e2;border:1px solid #e6c98c;border-radius:10px;padding:11px 14px;margin-bottom:16px;line-height:1.5}
+.pubm-list{list-style:none;margin:0 0 18px;border:1px solid var(--line);border-radius:10px;overflow:hidden}
+.pubm-list li{display:flex;justify-content:space-between;align-items:center;gap:12px;padding:11px 15px}
+.pubm-list li+li{border-top:1px solid var(--line)}
+.pubm-sec{font-size:13.5px;font-weight:500;color:var(--navy)}
+.pubm-det{font-size:12.5px;color:var(--muted);letter-spacing:.01em}
+.pubm-next{background:var(--cream);border-radius:10px;padding:15px 17px}
+.pubm-next h3{font-size:11px;text-transform:uppercase;letter-spacing:.12em;color:var(--muted);margin-bottom:10px}
+.pubm-next ol{margin:0;padding-left:18px;font-size:13.5px;color:var(--ink);line-height:1.75}
+.pubm-hint{font-size:12.5px;color:var(--muted);margin-top:11px;line-height:1.55}
+.pubm-done{text-align:center;padding:6px 4px}
+.pubm-check{width:54px;height:54px;border-radius:50%;background:var(--ok);color:#fff;display:grid;place-items:center;margin:0 auto 14px}
+.pubm-check.warnc{background:#e6a300}
+.pubm-check svg{width:26px;height:26px;stroke-width:2}
+.pubm-done h3{font-size:20px;margin-bottom:10px}
+.pubm-done p{font-size:14px;color:var(--ink);line-height:1.6}
+.pubm-steps{list-style:none;margin:16px auto;max-width:340px;padding:0;text-align:left}
+.pubm-steps li{display:flex;gap:12px;align-items:baseline;padding:9px 0;font-size:13.5px;color:var(--ink)}
+.pubm-steps li+li{border-top:1px solid var(--line)}
+.pubm-steps li b{color:var(--navy);flex:none;min-width:82px}
+.pubm-err{color:var(--err);font-size:13px;margin-top:14px}
 
 /* row reordering: the list order is the website order, so the arrows are part of editing */
 .icon-btn.mv{width:28px;height:28px;border-color:var(--line-soft)}
