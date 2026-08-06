@@ -325,14 +325,22 @@ function moveRecord(collection,id,dir){
 }
 function setObj(k,o){CACHE.singletons[k]=o;pubTouch();if(MODE==='api')apiSaveSingleton(k,o).catch(function(){toast('Save failed','err');});else persistLocal();}
 
-/* boot: try the backend, else fall back to localStorage, then render */
+/* boot: ask the backend for content. Three outcomes:
+   - 200  -> deployed and the session cookie is valid: load content, show the dashboard.
+   - 401  -> deployed but not signed in: show the real login screen (the API stays closed).
+   - error/404 -> no backend at all (local static preview): fall back to localStorage + demo login. */
 function boot(){
- fetch(API+'/bootstrap',{headers:{'Accept':'application/json'}}).then(function(r){if(!r.ok)throw 0;return r.json();}).then(function(d){
+ fetch(API+'/bootstrap',{headers:{'Accept':'application/json'}}).then(function(r){
+  if(r.status===401){MODE='api';renderLogin();return null;}
+  if(!r.ok)throw 0;
+  return r.json();
+ }).then(function(d){
+  if(!d)return;
   MODE='api';CACHE.entries=d.entries||{};CACHE.singletons=d.singletons||{};
   COLLECTIONS.forEach(function(k){if(!CACHE.entries[k])CACHE.entries[k]=[];});
-  try{localStorage.setItem(SKEY,'1');}catch(e){} /* Cloudflare Access already authenticated the user */
+  try{localStorage.setItem(SKEY,'1');}catch(e){}
   render();pubRefresh();
- }).catch(function(){MODE='local';loadLocal();render();pubRefresh();});
+ }).catch(function(){MODE='local';loadLocal();if(loggedIn())render();else renderLogin();pubRefresh();});
 }
 
 /* ---------------- models ---------------- */
@@ -386,26 +394,64 @@ var MODELS={
 /* ---------------- auth ---------------- */
 var SKEY='pp_admin_session';
 function loggedIn(){return localStorage.getItem(SKEY)==='1';}
+/* Sign in against the real backend (/api/login). The one account belongs to the marketing
+   department. On a local static preview there is no backend, so a failed/absent /api/login
+   falls back to the offline demo (localStorage), keeping the dashboard usable without deploy. */
+function localSignIn(){localStorage.setItem(SKEY,'1');MODE='local';if(!CACHE.entries||!Object.keys(CACHE.entries).length)loadLocal();render();pubRefresh();}
 function renderLogin(){
  root.innerHTML='<div class="login"><form class="login-card" id="lf">'+
   '<div class="login-brand">PRINTO<span>·</span>PACK</div>'+
-  '<p class="login-sub">Site administration · Staff only</p>'+
+  '<p class="login-sub">Site administration · Marketing</p>'+
   '<h1>Admin sign in</h1>'+
-  '<div class="field"><label>Email</label><input type="email" value="creative@printopack.com.sa" required></div>'+
-  '<div class="field"><label>Password</label><input type="password" value="demo" required></div>'+
-  '<button class="btn btn-primary" style="width:100%;justify-content:center;padding:13px" type="submit">Sign in</button>'+
-  '<p class="login-note">Restricted area for Printopack staff. Customer accounts are managed in the customer portal.</p>'+
+  '<div class="field"><label>Password</label><input type="password" id="lpw" autocomplete="current-password" required autofocus></div>'+
+  '<div id="lts" style="margin:0 0 12px"></div>'+
+  '<p class="login-err" id="lerr" hidden style="color:#b00020;font-size:13px;margin:-4px 0 12px"></p>'+
+  '<button class="btn btn-primary" id="lbtn" style="width:100%;justify-content:center;padding:13px" type="submit">Sign in</button>'+
+  '<p class="login-note">Restricted area for Printopack marketing. Customer accounts are managed in the customer portal.</p>'+
   '<a class="login-portal" href="https://printopack.azurewebsites.net/">Are you a customer? Go to the customer portal &rarr;</a>'+
  '</form></div>';
- $('#lf').addEventListener('submit',function(e){e.preventDefault();localStorage.setItem(SKEY,'1');render();});
+ var err=$('#lerr'),btn=$('#lbtn');
+ /* Turnstile: the bot wall is optional and server-driven. Ask /api/config whether a site key is
+    set; if so, render the widget and hold its token, requiring it before we allow a submit. */
+ var tsToken=null,tsOn=false,tsWidget=null;
+ fetch(API+'/config').then(function(r){return r.json();}).then(function(c){
+  if(!c||!c.turnstile)return;                                       /* no key configured: skip the wall */
+  tsOn=true;
+  function draw(){tsWidget=window.turnstile.render('#lts',{sitekey:c.turnstile,
+   callback:function(t){tsToken=t;},
+   'expired-callback':function(){tsToken=null;},
+   'error-callback':function(){tsToken=null;}});}
+  if(window.turnstile&&window.turnstile.render){draw();return;}
+  var s=document.createElement('script');
+  s.src='https://challenges.cloudflare.com/turnstile/v0/api.js?render=explicit';
+  s.async=true;s.defer=true;s.onload=draw;document.head.appendChild(s);
+ }).catch(function(){});                                            /* config unreachable: offline demo path stays */
+ function resetTs(){if(tsOn&&window.turnstile&&tsWidget!=null){window.turnstile.reset(tsWidget);tsToken=null;}}
+ $('#lf').addEventListener('submit',function(e){
+  e.preventDefault();
+  var pw=$('#lpw').value;err.hidden=true;
+  function fail(msg){btn.disabled=false;btn.textContent='Sign in';err.textContent=msg;err.hidden=false;}
+  if(tsOn&&!tsToken){fail('Please complete the verification.');return;}
+  btn.disabled=true;btn.textContent='Signing in...';
+  fetch(API+'/login',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({password:pw,turnstileToken:tsToken})}).then(function(r){
+   if(r.ok){localStorage.setItem(SKEY,'1');boot();return;}          /* cookie set: reload content */
+   if(r.status===404){localSignIn();return;}                        /* route absent: no backend -> offline demo */
+   return r.json().catch(function(){return {};}).then(function(o){  /* backend present but rejected */
+    resetTs();                                                      /* one token is one attempt: get a fresh one */
+    if(r.status===401)return fail('Wrong password. Please try again.');
+    fail((o&&o.error)||'Sign in failed. Please try again.');        /* 429 lockout / 403 bot / 500 misconfig carry a message */
+   });
+  }).catch(function(){localSignIn();});                              /* network error: offline demo */
+ });
 }
 
 /* ---------------- shell ---------------- */
 var view='dashboard';
-var NAV=[{k:'dashboard',label:'Dashboard',icon:'dash'},{grp:'Content'},{k:'news'},{k:'products'},{k:'team'},{k:'careers'},{k:'partners'},{k:'formats'},{k:'standard'},{grp:'Company'},{k:'factory'},{k:'quality'},{k:'responsibility'},{k:'values'},{k:'gallery'},{grp:'Site'},{k:'about',label:'About & Home',icon:'about'},{k:'offices'},{k:'countries',label:'Countries on the map',icon:'offices'},{k:'settings',label:'Settings',icon:'settings'}];
+var NAV=[{k:'dashboard',label:'Dashboard',icon:'dash'},{grp:'Content'},{k:'news'},{k:'products'},{k:'team'},{k:'careers'},{k:'partners'},{k:'formats'},{k:'standard'},{grp:'Company'},{k:'factory'},{k:'quality'},{k:'responsibility'},{k:'values'},{k:'gallery'},{grp:'Site'},{k:'about',label:'About & Home',icon:'about'},{k:'offices'},{k:'countries',label:'Countries on the map',icon:'offices'},{k:'settings',label:'Settings',icon:'settings'},{k:'security',label:'Password',icon:'logout'}];
 function sidebar(){
  var items=NAV.map(function(n){
   if(n.grp)return '<div class="sb-group">'+n.grp+'</div>';
+  if(n.k==='security'&&MODE!=='api')return ''; /* password change needs the live backend */
   var m=MODELS[n.k]; var label=n.label||(m&&m.label)||n.k; var icon=n.icon||(m&&m.icon)||'dash';
   var badge=m?'<span class="badge">'+coll(n.k).length+'</span>':'';
   return '<div class="sb-item'+(view===n.k?' on':'')+'" data-nav="'+n.k+'">'+svg(icon)+'<span>'+label+'</span>'+badge+'</div>';
@@ -413,7 +459,7 @@ function sidebar(){
  return '<aside class="sidebar"><div class="sb-brand"><b>PRINTO<span>·</span>PACK</b><small>System · Admin</small></div>'+
   '<nav class="sb-nav">'+items+'</nav>'+
   '<div class="sb-pub" id="pub"></div>'+
-  '<div class="sb-foot"><div class="sb-user"><div class="av">CM</div><div><div class="nm">Creative Manager</div><div class="rl">creative@printopack.com.sa</div></div></div>'+
+  '<div class="sb-foot"><div class="sb-user"><div class="av">MK</div><div><div class="nm">Marketing</div><div class="rl">Site administrator</div></div></div>'+
   '<button class="sb-logout" data-logout>'+svg('logout')+'Sign out</button></div></aside>';
 }
 
@@ -486,9 +532,36 @@ function render(){
  renderView();
  pubRender();
  root.querySelectorAll('[data-nav]').forEach(function(el){el.addEventListener('click',function(){view=el.getAttribute('data-nav');render();});});
- var lo=root.querySelector('[data-logout]');if(lo)lo.addEventListener('click',function(){localStorage.removeItem(SKEY);render();});
+ var lo=root.querySelector('[data-logout]');if(lo)lo.addEventListener('click',function(){localStorage.removeItem(SKEY);if(MODE==='api'){fetch(API+'/logout',{method:'POST'}).catch(function(){}).finally(function(){renderLogin();});}else render();});
 }
-function renderView(){var m=$('#main');if(view==='dashboard')return dashView(m);if(view==='about')return aboutView(m);if(view==='countries')return countriesView(m);if(view==='settings')return settingsView(m);if(MODELS[view])return listView(m,view);}
+function renderView(){var m=$('#main');if(view==='dashboard')return dashView(m);if(view==='about')return aboutView(m);if(view==='countries')return countriesView(m);if(view==='settings')return settingsView(m);if(view==='security')return securityView(m);if(MODELS[view])return listView(m,view);}
+/* Rotate the single marketing password from inside the dashboard (API mode only). The new
+   password takes effect immediately and is stored hashed in the database, so it is never
+   frozen the way a hardcoded credential would be. */
+function securityView(m){
+ m.innerHTML=topbar('Password','Site','')+'<div class="view">'+
+  '<div class="panel"><div class="panel-head"><div><h2>Change admin password</h2><p>This is the single sign-in for the marketing team. Change it here whenever you need to (for example when a staff member leaves). The new password works right away and is stored securely, never in plain text.</p></div></div>'+
+  '<div class="panel-body"><div class="form-grid">'+
+   '<div class="field"><label>Current password</label><input type="password" id="pc" autocomplete="current-password"></div>'+
+   '<div class="field"></div>'+
+   '<div class="field"><label>New password</label><input type="password" id="pn" autocomplete="new-password"></div>'+
+   '<div class="field"><label>Confirm new password</label><input type="password" id="pn2" autocomplete="new-password"></div>'+
+   '<p id="perr" hidden style="color:#b00020;font-size:13px;grid-column:1/-1;margin:0"></p>'+
+   '<div style="grid-column:1/-1"><button class="btn btn-ok" id="pbtn">Update password</button></div>'+
+  '</div></div></div></div>';
+ var err=$('#perr'),btn=$('#pbtn');
+ btn.addEventListener('click',function(){
+  var c=$('#pc').value,n=$('#pn').value,n2=$('#pn2').value;err.hidden=true;
+  if(n.length<10){err.textContent='New password must be at least 10 characters.';err.hidden=false;return;}
+  if(n!==n2){err.textContent='The two new passwords do not match.';err.hidden=false;return;}
+  btn.disabled=true;btn.textContent='Updating...';
+  fetch(API+'/password',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({current:c,next:n})}).then(function(r){return r.json().catch(function(){return {};}).then(function(o){return {ok:r.ok,o:o};});}).then(function(x){
+   btn.disabled=false;btn.textContent='Update password';
+   if(x.ok){$('#pc').value='';$('#pn').value='';$('#pn2').value='';toast('Password updated','ok');}
+   else{err.textContent=(x.o&&x.o.error)||'Could not update the password.';err.hidden=false;}
+  }).catch(function(){btn.disabled=false;btn.textContent='Update password';err.textContent='Network error. Please try again.';err.hidden=false;});
+ });
+}
 
 /* Picture storage, shown on the dashboard when the Cloudflare backend is live. Local demo
    mode has nothing to measure, so the panel simply stays hidden. */
