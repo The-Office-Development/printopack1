@@ -63,7 +63,8 @@ h1,h2,h3,h4{font-family:var(--disp);font-weight:400;letter-spacing:-.01em;line-h
 .topbar .crumb{font-family:var(--disp);font-size:11px;letter-spacing:.18em;text-transform:uppercase;color:var(--gold);margin-bottom:4px}
 .topbar h1{font-size:25px}
 .topbar-actions{display:flex;gap:10px;align-items:center}
-.view{padding:32px 36px 64px;max-width:1200px;width:100%}
+.view{padding:32px 36px 64px;max-width:1200px;width:100%;animation:viewin .26s var(--ease)}
+@keyframes viewin{from{opacity:0;transform:translateY(6px)}to{opacity:1;transform:none}}
 
 /* buttons */
 .btn{display:inline-flex;align-items:center;gap:8px;border:none;border-radius:6px;font-family:var(--disp);font-weight:500;font-size:13px;letter-spacing:.04em;padding:11px 20px;cursor:pointer;transition:.3s var(--ease);white-space:nowrap}
@@ -122,6 +123,9 @@ h1,h2,h3,h4{font-family:var(--disp);font-weight:400;letter-spacing:-.01em;line-h
 .field.full{grid-column:1/-1}
 .field label{display:block;font-family:var(--disp);font-size:12px;font-weight:500;letter-spacing:.04em;text-transform:uppercase;color:var(--muted);margin-bottom:7px}
 .field label .ar{color:var(--gold);text-transform:none;letter-spacing:0;margin-left:6px;font-size:11px}
+.field label .req{color:var(--err);margin-left:3px;font-weight:700}
+.field.missing input,.field.missing textarea,.field.missing select,.field.missing .imgpick{border-color:var(--err);background:var(--err-bg)}
+.field.missing label{color:var(--err)}
 .field input,.field textarea,.field select{width:100%;padding:12px 14px;border:1px solid var(--line);border-radius:8px;background:var(--white);font-size:14.5px;color:var(--ink)}
 .field input:focus,.field textarea:focus,.field select:focus{outline:none;border-color:var(--gold)}
 .field textarea{min-height:110px;resize:vertical;line-height:1.6}
@@ -210,10 +214,13 @@ h1,h2,h3,h4{font-family:var(--disp);font-weight:400;letter-spacing:-.01em;line-h
 .login-portal:hover{color:var(--navy,#0e2340)}
 .login-back{display:block;margin-top:10px;text-align:center;font-size:12.5px;color:var(--muted,#6b7280);text-decoration:none;letter-spacing:.02em;transition:.3s}
 .login-back:hover{color:var(--navy,#0e2340)}
-/* No-animation policy: the dashboard renders and switches instantly, matching the
-   still public site. The only exception is the loading spinner, kept as functional
-   progress feedback during network fetches. */
-*,*::before,*::after{transition:none!important}
+/* The no-motion brief is for the public marketing site (no scroll reveals / parallax that
+   tire a visitor's eyes). This internal admin tool is the opposite case: the marketing team
+   works in it all day, so the authored micro-interactions below (the sidebar active fade,
+   hover states, the drawer slide, the toast) stay on to make navigation feel calm and
+   deliberate instead of snapping. Motion is kept short and functional, and reduced-motion
+   users still get the honoured @media block. */
+@media(prefers-reduced-motion:reduce){*,*::before,*::after{transition-duration:.01ms!important;animation:none!important}}
 
 /* picture storage meter (dashboard) */
 .meter{height:8px;border-radius:99px;background:var(--line);overflow:hidden}

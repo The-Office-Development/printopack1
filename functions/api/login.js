@@ -19,6 +19,26 @@ export async function onRequestPost({ request, env }) {
   let body = {};
   try { body = await request.json(); } catch (e) {}
 
+  // ============================================================================
+  // LOCAL TESTING ONLY -- REMOVE BEFORE LAUNCH.
+  // Issues a session with no password and no bot wall so the admin can be clicked
+  // through on a local `wrangler pages dev` server, where the real bootstrap
+  // password is not to hand. Hard-gated to a localhost hostname: a deployed
+  // request's hostname is always the Pages/custom domain, so this branch can never
+  // run in production. Delete this whole block before going live.
+  {
+    const host = new URL(request.url).hostname;
+    const isLocal = host === 'localhost' || host === '127.0.0.1' || host === '::1' || host === '[::1]';
+    if (isLocal && body && body.dev === true) {
+      const devToken = await issueSession(env.SESSION_SECRET);
+      return new Response(JSON.stringify({ ok: true, dev: true }), {
+        status: 200,
+        headers: { 'content-type': 'application/json; charset=utf-8', 'Set-Cookie': sessionCookie(devToken) },
+      });
+    }
+  }
+  // ============================ end local testing block =======================
+
   // Bot wall (only when configured). A failed check is a bot, not a password guess, so it is
   // rejected before the lockout counter is touched.
   if (env.TURNSTILE_SECRET) {

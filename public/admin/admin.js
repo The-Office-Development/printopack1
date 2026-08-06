@@ -397,6 +397,31 @@ var MODELS={
   columns:[{type:"title",field:"city",sub:"staffName"},{type:"text",field:"phone"},{type:"text",field:"email"}],
   fields:[{name:"photo",type:"image",label:"Office manager's photo",rec:"420 × 420px, square. Shown beside the office on the contact page; initials stand in until one is added."},{name:"city",type:"text",label:"Office (English)",half:true},{name:"cityAr",type:"text",label:"Office",ar:"Arabic",rtl:true,half:true},{name:"group",type:"select",label:"Group",half:true,options:["Saudi Arabia","Regional & Export"]},{name:"cc",type:"select",label:"Country on the map",half:true,options:["","sa","kw","jo","iq","eg","sd","tn","ly","dz","ma","ye","sy","int"],rec:"Which country this office lights up on the map, and whose details the map shows. Leave blank for a branch inside a country that already has an office (Riyadh, Dammam). 'int' is International Sales, which appears in the selector but has no country to colour."},{name:"country",type:"text",label:"Country / area (English)",half:true},{name:"countryAr",type:"text",label:"Country / area",ar:"Arabic",rtl:true,half:true},{name:"staffName",type:"text",label:"Manager name (English)",half:true},{name:"staffNameAr",type:"text",label:"Manager name",ar:"Arabic",rtl:true,half:true},{name:"staffRole",type:"text",label:"Manager title (English)",half:true},{name:"staffRoleAr",type:"text",label:"Manager title",ar:"Arabic",rtl:true,half:true},{name:"phone",type:"text",label:"Phone",half:true},{name:"email",type:"text",label:"Email",half:true}]}
 };
+/* The fields that MUST be filled before a record can be saved, per model. These are the
+   identifying names/titles, the visual-anchor images, and the categorisation each record needs
+   to slot into the site; leaving them blank breaks the card and list layouts. Arabic and
+   genuinely optional fields stay free. Applied to the MODELS field objects as f.req below. */
+var REQUIRED={
+ news:["image","title","category","date","body"],
+ productGroups:["image","name","filter"],
+ products:["image","name","category"],
+ team:["name","role","experience"],
+ careers:["title","dept","type","location","email","requirements"],
+ partners:["image","name","country"],
+ factory:["image","name","kind","description"],
+ quality:["image","title","kind"],
+ responsibility:["image","title","category"],
+ gallery:["kind","title","image"],
+ values:["title","text"],
+ formats:["title"],
+ standard:["title","text"],
+ // An office is bilingual contact data shown on the contact page and both maps; a blank English
+ // OR Arabic field leaves a gap in the RTL layout, so every naming/contact field is required.
+ // 'cc' stays optional on purpose: branch offices inside an existing country (Riyadh, Dammam)
+ // deliberately leave it blank, and the map-country toggle always sets it itself.
+ offices:["city","cityAr","country","countryAr","staffName","staffNameAr","staffRole","staffRoleAr","phone","email"]
+};
+Object.keys(REQUIRED).forEach(function(k){var s=REQUIRED[k];((MODELS[k]||{}).fields||[]).forEach(function(f){if(s.indexOf(f.name)>-1)f.req=true;});});
 
 /* ---------------- auth ---------------- */
 var SKEY='pp_admin_session';
@@ -405,6 +430,13 @@ function loggedIn(){return localStorage.getItem(SKEY)==='1';}
    department. There is no offline demo sign-in: if the backend cannot be reached, the login
    fails rather than admitting anyone. To preview the admin locally, run it against the real
    backend with `wrangler pages dev` (which serves /api and enforces the password). */
+/* LOCAL TESTING ONLY -- REMOVE BEFORE LAUNCH. A one-click sign in that skips the password and
+   the bot wall, so the admin can be reviewed on a local `wrangler pages dev` server without the
+   real bootstrap password. Only ever rendered when the page is served from localhost; the paired
+   backend branch in functions/api/login.js is hard-gated to a localhost hostname too, so this can
+   never work in production. Delete this function, its call site, and the backend block before launch. */
+function isLocalHost(){var h=location.hostname;return h==='localhost'||h==='127.0.0.1'||h==='::1'||h==='[::1]';}
+function devSignInHTML(){return isLocalHost()?'<button class="btn btn-ghost" id="ldev" type="button" style="width:100%;justify-content:center;padding:11px;margin-top:10px">Developer sign in (local testing only)</button>':'';}
 function renderLogin(msg){
  root.innerHTML='<div class="login"><form class="login-card" id="lf">'+
   '<img class="login-logo" src="/images/printopack-logo.png" alt="Printopack">'+
@@ -414,6 +446,7 @@ function renderLogin(msg){
   '<div id="lts" style="margin:0 0 12px"></div>'+
   '<p class="login-err" id="lerr" hidden style="color:#b00020;font-size:13px;margin:-4px 0 12px"></p>'+
   '<button class="btn btn-primary" id="lbtn" style="width:100%;justify-content:center;padding:13px" type="submit">Sign in</button>'+
+  devSignInHTML()+
   '<p class="login-note">Restricted area for Printopack marketing. Customer accounts are managed in the customer portal.</p>'+
   '<a class="login-portal" href="https://printopack.azurewebsites.net/">Are you a customer? Go to the customer portal &rarr;</a>'+
   '<a class="login-back" href="/">&larr; Back to the website</a>'+
@@ -451,6 +484,16 @@ function renderLogin(msg){
     fail((o&&o.error)||'Sign in failed. Please try again.');        /* 429 lockout / 403 bot / 500 misconfig carry a message */
    });
   }).catch(function(){resetTs();fail('Network error. Please check your connection and try again.');});
+ });
+ /* LOCAL TESTING ONLY -- REMOVE BEFORE LAUNCH (see devSignInHTML). */
+ var dev=$('#ldev');
+ if(dev)dev.addEventListener('click',function(){
+  dev.disabled=true;dev.textContent='Signing in...';err.hidden=true;
+  fetch(API+'/login',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({dev:true})}).then(function(r){
+   if(r.ok){localStorage.setItem(SKEY,'1');boot();return;}
+   dev.disabled=false;dev.textContent='Developer sign in (local testing only)';
+   err.textContent='Developer sign in is only available on a local server.';err.hidden=false;
+  }).catch(function(){dev.disabled=false;dev.textContent='Developer sign in (local testing only)';err.textContent='Network error.';err.hidden=false;});
  });
 }
 
@@ -610,14 +653,46 @@ function runPublish(host){
  });
 }
 function topbar(title,crumb,actions){return '<div class="topbar"><div><div class="crumb">'+esc(crumb||'Printopack System')+'</div><h1>'+esc(title)+'</h1></div><div class="topbar-actions">'+(actions||'')+'</div></div>';}
+/* Full mount: build the shell once. The sidebar is deliberately NOT rebuilt on every click
+   (that was what made navigation feel laggy and reload the logo); only the main panel is
+   swapped by navigate(). The sidebar nav is bound here; each view binds its own controls. */
 function render(){
  ensure();
  if(!loggedIn()){renderLogin();return;}
  root.innerHTML='<div class="app">'+sidebar()+'<main class="main" id="main"></main></div>';
+ root.querySelectorAll('.sidebar [data-nav]').forEach(function(el){el.addEventListener('click',function(){navigate(el.getAttribute('data-nav'));});});
+ var lo=root.querySelector('[data-logout]');if(lo)lo.addEventListener('click',function(){localStorage.removeItem(SKEY);if(MODE==='api'){fetch(API+'/logout',{method:'POST'}).catch(function(){}).finally(function(){renderLogin();});}else render();});
  renderView();
  pubRender();
- root.querySelectorAll('[data-nav]').forEach(function(el){el.addEventListener('click',function(){view=el.getAttribute('data-nav');render();});});
- var lo=root.querySelector('[data-logout]');if(lo)lo.addEventListener('click',function(){localStorage.removeItem(SKEY);if(MODE==='api'){fetch(API+'/logout',{method:'POST'}).catch(function(){}).finally(function(){renderLogin();});}else render();});
+}
+/* Switch section without touching the shell: repaint only the main panel, then update the
+   sidebar's active item and counts in place. Instant, and the active state transitions
+   smoothly instead of the whole page being torn down and rebuilt. */
+function navigate(v){
+ if(!root.querySelector('.sidebar')){view=v;render();return;}
+ view=v;
+ renderView();
+ syncSidebar();
+ var app=root.querySelector('.app');if(app)app.classList.remove('nav-open');
+ // The window is the scroll container for long sections (.main has no overflow of its own),
+ // so bring the window to the top on a section change. Without this, navigating from a long
+ // section to a shorter one leaves the page scrolled past the new content and the browser
+ // clamps it, which reads as the sticky sidebar "teleporting" to the top. The sidebar's own
+ // nav scroll is untouched, so the item just clicked stays where it was.
+ window.scrollTo(0,0);
+ var m=$('#main');if(m)m.scrollTop=0;
+}
+/* After a save or delete: repaint the current view and refresh the sidebar counts, again
+   without rebuilding the shell. */
+function refresh(){renderView();syncSidebar();}
+/* Keep the sidebar's active highlight and per-section counts current in place. */
+function syncSidebar(){
+ root.querySelectorAll('.sidebar [data-nav]').forEach(function(el){
+  var k=el.getAttribute('data-nav');
+  el.classList.toggle('on',k===view);
+  var b=el.querySelector('.badge');
+  if(b&&MODELS[k])b.textContent=coll(k).length;
+ });
 }
 function renderView(){var m=$('#main');if(view==='dashboard')return dashView(m);if(view==='about')return aboutView(m);if(view==='countries')return countriesView(m);if(view==='settings')return settingsView(m);if(view==='security')return securityView(m);if(MODELS[view])return listView(m,view);}
 /* Rotate the single marketing password from inside the dashboard (API mode only). The new
@@ -739,11 +814,14 @@ function listView(m,key){
 
 /* ---------------- form drawer ---------------- */
 var draft={};
+// A required field's name for the "please fill…" message: the label without the language/optional tag.
+function reqName(f){return String(f.label).replace(/\s*\((English|optional)\)/gi,'').trim();}
 function fieldHTML(f,val){
- var lab='<label>'+esc(f.label)+(f.ar?' <span class="ar">· '+esc(f.ar)+'</span>':'')+'</label>';
+ var req=f.req?'<span class="req" title="Required">*</span>':'';
+ var lab='<label>'+esc(f.label)+req+(f.ar?' <span class="ar">· '+esc(f.ar)+'</span>':'')+'</label>';
  var rtl=f.rtl?' dir="rtl"':'';
  var hint=f.rec?'<div class="hint">'+esc(f.rec)+'</div>':'';
- if(f.type==='image'){var has=val?' has':'';var cn=f.contain?' contain':'';var rec=f.rec?'<span class="imgrec">'+svg('image')+'Recommended: <b>'+esc(f.rec)+'</b> for a flawless fit</span>':'';return '<div class="field full"><label>'+esc(f.label)+'</label>'+rec+'<div class="imgpick'+has+cn+'" data-imgpick="'+f.name+'" data-box="'+recBox(f.rec)+'"><img src="'+esc(imgSrc(val))+'"><div class="ph">'+svg('image')+'Click to upload</div></div><input type="file" accept="image/*" data-imgfile="'+f.name+'" hidden></div>';}
+ if(f.type==='image'){var has=val?' has':'';var cn=f.contain?' contain':'';var rec=f.rec?'<span class="imgrec">'+svg('image')+'Recommended: <b>'+esc(f.rec)+'</b> for a flawless fit</span>':'';return '<div class="field full"><label>'+esc(f.label)+req+'</label>'+rec+'<div class="imgpick'+has+cn+'" data-imgpick="'+f.name+'" data-box="'+recBox(f.rec)+'"><img src="'+esc(imgSrc(val))+'"><div class="ph">'+svg('image')+'Click to upload</div></div><input type="file" accept="image/*" data-imgfile="'+f.name+'" hidden></div>';}
  if(f.type==='textarea')return '<div class="field full">'+lab+'<textarea data-f="'+f.name+'"'+rtl+'>'+esc(val||'')+'</textarea>'+hint+'</div>';
  if(f.type==='select'){var src=f.optionsFrom?coll(f.optionsFrom).map(function(g){return g.name;}).filter(Boolean):f.options;var list=f.optionsFrom?[''].concat(src):src;var opts=list.map(function(o){return '<option'+(String(val)===String(o)?' selected':'')+'>'+esc(o)+'</option>';}).join('');return '<div class="field'+(f.half?'':' full')+'">'+lab+'<select data-f="'+f.name+'">'+opts+'</select>'+hint+'</div>';}
  var t=f.type==='date'?'date':(f.type==='number'?'number':(f.type==='url'?'url':'text'));
@@ -761,13 +839,34 @@ function openForm(key,id){
  requestAnimationFrame(function(){$('#ov',host).classList.add('show');$('#dw',host).classList.add('show');});
  function close(){$('#ov',host).classList.remove('show');$('#dw',host).classList.remove('show');setTimeout(function(){host.remove();},350);}
  $('#xc',host).addEventListener('click',close);$('#cx',host).addEventListener('click',close);$('#ov',host).addEventListener('click',close);
- host.querySelectorAll('[data-f]').forEach(function(el){el.addEventListener('input',function(){draft[el.getAttribute('data-f')]=el.value;});});
- host.querySelectorAll('[data-imgpick]').forEach(function(p){var name=p.getAttribute('data-imgpick');var file=host.querySelector('[data-imgfile="'+name+'"]');p.addEventListener('click',function(){file.click();});file.addEventListener('change',function(e){var f=e.target.files[0];if(!f)return;prepImage(f,+p.getAttribute('data-box')||IMG_BOX,function(out,kb){draft[name]=out;p.classList.add('has');$('img',p).src=out;toast('Picture ready, '+kb+' KB','ok');});file.value='';});});
+ host.querySelectorAll('[data-f]').forEach(function(el){el.addEventListener('input',function(){draft[el.getAttribute('data-f')]=el.value;var fl=el.closest('.field');if(fl&&String(el.value).trim()!=='')fl.classList.remove('missing');});});
+ host.querySelectorAll('[data-imgpick]').forEach(function(p){var name=p.getAttribute('data-imgpick');var file=host.querySelector('[data-imgfile="'+name+'"]');p.addEventListener('click',function(){file.click();});file.addEventListener('change',function(e){var f=e.target.files[0];if(!f)return;prepImage(f,+p.getAttribute('data-box')||IMG_BOX,function(out,kb){draft[name]=out;p.classList.add('has');$('img',p).src=out;var fl=p.closest('.field');if(fl)fl.classList.remove('missing');toast('Picture ready, '+kb+' KB','ok');});file.value='';});});
  if(mdl.hasImport){$('#lib',host).addEventListener('click',function(){importLI(host);});$('#liu',host).addEventListener('keydown',function(e){if(e.key==='Enter')importLI(host);});}
  $('#sv',host).addEventListener('click',function(){
+  // Pull the live value of every field into the draft first, so a select left on its default
+  // (never touched, so no input event fired) is captured and the required-check sees it.
+  host.querySelectorAll('[data-f]').forEach(function(el){draft[el.getAttribute('data-f')]=el.value;});
   if(key==='products')draft.active=String(draft.active)!=='false';
-  if(key==='team'&&draft.experience!=null)draft.experience=parseInt(draft.experience,10)||0;
-  if(!draft.title&&!draft.name&&!draft.city&&!draft.staffName){toast('Add a title/name first','err');return;}
+  // NB: coerce experience to a number AFTER the required-check below, otherwise a blank field
+  // becomes 0 here and slips past the "required" guard.
+  var miss=mdl.fields.filter(function(f){return f.req&&String(draft[f.name]==null?'':draft[f.name]).trim()==='';});
+  if(miss.length){
+   host.querySelectorAll('.field.missing').forEach(function(el){el.classList.remove('missing');});
+   miss.forEach(function(f){var el=host.querySelector('[data-f="'+f.name+'"]')||host.querySelector('[data-imgpick="'+f.name+'"]');var fl=el&&el.closest('.field');if(fl)fl.classList.add('missing');});
+   var first=host.querySelector('.field.missing');if(first)first.scrollIntoView({block:'center'});
+   toast('Please fill the required fields: '+miss.map(reqName).join(', '),'err');
+   return;
+  }
+  // A Video gallery item plays from its external link (the image is only the poster), so the
+  // link is required for that type even though it is optional for a Photo or an Advertisement.
+  if(key==='gallery'&&draft.kind==='Video'&&String(draft.url||'').trim()===''){
+   host.querySelectorAll('.field.missing').forEach(function(el){el.classList.remove('missing');});
+   var uf=host.querySelector('[data-f="url"]'),ufl=uf&&uf.closest('.field');
+   if(ufl){ufl.classList.add('missing');ufl.scrollIntoView({block:'center'});}
+   toast('A video needs its external link (YouTube or Vimeo).','err');
+   return;
+  }
+  if(key==='team')draft.experience=parseInt(draft.experience,10)||0;
   if(id==='new'&&capLeft(key)===0){toast(MODELS[key].label+' is full at '+capOf(key)+'. Delete one before adding another.','err');return;}
   /* The home page shows exactly MAIN_PARTNERS main partners. Normalise the flag first: a
      new partner that was never touched must land as "false", not inherit a rendered default,
@@ -783,7 +882,7 @@ function openForm(key,id){
   if(id==='new')draft.id=uid();
   saveRecord(key,draft);
   toast(mdl.singular+(id==='new'?' created':' updated'),'ok');
-  close();render();
+  close();refresh();
  });
 }
 function importLI(host){
@@ -846,12 +945,16 @@ function countriesView(m){
     deleteRecord('offices',existing.id);
     toast(c.en+' switched off','ok');
    }else{
-    saveRecord('offices',{id:uid(),group:'Regional & Export',cc:cc,city:c.en,cityAr:c.ar,
+    var nid=uid();
+    saveRecord('offices',{id:nid,group:'Regional & Export',cc:cc,city:c.en,cityAr:c.ar,
      country:c.en,countryAr:c.ar,staffName:'',staffNameAr:'',staffRole:'',staffRoleAr:'',
      phone:'',email:''});
-    toast(c.en+' switched on. Add its details under Offices & Contact.','ok');
+    toast(c.en+' switched on. Fill in its details to finish.','ok');
+    refresh();
+    openForm('offices',nid); // every field is required, so the editor opens straight away
+    return;
    }
-   render();
+   refresh();
   });
  });
 }
@@ -876,8 +979,8 @@ function settingsView(m){
 /* ---------------- shared bindings ---------------- */
 function bind(scope){
  scope.querySelectorAll('[data-open]').forEach(function(el){el.addEventListener('click',function(e){e.stopPropagation();var p=el.getAttribute('data-open').split(':');openForm(p[0],p[1]);});});
- scope.querySelectorAll('[data-del]').forEach(function(el){el.addEventListener('click',function(e){e.stopPropagation();var p=el.getAttribute('data-del').split(':');if(!confirm('Delete this '+MODELS[p[0]].singular.toLowerCase()+'? This cannot be undone.'))return;deleteRecord(p[0],p[1]);toast(MODELS[p[0]].singular+' deleted');render();});});
- scope.querySelectorAll('[data-nav]').forEach(function(el){el.addEventListener('click',function(){view=el.getAttribute('data-nav');render();});});
+ scope.querySelectorAll('[data-del]').forEach(function(el){el.addEventListener('click',function(e){e.stopPropagation();var p=el.getAttribute('data-del').split(':');if(!confirm('Delete this '+MODELS[p[0]].singular.toLowerCase()+'? This cannot be undone.'))return;deleteRecord(p[0],p[1]);toast(MODELS[p[0]].singular+' deleted');refresh();});});
+ scope.querySelectorAll('[data-nav]').forEach(function(el){el.addEventListener('click',function(){navigate(el.getAttribute('data-nav'));});});
 }
 boot();
 })();
