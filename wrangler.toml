@@ -7,7 +7,7 @@
 # Bindings can also be set in the Pages dashboard; this file lets `wrangler` do the schema
 # load, seed import, and local dev.
 
-name = "printopack"
+name = "printopack1"
 compatibility_date = "2024-11-01"
 pages_build_output_dir = "dist"
 
