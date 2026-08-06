@@ -13,7 +13,11 @@ import { json, bad } from './_shared.js';
 // A browser can be bypassed, so the same limit is applied again here, read from the same
 // setting rather than duplicated as a second number that could drift away from it.
 const FLOOR_KB = 40, CEIL_KB = 600, DEFAULT_KB = 400;
-const EXT = { 'image/webp': 'webp', 'image/jpeg': 'jpg', 'image/png': 'png', 'image/gif': 'gif' };
+// The browser re-encodes every picture to WebP (or JPEG where WebP export is unavailable), so
+// those are the only two types that ever legitimately arrive. This is the security boundary, so
+// the allowlist is enforced again rather than trusted: anything else (PNG/GIF/SVG/HEIC/etc.) is
+// refused, which keeps the served site to a single, fast, predictable image format.
+const EXT = { 'image/webp': 'webp', 'image/jpeg': 'jpg' };
 
 async function maxBytes(env) {
   try {

@@ -58,7 +58,11 @@ const _avgExp = _num(_about.statAvgExp, 14);
 export const stats = {
   founded: _num(_about.statFounded, 1997),
   countries: _num(_about.statCountries, 35),
-  offices: _num(_about.statOffices, 10),
+  /** Regional offices: counted from the offices collection, not typed. The counter always
+   *  matches the list beneath it (the same "Regional & Export" group the Contact directory and
+   *  the footer render), so splitting or adding an office in the admin updates it with no second
+   *  number to keep in step. Falls back to the old `statOffices` only if the collection is empty. */
+  offices: collection('offices').filter((o) => o.group === 'Regional & Export').length || _num(_about.statOffices, 10),
   employees: _employees,
   avgExp: _avgExp,
   /** Total experience across the team, in years. Derived from the two numbers the client

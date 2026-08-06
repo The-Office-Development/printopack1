@@ -8,29 +8,41 @@ Direction from Bader in this session. Two buckets: (a) locked decisions we act o
 (red `#a60006`, blue `#0046a2`, orange `#f89900`, white). The current `global.css` still uses
 navy/gold/cream and must be migrated; that re-skin is a separate pending task.
 
-**Home cover image:** approved, stays as-is.
+**Home cover image (hero):** approved, stays as-is. There are NO slider images: the hero is a
+single fixed image, not a rotating set. (Bader, 2026-08-06.)
 
-**Fonts:** requested from the client (they are getting us the approved fonts).
+**Fonts:** ON the client list, and NOT to be taken lightly. Given the size of the company, the
+font licensing/availability question is real and stays a client-facing item. Client asked for
+GE Flow Regular (Arabic) and Narkisim (English); no font files exist, only the names, and
+Narkisim is a Hebrew face with no free "official English counterpart" found. We ask the client
+to supply the licensed font files (or confirm a licensed source) before we self-host anything,
+because the repo is public and self-hosting a commercial font there is a redistribution risk.
 
 **The seven main-page section images:** these are deliberately NOT editable from the admin
-dashboard and must stay that way. They are fixed brand furniture. We ASK the client to supply
-them. (Separate from the home cover, which is already approved.)
+dashboard and must stay that way. They are fixed brand furniture. We ASK the client to bring us
+CLEAR images for the seven sections. Bader has Google Drive access but will NOT sift the drive
+image by image: the client must hand over the seven specific, final images. (Bader, 2026-08-06.)
 
-**Partners (the 20 logos on the home page):** every partner name, country, and logo must be
-fully editable from the admin, including adding, removing, and replacing any logo or the main
-logo. So there is no need to lock in "real" partner data now: the client maintains it all
-themselves.
+**Partners (the 20 logos on the home page):** every partner name, country, and logo is fully
+editable from the admin, including adding, removing, and replacing any logo or the main logo.
+Real partner names are therefore the client's to fill in themselves: no need to chase them.
 
-**Offices and their managers:** same rule, everything editable AND add-able from the admin
-(office details, manager names/titles/phones/emails, new offices). No need to chase final
-office data from the client.
+**Offices and their managers:** everything editable AND add-able from the admin (office details,
+manager names/titles/phones/emails, new offices). Office email addresses and manager names are
+the client's to fill in themselves via the admin. No need to chase final office data.
 
 **Certificates:** no need to obtain the full certificate document files. What is required is
 the admin ABILITY to add and edit certificates, following the existing image-and-description
-house layout (see the house-layout section below). Confirm current cert entries expose an
-add/edit path in the admin.
+house layout (see the house-layout section below). Confirmed: cert entries have an add/edit path.
 
-**Mr Printo (mascot):** deferred, do this last.
+**Logo:** the logo file is already provided. The white logo for the footer is in hand
+(`/Users/bader/Downloads/printopack-white-logo.jpeg`), BUT that file is a signage mockup (blue
+background, QR code, "Main Gate", print dimensions), not an isolated transparent asset. The
+footer already carries a clean transparent white wordmark (`printopack-logo-white.png`), which
+is correct as-is. If the client wants the exact coloured-roller version in the footer, they
+should provide a transparent PNG of just the logo, not the signage sheet.
+
+**Mr Printo (mascot):** deferred, do this LAST, after everything else. (Bader, 2026-08-06.)
 
 **Texts to confirm with the client** (Bader will ask them to confirm the current wording):
 vision, mission, and any other section carrying drafted/placeholder copy we wrote. Sections to
@@ -175,8 +187,14 @@ These are not one page. Each one changes something every page renders.
       logo yellow, then sweep for hardcoded colours. Explicitly named by the client for the
       **map** (`.rc-served` / `.rc-ctx` fills in `contact.astro` and `partners.astro`).
       Needs the logo file or its hex values first.
-- [ ] **G4. Fonts.** Currently Jost (display) + Inter (body) + IBM Plex Sans Arabic,
-      loaded in `src/layouts/Base.astro`. Client says edit them. Needs to know which font.
+- [?] **G4. Fonts.** Currently Jost (display) + Inter (body) + IBM Plex Sans Arabic,
+      loaded in `src/layouts/Base.astro`. Client asked for **GE Flow Regular** (Arabic) and
+      **Narkisim** (English). **On the client list, not to be taken lightly** (Bader, 2026-08-06):
+      no font files exist, only the names; GE Flow is a commercial Boutros face; Narkisim is a
+      Hebrew font with no free "official English counterpart" found, and its named Latin cousins
+      (Narkiss Tam/Text/Block) are commercial. The repo is public, so self-hosting a commercial
+      font there is a redistribution risk. **Blocked on the client supplying the licensed font
+      files, or confirming a licensed source.**
 - [~] **G5. Logo.** Two halves. **Larger in the navbar: DONE 2026-08-03**, 46px to 62px inside
       the 82px bar (10px breath each side, the most it takes without the bar growing), and
       36px to 46px on mobile. The "Saudi Modern Packaging Factory Co. Ltd." strapline is
@@ -252,10 +270,12 @@ These are not one page. Each one changes something every page renders.
       snap logic and the "swipe to see all seven" hint are all gone, and the lede no longer
       tells the visitor to move sideways.
 - [x] **1b. Card order** follows G1 (Careers and News & Gallery swap). DONE 2026-08-03.
-- [ ] **1c. Cover image.** Replace `/images/hero.jpg` with the client's new image.
-- [?] **1d. New slider images** from the client, or from the Google Drive he sent, cross-referenced
-      against the images he named in the voice notes. Neither the Drive link nor the voice notes
-      are in the repo. Needed before this can start.
+- [x] **1c. Cover image.** DONE (decision) 2026-08-06: the current hero image STAYS as-is,
+      approved by the client. Nothing to replace.
+- [x] **1d. Slider images: none.** RESOLVED 2026-08-06. There are NO slider images: the hero is a
+      single fixed image, not a rotating set. The only images we still ask the client for are the
+      seven main-page section images (clear, final versions), which the client hands over directly
+      rather than us sifting the Google Drive. See the top bucket and section 10.
 - [x] **1e. Latest news section.** DONE 2026-08-03. Two fixes:
       the grid was `repeat(3,1fr)` with a hard `1fr` override from 1000px down, so tablets got one
       enormous card per row; it is now `auto-fit minmax(290px,1fr)` and measures 3 / 2 / 1 columns
@@ -330,7 +350,8 @@ These notes settle two open questions from it.
       Verified from the built HTML on all 22 pages: 73 rendered, group by group, in order.
       Each section has a photo and description slot the client fills from the admin; until then
       it renders as a clean named card rather than an empty frame. Arabic names are drafted
-      natural fusha and still need Amal's sign-off (question 7 of the clarifications draft).
+      natural fusha. **Sign-off is no longer a client-list item** (Bader, 2026-08-06): the client
+      edits every product name (EN and AR) themselves from the admin, so there is nothing to chase.
 - [x] **8d-layout. Office manager photo repositioned** after Bader's review: it was a 42px
       circle tucked beside the manager's name, which read as an afterthought. It is now a
       square (84 to 104px, flush right) filling the empty space beside the office details, top
@@ -347,9 +368,10 @@ These notes settle two open questions from it.
       **The Bags Measurements group page** puts the details column below the chart so the
       drawing takes the full page width: 1326px rendered against roughly 610px before, and it
       opens at full size. `aspect-ratio` and the inner padding come off so nothing is wasted.
-      **Limit worth knowing:** the chart we hold is only 1000 x 752, so at full width it is
-      upscaled 1.33x and softens exactly where the millimetre figures are. Logged in
-      `ASSETS_NEEDED.md`: ask for 2000px or wider, or the original PDF.
+      **Higher-res chart is NOT needed for launch** (Bader, 2026-08-06). The chart is the product
+      group's `image`, which is an editable field in the admin (Product Groups > image), verified
+      2026-08-06, so the client can drop in a sharper 2000px+ chart or the original PDF export
+      themselves whenever they want, with no code change. It is off the client-request list.
 - [x] **4d. The 22-group taxonomy is applied.** DONE 2026-08-03, from Amal's approved email of
       2026-07-27 ("يرجى اعتماد هذا الترتيب عند تصميم صفحات المنتجات").
       22 groups in her numbered order, which is now the site order. 3 new (Frozen Food, Medical
@@ -364,8 +386,10 @@ These notes settle two open questions from it.
          instruction, but it is a section that exists on their current site. Recoverable from
          git if the GM objects. **Worth confirming with Amal.**
       2. **Medical Applications and Food Powder have no photograph** and both currently show
-         `pouch.png` as an obvious stand-in. Frozen Food took the image freed by Nuts. These are
-         question 6 of the clarifications draft: three section photos at 1600px or wider.
+         `pouch.png` as an obvious stand-in. Frozen Food took the image freed by Nuts. **No longer
+         a client-request item** (Bader, 2026-08-06): the group `image` is an editable admin field
+         (Product Groups > image), verified 2026-08-06, so the client uploads the two section
+         photos themselves. The stand-in reads as a clean card until they do.
 
 ---
 
@@ -445,11 +469,14 @@ These notes settle two open questions from it.
       `reachMap.served`, which has no `int` key. The popup centres over the map instead of
       inheriting the previous selection's position.
 
-- [!] **Consequence of 8a and 8b: the offices counter is now wrong.** `statOffices` is 10, which
-      matched the Regional & Export count before the split. That count is now 12, so the
-      counter on the home, company and contact pages contradicts the list beneath it.
-      Either set it to 12 in the admin, or derive it from the collection the way departments
-      and partners already are. **Decision needed.**
+- [x] **Consequence of 8a and 8b: the offices counter.** DONE 2026-08-06. `statOffices` (10) no
+      longer matched the Regional & Export count after the Tunisia/Libya and Jordan/Iraq splits
+      took it to 12. Per Bader's instruction the counter is now **automatic**: `stats.offices` in
+      `src/lib/content.ts` counts `collection('offices')` filtered to `group === 'Regional &
+      Export'`, exactly the way `departments` and `partners` are counted, so it always matches the
+      list beneath it and the footer. Splitting or adding an office in the admin updates the
+      counter with no second number to type. It now reads 12; the old `statOffices` remains only
+      as a fallback if the collection is ever empty.
 - [x] **8d. A photo of the manager on each Regional & Export office.** DONE 2026-08-03.
       New `photo` field on the `offices` collection with an upload in the admin drawer, so it is
       changed exactly like the email and phone. Rendered as a 42px round photo beside the role
@@ -546,17 +573,33 @@ Most notes above end here. Collected so the dashboard is worked on once, not nin
 
 ## 10. Needs the client, or needs Bader
 
-- [?] **Real partner names.** The 20 partner records carry placeholder names, "Partner 01" to
-      "Partner 20", because the client's own API never had per-client names; only the countries
-      are real. Those placeholders were harmless while the home page showed logos alone, but
-      now that names render there they are on the front page. Either get the real names from
-      Amal, or blank the name field in the seed so both walls fall back to logo plus country,
-      which the markup already handles. Decision needed.
-- [?] **The logo file**, or its exact blue and yellow (blocks G3, G5).
-- [?] **The font** he wants (blocks G4).
-- [?] **The Google Drive link and the voice notes** (blocks 1d, and the new cover image).
-- [?] **The mascot artwork**, "Mr Printo" (blocks 11).
-- [?] **Libya, Iraq and the new international office**: email addresses and managers (blocks 8a to 8c).
+Revised 2026-08-06. Bader's rule for this round: **anything the client can do themselves from the
+admin comes OFF this list** (partner names, office emails/managers, product photos, the Bags chart,
+Arabic product names). What remains is what only the client can hand over, or what only Bader can
+clarify.
+
+**Off the list now (admin-editable, client self-serves):**
+- ~~Real partner names~~ (partner name EN/AR is an editable field; the seed name is blank so both
+  walls already fall back to logo plus country until the client fills it).
+- ~~Office email addresses and managers~~ (Libya, Iraq, International and every other office are
+  fully editable in the admin, including manager name/title/phone/email).
+- ~~Product section photos~~ and ~~the Bags Measurements chart~~ (both are the record's editable
+  `image` field, verified 2026-08-06).
+- ~~Arabic product names sign-off~~ (client edits every name themselves).
+
+**Still needs the client:**
+- [?] **The seven main-page section images.** Clear, final versions, handed to us directly. Bader
+      has Google Drive access but will not sift it image by image; the client picks the seven.
+- [?] **The fonts** (GE Flow Regular + Narkisim): the licensed font files, or a licensed source.
+      On the list and not to be taken lightly, given the company's size (blocks G4).
+- [?] **A clean transparent white logo PNG**, IF they want the coloured-roller version in the
+      footer. The footer already has a usable clean white wordmark; the file we were given is a
+      signage mockup, not an isolated asset (blocks nothing for launch; see the Logo note up top).
+
+**Deferred, do last:**
+- [?] **The mascot artwork**, "Mr Printo" (blocks 11). Last item, after everything else.
+
+**Still needs Bader to clarify (deferred by Bader on 2026-08-03, unchanged):**
 - [?] **"Make the new automation system"**: too vague to act on. Publishing automation, news
       import, something else?
 - [?] **"And unify the databases"**: which databases? The old `api.printopack.com.sa` and the new

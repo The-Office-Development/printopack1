@@ -10,7 +10,7 @@ if (!password) {
   console.error("Usage: node scripts/hash-password.mjs '<password>'");
   process.exit(1);
 }
-const iterations = 210000; // OWASP PBKDF2-SHA256 guidance
+const iterations = 100000; // Cloudflare Workers caps PBKDF2 at 100,000 and throws above it
 const enc = new TextEncoder();
 const salt = crypto.getRandomValues(new Uint8Array(16));
 const key = await crypto.subtle.importKey('raw', enc.encode(password), { name: 'PBKDF2' }, false, ['deriveBits']);

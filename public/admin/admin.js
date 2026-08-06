@@ -59,9 +59,14 @@ function imgMaxKB(){
 }
 function recBox(rec){var m=/(\d{3,4})\s*[x×]\s*(\d{3,4})/.exec(rec||'');return m?Math.max(+m[1],+m[2]):IMG_BOX;}
 function dataKB(d){return Math.round((d.length-d.indexOf(',')-1)*0.75/1024);}
+/* Accepted upload formats, kept to the three the whole web decodes fast and losslessly enough:
+   JPG for photos, PNG for logos with transparency, WebP for either. Everything is re-encoded to
+   WebP (or JPEG) below regardless, so the stored site never carries more than those two, but the
+   input is fenced too: HEIC/TIFF/BMP/AVIF decode inconsistently across browsers and would fail
+   confusingly, GIF is animated (against the no-motion brief), and SVG can carry script. */
+var OK_UPLOAD_TYPES={'image/jpeg':1,'image/png':1,'image/webp':1};
 function prepImage(f,box,cb){
- if(f.type==='image/svg+xml'){toast('SVG files are not accepted. Please save it as a PNG.','err');return;}
- if(f.type.slice(0,6)!=='image/'){toast('Pictures only. A video goes in as a YouTube or Vimeo link.','err');return;}
+ if(!OK_UPLOAD_TYPES[f.type]){toast('Only JPG, PNG or WebP images are accepted (they load fastest). Save or export other formats as one of these first. A video goes in as a YouTube or Vimeo link.','err');return;}
  var url=URL.createObjectURL(f),im=new Image();
  im.onerror=function(){URL.revokeObjectURL(url);toast('That image could not be read','err');};
  im.onload=function(){
@@ -328,7 +333,8 @@ function setObj(k,o){CACHE.singletons[k]=o;pubTouch();if(MODE==='api')apiSaveSin
 /* boot: ask the backend for content. Three outcomes:
    - 200  -> deployed and the session cookie is valid: load content, show the dashboard.
    - 401  -> deployed but not signed in: show the real login screen (the API stays closed).
-   - error/404 -> no backend at all (local static preview): fall back to localStorage + demo login. */
+   - error  -> backend unreachable: show the login screen with a notice. There is no offline
+               demo sign-in: the admin only ever admits against a valid server session. */
 function boot(){
  fetch(API+'/bootstrap',{headers:{'Accept':'application/json'}}).then(function(r){
   if(r.status===401){MODE='api';renderLogin();return null;}
@@ -340,7 +346,7 @@ function boot(){
   COLLECTIONS.forEach(function(k){if(!CACHE.entries[k])CACHE.entries[k]=[];});
   try{localStorage.setItem(SKEY,'1');}catch(e){}
   render();pubRefresh();
- }).catch(function(){MODE='local';loadLocal();if(loggedIn())render();else renderLogin();pubRefresh();});
+ }).catch(function(){renderLogin('Cannot reach the backend. The admin requires the live backend to sign in.');});
 }
 
 /* ---------------- models ---------------- */
@@ -395,10 +401,10 @@ var MODELS={
 var SKEY='pp_admin_session';
 function loggedIn(){return localStorage.getItem(SKEY)==='1';}
 /* Sign in against the real backend (/api/login). The one account belongs to the marketing
-   department. On a local static preview there is no backend, so a failed/absent /api/login
-   falls back to the offline demo (localStorage), keeping the dashboard usable without deploy. */
-function localSignIn(){localStorage.setItem(SKEY,'1');MODE='local';if(!CACHE.entries||!Object.keys(CACHE.entries).length)loadLocal();render();pubRefresh();}
-function renderLogin(){
+   department. There is no offline demo sign-in: if the backend cannot be reached, the login
+   fails rather than admitting anyone. To preview the admin locally, run it against the real
+   backend with `wrangler pages dev` (which serves /api and enforces the password). */
+function renderLogin(msg){
  root.innerHTML='<div class="login"><form class="login-card" id="lf">'+
   '<div class="login-brand">PRINTO<span>·</span>PACK</div>'+
   '<p class="login-sub">Site administration · Marketing</p>'+
@@ -411,6 +417,7 @@ function renderLogin(){
   '<a class="login-portal" href="https://printopack.azurewebsites.net/">Are you a customer? Go to the customer portal &rarr;</a>'+
  '</form></div>';
  var err=$('#lerr'),btn=$('#lbtn');
+ if(msg){err.textContent=msg;err.hidden=false;}
  /* Turnstile: the bot wall is optional and server-driven. Ask /api/config whether a site key is
     set; if so, render the widget and hold its token, requiring it before we allow a submit. */
  var tsToken=null,tsOn=false,tsWidget=null;
@@ -425,7 +432,7 @@ function renderLogin(){
   var s=document.createElement('script');
   s.src='https://challenges.cloudflare.com/turnstile/v0/api.js?render=explicit';
   s.async=true;s.defer=true;s.onload=draw;document.head.appendChild(s);
- }).catch(function(){});                                            /* config unreachable: offline demo path stays */
+ }).catch(function(){});                                            /* config unreachable: submit will fail cleanly */
  function resetTs(){if(tsOn&&window.turnstile&&tsWidget!=null){window.turnstile.reset(tsWidget);tsToken=null;}}
  $('#lf').addEventListener('submit',function(e){
   e.preventDefault();
@@ -435,13 +442,13 @@ function renderLogin(){
   btn.disabled=true;btn.textContent='Signing in...';
   fetch(API+'/login',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({password:pw,turnstileToken:tsToken})}).then(function(r){
    if(r.ok){localStorage.setItem(SKEY,'1');boot();return;}          /* cookie set: reload content */
-   if(r.status===404){localSignIn();return;}                        /* route absent: no backend -> offline demo */
+   if(r.status===404){resetTs();return fail('The backend is not reachable, so sign in is unavailable here. Use the live site.');}
    return r.json().catch(function(){return {};}).then(function(o){  /* backend present but rejected */
     resetTs();                                                      /* one token is one attempt: get a fresh one */
     if(r.status===401)return fail('Wrong password. Please try again.');
     fail((o&&o.error)||'Sign in failed. Please try again.');        /* 429 lockout / 403 bot / 500 misconfig carry a message */
    });
-  }).catch(function(){localSignIn();});                              /* network error: offline demo */
+  }).catch(function(){resetTs();fail('Network error. Please check your connection and try again.');});
  });
 }
 

@@ -68,7 +68,10 @@ export function sessionCookie(token, maxAge) {
   ].join('; ');
 }
 
-const PBKDF2_ITER = 210000; // OWASP PBKDF2-SHA256 guidance
+// Cloudflare Workers' Web Crypto caps PBKDF2 at 100,000 iterations and throws above it, so this
+// is the ceiling rather than OWASP's higher figure. It is the iteration count baked into every
+// new hash; verifyPassword reads each stored hash's own count, so old hashes keep working.
+const PBKDF2_ITER = 100000;
 
 // Verify a password against a stored PBKDF2 hash: "pbkdf2$<iterations>$<saltB64url>$<hashB64url>".
 export async function verifyPassword(password, stored) {
