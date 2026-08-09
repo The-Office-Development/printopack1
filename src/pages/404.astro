@@ -1,0 +1,39 @@
+---
+import Base from '../layouts/Base.astro';
+import Bi from '../components/Bi.astro';
+---
+<Base title="Page not found - Printopack" description="The page you were looking for could not be found.">
+  <section class="nf">
+    <div class="wrap nf-inner">
+      <p class="eyebrow"><Bi en="Error 404" ar="خطأ 404" /></p>
+      <p class="nf-code">404</p>
+      <h1 class="display-xl nf-title"><Bi en="Page not found" ar="الصفحة غير موجودة" /></h1>
+      <p class="nf-lead">
+        <Bi
+          en="The page you were looking for has moved or no longer exists. Let us take you back."
+          ar="الصفحة التي تبحث عنها قد انتقلت أو لم تعد موجودة. دعنا نعيدك إلى المسار."
+        />
+      </p>
+      <div class="nf-actions">
+        <a class="btn btn-solid" href="/"><Bi en="Back to home" ar="العودة للرئيسية" /></a>
+        <a class="btn btn-outline" href="/contact"><Bi en="Contact us" ar="تواصل معنا" /></a>
+      </div>
+    </div>
+  </section>
+</Base>
+
+<style>
+  .nf { padding: clamp(80px, 14vh, 180px) 0; }
+  .nf-inner { text-align: center; max-width: 720px; }
+  .nf-code {
+    font-family: var(--display);
+    font-weight: 300;
+    font-size: clamp(96px, 22vw, 240px);
+    line-height: .9;
+    color: var(--blue);
+    margin: 10px 0 0;
+  }
+  .nf-title { margin: 4px 0 0; }
+  .nf-lead { color: var(--muted); font-size: 18px; line-height: 1.7; margin: 20px auto 0; max-width: 46ch; }
+  .nf-actions { display: flex; gap: 14px; justify-content: center; flex-wrap: wrap; margin-top: 34px; }
+</style>
