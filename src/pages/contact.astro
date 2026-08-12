@@ -525,7 +525,7 @@ const markets = marketOrder.map((cc) => ({ cc, ...officesByCc[cc] }));
     appearance:none;-webkit-appearance:none;padding-inline-end:40px;cursor:pointer;
   }
   .enquire-form select:focus,.map-pick select:focus{outline:none;border-color:var(--navy)}
-  .enquire-form select:disabled,.map-pick select:disabled{background:var(--cream);color:var(--faint);cursor:not-allowed}
+  .enquire-form select:disabled,.map-pick select:disabled{background:var(--surface);color:var(--faint);cursor:not-allowed}
   .select-chevron{position:absolute;inset-inline-end:14px;top:50%;transform:translateY(-50%);width:18px;height:18px;color:var(--muted);pointer-events:none}
   /* locked, auto-filled office fields: clearly outlined + visibly unchangeable */
   .locked-row .field{gap:7px}
@@ -540,9 +540,9 @@ const markets = marketOrder.map((cc) => ({ cc, ...officesByCc[cc] }));
   .career-fields[hidden]{display:none}
   .career-note{background:var(--gold-soft);border:1px solid var(--gold);color:var(--navy);padding:12px 14px;border-radius:var(--radius);font-size:13.5px}
   .file-drop{position:relative;display:flex;align-items:center;gap:14px;border:1.5px dashed var(--line);border-radius:var(--radius);padding:15px 18px;background:var(--white);cursor:pointer}
-  .file-drop:hover{border-color:var(--gold-bright);background:var(--cream)}
+  .file-drop:hover{border-color:var(--gold-bright);background:var(--surface)}
   .file-native{position:absolute;inset:0;width:100%;height:100%;opacity:0;cursor:pointer}
-  .file-icon{flex:none;display:grid;place-items:center;width:40px;height:40px;border-radius:50%;background:var(--cream);color:var(--navy)}
+  .file-icon{flex:none;display:grid;place-items:center;width:40px;height:40px;border-radius:50%;background:var(--surface);color:var(--navy)}
   .file-icon svg{width:20px;height:20px}
   .file-drop:hover .file-icon{background:var(--paper)}
   .file-copy{display:flex;flex-direction:column;gap:2px;min-width:0}
@@ -560,7 +560,7 @@ const markets = marketOrder.map((cc) => ({ cc, ...officesByCc[cc] }));
   .compose-btns{display:flex;flex-wrap:wrap;gap:10px}
   .compose-btn{display:inline-flex;align-items:center;gap:9px;border:1px solid var(--line);border-radius:var(--radius);padding:10px 16px;font-family:var(--display);font-size:13.5px;color:var(--navy);background:var(--white);cursor:pointer}
   .compose-btn svg{width:17px;height:17px;color:var(--gold)}
-  .compose-btn:hover{border-color:var(--gold-bright);background:var(--cream)}
+  .compose-btn:hover{border-color:var(--gold-bright);background:var(--surface)}
 
   /* offices directory */
   .offices-band{padding-block:clamp(56px,7vw,96px)}
@@ -586,12 +586,30 @@ const markets = marketOrder.map((cc) => ({ cc, ...officesByCc[cc] }));
   @media(max-width:960px){.office-grid{grid-template-columns:repeat(2,1fr)}}
   @media(max-width:900px){
     .chan-grid{grid-template-columns:1fr;gap:30px}
-    .counters-row{grid-template-columns:1fr;gap:36px}
+    /* Two across, not one. A counter is a big number and a short label, and six of them
+       stacked single-file made a 779px band on a 375px phone: a whole screen of scrolling
+       past numbers. Two across halves that and matches what the company page already did. */
+    .counters-row{grid-template-columns:repeat(2,1fr);gap:34px 18px}
   }
   @media(max-width:560px){
     .field-row{grid-template-columns:1fr}
     .office-grid{grid-template-columns:1fr}
     .compose-btn{flex:1 1 auto;justify-content:center}
+    /* Direct lines: on a phone these addresses and that number are the point of the page,
+       and they were 26px rows. Each becomes a 44px row so a thumb lands on the right one. */
+    .chan-list a{min-height:44px;display:flex;align-items:center}
+    /* The square photo fills empty space beside the details on a desktop. A phone has no
+       empty space: it squeezed the text to 191px and broke every address across two lines
+       ("yemen@printopack.com.sa" over two). The photo moves above the details, which is the
+       usual shape for a person card on a phone, and the details take the full width. */
+    .office{flex-direction:column;align-items:stretch;gap:14px}
+    .staff-photo{order:-1;width:72px}
+    /* Phone and email are what a visitor actually came here to tap, and on a phone the
+       phone number IS the call. They were 25px lines packed two to a card, so each gets a
+       44px row of its own with a hairline between them, which also stops a mis-tap dialling
+       the wrong office. */
+    .office-info a{min-height:44px;display:flex;align-items:center;font-size:15px}
+    .office-info a + a{border-top:1px solid rgba(255,255,255,.10)}
   }
 </style>
 

@@ -80,7 +80,17 @@ sample items in place now are placeholders and are listed for removal in `PRODUC
   and favicon, and sampling its exact blue and yellow so the site's palette can be unified to
   the logo, which the client asked for explicitly and named the map colours for. The navbar
   logo has already been enlarged; only the file itself is outstanding.
-- **The approved font.**
+- **The approved fonts: a decision is needed, not a file.** The client named **GE Flow Regular**
+  (Arabic) and **Narkisim** (English). Researched 2026-08-12:
+  - **Narkisim is a Hebrew typeface**, not an English one. Microsoft's own font data lists its
+    design language as Hebrew, it ships as a single weight with no bold or italic, and MyFonts
+    now says "no longer available for purchase". It cannot be bought or used as the Latin face.
+  - **GE Flow** is a Boutros International face from 2005, free for personal use only. It is not
+    on the Boutros retail site; comparable GE-range fonts there are **GBP 80 per weight, GBP 190
+    per family**, and web-font licensing is quoted separately on request. A web licence is the
+    one we would actually need, and self-hosting it in a public repo is a redistribution risk.
+  - Recommended instead: an open-licence (SIL OFL) pairing that covers Arabic and Latin, free
+    for commercial use and safe to self-host. See the note in `CLIENT_NOTES.md` (G4).
 - **Mr Printo**, the mascot artwork.
 - **The QR code target**, whatever URL the unified QR should open.
 

@@ -316,5 +316,15 @@ const t = {
   }
   @media(max-width:520px){
     .more-grid{grid-template-columns:1fr}
+    /* A size chart is the one thing on this site a phone genuinely cannot show. At 348px a
+       1000px drawing of millimetre figures is unreadable, and no layout fixes that. So the
+       way out stops being a small pill in the corner and becomes a full-width button under
+       the chart, which is the actual action on a phone: open it and pinch to zoom. */
+    .chart-zoom,.pdp-chart .chart-zoom{
+      position:static;display:flex;align-items:center;justify-content:center;gap:8px;
+      margin-top:12px;min-height:46px;border-radius:var(--radius);font-size:12.5px;
+    }
+    .chart-figure{padding-bottom:0}
+    .pdp-chart .pdp-chart-link{display:flex;flex-direction:column}
   }
 </style>

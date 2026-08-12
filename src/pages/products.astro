@@ -251,7 +251,7 @@ const c = content;
     .cat-rail.open .rail-list{display:flex}
     .rail-btn{width:100%;text-align:start;padding:13px 18px;font-size:15px;color:var(--muted);border-bottom:1px solid var(--line-soft)}
     .rail-list li:last-child .rail-btn{border-bottom:none}
-    .rail-btn.active{color:var(--navy);font-weight:500;background:var(--cream)}
+    .rail-btn.active{color:var(--navy);font-weight:500;background:var(--surface)}
     .rail-note{display:none}
     .cat-grid{grid-template-columns:repeat(2,1fr)}
     .steps{grid-template-columns:1fr;gap:0}
@@ -260,7 +260,10 @@ const c = content;
   }
   @media(max-width:520px){
     .cat-grid{grid-template-columns:1fr}
-    .counters-row{grid-template-columns:1fr}
+    /* Two across, not one. A counter is a big number and a short label, and six of them
+       stacked single-file made a 779px band on a 375px phone: a whole screen of scrolling
+       past numbers. Two across halves that and matches what the company page already did. */
+    .counters-row{grid-template-columns:repeat(2,1fr);gap:34px 18px}
   }
 </style>
 

@@ -38,9 +38,9 @@ const offices = collection('offices')
         <a href="/" class="wordmark" aria-label="Printopack home"><img src="/images/printopack-logo-white.png" alt="Printopack, Saudi Modern Packaging Factory" width="1600" height="562" /></a>
         <p><Bi en={`Flexible packaging, printed and finished in Jeddah for brands across ${stats.countries}+ countries since ${stats.founded}.`} ar={`تغليف مرن، يُطبع ويُجهّز في جدة لعلامات تجارية في أكثر من ${stats.countries} دولة منذ عام ${stats.founded}.`} /></p>
         <div class="qr">
-          <div class="qr-box" aria-hidden="true">
+          <button class="qr-box" data-qr-open aria-label="Enlarge the QR code">
             <img src="/images/printopack-qr.png" alt="Printopack QR code" width="451" height="451" />
-          </div>
+          </button>
           <span><Bi en="Scan for our digital profile" ar="امسح للوصول إلى ملفنا الرقمي" /></span>
         </div>
       </div>
@@ -122,5 +122,14 @@ const offices = collection('offices')
   .foot-legal a:hover{color:var(--gold-bright)}
 
   @media(max-width:900px){.foot-grid{grid-template-columns:1fr 1fr;gap:36px}}
-  @media(max-width:560px){.foot-grid{grid-template-columns:1fr}.news-form{flex-direction:column}}
+  @media(max-width:560px){
+    .foot-grid{grid-template-columns:1fr}
+    .news-form{flex-direction:column}
+    /* On a phone these become the navigation, not a footnote. A 15px line with a 13px
+       margin gives a 26px target and puts neighbouring links a thumb-width apart; the
+       margin becomes padding so the tappable area grows without spreading the column out. */
+    .foot-col a{margin-bottom:0;padding-block:11px;min-height:44px;display:flex;align-items:center}
+    .foot-legal{gap:8px 22px;flex-wrap:wrap}
+    .foot-legal a{padding-block:10px;min-height:40px;display:inline-flex;align-items:center}
+  }
 </style>

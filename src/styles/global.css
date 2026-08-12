@@ -10,10 +10,12 @@
   --navy-soft:  #0046a2;   /* raised (same exact logo blue) */
   --blue:       #0046a2;   /* logo-exact interactive blue */
 
-  --paper:      #faf6ee;   /* warm ivory base (never stark white) */
-  --cream:      #f2ebdc;   /* soft surface */
-  --sand:       #e8ddc8;   /* deeper surface */
+  --paper:      #ffffff;   /* base surface (locked palette: white) */
+  --cream:      #ffffff;   /* was a warm fill; now white, separated by hairlines */
+  --sand:       #ffffff;   /* was a deeper fill; now white */
   --white:      #ffffff;
+  --surface:    #f4f3f0;   /* neutral grey for state fills only (disabled/active/hover) */
+  --red:        #a60006;   /* logo red (accents on light surfaces) */
 
   --gold:       #f89900;   /* brand orange accent (exact Printopack logo orange) */
   --gold-bright:#f89900;   /* orange hover / on-dark (same exact logo orange) */
@@ -163,3 +165,25 @@ section{padding-block:var(--section-y)}
 [dir="rtl"] .btn svg,[dir="rtl"] .link-line svg{transform:scaleX(-1)}
 /* Arabic reads a touch larger for legibility parity with Latin */
 [dir="rtl"]{font-size:16.5px}
+
+/* ---------- touch targets ---------- */
+/* On a phone every link is a thumb, not a cursor. These are the site's small text links:
+   the action link used on every page, breadcrumbs, and product card titles. They kept their
+   type size and their underline; the extra height is padding around them, so nothing looks
+   different, there is just something to hit. 44px is the size a fingertip actually covers. */
+@media(max-width:720px){
+  .link-line{min-height:44px;padding-bottom:0;align-items:center}
+  .crumbs a,.crumbs .crumb-here{min-height:40px;display:inline-flex;align-items:center}
+  .prod2-name a{display:block;padding-block:8px}
+}
+
+/* iOS Safari zooms the whole page in when a field smaller than 16px is focused, and the
+   visitor has to pinch back out afterwards. Every field on the site was 15px, so tapping
+   anything in the enquiry form, the job application or the newsletter did it. 16px on
+   phones only: the desktop keeps its 15px. */
+@media(max-width:720px){
+  /* !important on purpose: the form styles live in Astro's scoped page CSS, which carries an
+     attribute selector and therefore beats a bare element rule here. This is a usability
+     guard that must never lose a specificity argument, and it only raises a font size. */
+  input,select,textarea{font-size:16px !important}
+}

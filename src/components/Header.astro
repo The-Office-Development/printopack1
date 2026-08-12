@@ -124,9 +124,9 @@ const nav = [
           <span>QR</span>
         </button>
         <div class="qr-pop" id="qr-pop" hidden>
-          <div class="qr-pop-box" aria-hidden="true">
+          <button class="qr-pop-box" data-qr-open aria-label="Enlarge the QR code">
             <img src="/images/printopack-qr.png" alt="Printopack QR code" width="451" height="451" />
-          </div>
+          </button>
           <span class="qr-pop-cap"><Bi en="Scan for Printopack's digital profile" ar="امسح للوصول إلى الملف الرقمي لبرنتوباك" /></span>
         </div>
       </div>
@@ -167,10 +167,26 @@ const nav = [
 <!-- mobile nav panel (burger, <=720px). Lives outside <header> because its
      backdrop-filter creates a containing block that would trap position:fixed. -->
 <nav class="mobile-nav" id="mobile-nav" aria-label="Mobile" hidden>
-  {nav.map((item) => (
+  {/* Sections with sub-pages start collapsed, so the menu is seven rows rather than a
+      fifteen-row scroll. The label stays a plain link, and the chevron beside it is a
+      separate button: tapping "About Us" still goes to the About page, tapping the chevron
+      opens its sub-pages. Hijacking the label to mean "expand" would have taken away the
+      only way to reach the section's own landing page. */}
+  {nav.map((item, i) => (
     <div class="mnav-group">
-      <a href={item.href} class="mnav-link"><Bi en={item.label.en} ar={item.label.ar} /></a>
-      {item.mega && item.mega.links.map((l) => <a href={l.href} class="mnav-sub"><Bi en={l.label.en} ar={l.label.ar} /></a>)}
+      <div class="mnav-row">
+        <a href={item.href} class="mnav-link"><Bi en={item.label.en} ar={item.label.ar} /></a>
+        {item.mega && (
+          <button class="mnav-toggle" aria-expanded="false" aria-controls={`mnav-subs-${i}`} aria-label={`Show ${item.label.en} pages`}>
+            <svg class="mnav-chev" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" aria-hidden="true"><path d="M6 9l6 6 6-6"/></svg>
+          </button>
+        )}
+      </div>
+      {item.mega && (
+        <div class="mnav-subs" id={`mnav-subs-${i}`} hidden>
+          {item.mega.links.map((l) => <a href={l.href} class="mnav-sub"><Bi en={l.label.en} ar={l.label.ar} /></a>)}
+        </div>
+      )}
     </div>
   ))}
   <div class="mnav-group mnav-logins">
@@ -179,7 +195,7 @@ const nav = [
     <a href="/admin/" target="_blank" rel="noopener" class="mnav-sub"><Bi en="Site administration" ar="إدارة الموقع" /></a>
   </div>
   <div class="mnav-qr">
-    <div class="mnav-qr-box"><img src="/images/printopack-qr.png" alt="Printopack QR code" width="451" height="451" /></div>
+    <button class="mnav-qr-box" data-qr-open aria-label="Enlarge the QR code"><img src="/images/printopack-qr.png" alt="Printopack QR code" width="451" height="451" /></button>
     <span class="mnav-qr-cap"><Bi en="Scan for Printopack's digital profile" ar="امسح للوصول إلى الملف الرقمي لبرنتوباك" /></span>
   </div>
 </nav>
@@ -267,14 +283,33 @@ const nav = [
     .hdr-left span,.hdr-icon span{display:none}
     /* declutter the top bar: customer login, admin and QR live inside the menu on mobile */
     .hdr-right .hdr-icon,.hdr-qr{display:none}
-    .lang{font-size:16px}
+    /* Touch targets. With their labels hidden these controls collapse to the size of their
+       glyph: search became a 19px icon, the language toggle a 10px-wide letter, and the
+       burger 36x27. All three are the primary controls on a phone, so each gets a 44px box
+       to be tapped in, centred on the glyph. The box is padding, so nothing moves visually. */
+    .hdr-left,.lang{min-width:44px;min-height:44px;display:inline-flex;align-items:center;justify-content:center}
+    .lang{font-size:17px}
     .wordmark img{height:46px}
     .hdr-nav{display:none}
-    .burger{display:flex}
+    .burger{display:flex;width:44px;height:44px;align-items:center;justify-content:center;padding:0}
+    .util-item{min-height:36px}
     .mobile-nav:not([hidden]){display:block;position:fixed;top:68px;left:0;right:0;bottom:0;background:var(--paper);overflow-y:auto;padding:22px var(--gutter) 48px;border-top:1px solid var(--line);z-index:55}
     .mnav-group{border-bottom:1px solid var(--line-soft);padding:8px 0}
-    .mnav-link{display:block;font-family:var(--display);font-size:23px;font-weight:300;color:var(--ink);padding:12px 0}
-    .mnav-sub{display:block;font-family:var(--display);font-size:14px;color:var(--muted);letter-spacing:.04em;padding:8px 0 8px 18px}
+    /* label and chevron share the row: the label takes the space, the chevron is its own
+       44px target at the end so the two never fight for the same tap */
+    .mnav-row{display:flex;align-items:center;justify-content:space-between;gap:12px}
+    .mnav-link{display:block;flex:1;min-width:0;font-family:var(--display);font-size:23px;font-weight:300;color:var(--ink);padding:12px 0}
+    .mnav-toggle{flex:none;width:44px;height:44px;display:grid;place-items:center;color:var(--muted);background:none;border:0;padding:0}
+    .mnav-chev{width:22px;height:22px}
+    /* Instant, no slide: the GM asked for no motion, and the rest of the site's pull-downs
+       (the products filter, the map selector) open the same way. */
+    .mnav-toggle[aria-expanded="true"]{color:var(--navy)}
+    .mnav-toggle[aria-expanded="true"] .mnav-chev{transform:rotate(180deg)}
+    .mnav-subs[hidden]{display:none}
+    .mnav-subs{padding-bottom:6px}
+    /* logical, not physical: a padding-left indent lands on the wrong side in Arabic, so the
+       sub-pages sat flush with the gutter in RTL instead of stepping in under their parent */
+    .mnav-sub{display:block;font-family:var(--display);font-size:14px;color:var(--muted);letter-spacing:.04em;padding-block:11px;padding-inline:18px 0;min-height:44px}
     .mnav-qr{display:flex;align-items:center;gap:16px;padding-top:26px}
     .mnav-qr-box{width:92px;height:92px;background:var(--paper);border:1px solid var(--line);border-radius:8px;padding:5px;flex:none}
     .mnav-qr-box img{width:100%;height:100%;display:block}
@@ -295,6 +330,27 @@ const nav = [
     burger.setAttribute('aria-expanded', String(open));
     document.body.style.overflow = open ? 'hidden' : '';
   });
+  // Collapsible sections inside the panel. Only one is open at a time: with three expandable
+  // sections, letting them all stand open rebuilds the long list this replaced. Instant, no
+  // slide, matching the rest of the site's pull-downs.
+  const setSection = (btn, open) => {
+    const subs = document.getElementById(btn.getAttribute('aria-controls'));
+    if (!subs) return;
+    btn.setAttribute('aria-expanded', String(open));
+    subs.toggleAttribute('hidden', !open);
+  };
+  document.querySelectorAll('.mnav-toggle').forEach((btn) => {
+    btn.addEventListener('click', () => {
+      const willOpen = btn.getAttribute('aria-expanded') !== 'true';
+      document.querySelectorAll('.mnav-toggle').forEach((b) => setSection(b, false));
+      setSection(btn, willOpen);
+    });
+  });
+  // Closing the whole panel collapses the sections, so it reopens in its short state.
+  burger?.addEventListener('click', () => {
+    if (panel?.hasAttribute('hidden')) document.querySelectorAll('.mnav-toggle').forEach((b) => setSection(b, false));
+  });
+
   // If the viewport leaves burger territory while the panel is open, reset state.
   matchMedia('(min-width: 721px)').addEventListener('change', (m) => {
     if (m.matches && panel && !panel.hasAttribute('hidden')) {

@@ -1,0 +1,103 @@
+---
+import Bi from './Bi.astro';
+
+// The unified QR (the GM's "unified QR code") appears in three places: the header popover,
+// the mobile menu and the footer. In all three it is small, because it is a decorative
+// element in a layout. This is the one place it is big enough to actually scan: any of them
+// opens this overlay, which fills the screen with the code and offers the file for download
+// (for a business card, a print job, a WhatsApp reply).
+//
+// Rendered once per page from Base.astro, so every page shares one overlay rather than three
+// copies. No motion: it appears and disappears instantly, like the rest of the site.
+const QR_SRC = '/images/printopack-qr.png';
+---
+<div class="qr-overlay" id="qr-overlay" hidden role="dialog" aria-modal="true" aria-labelledby="qr-overlay-title">
+  <div class="qr-overlay-backdrop" data-qr-close></div>
+  <div class="qr-overlay-panel">
+    <button class="qr-overlay-x" data-qr-close aria-label="Close">
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" aria-hidden="true"><path d="M6 6l12 12M18 6L6 18"/></svg>
+    </button>
+    <h2 class="qr-overlay-title" id="qr-overlay-title">
+      <Bi en="Scan for Printopack's digital profile" ar="امسح للوصول إلى الملف الرقمي لبرنتوباك" />
+    </h2>
+    <div class="qr-overlay-code">
+      <img src={QR_SRC} alt="Printopack QR code" width="451" height="451" />
+    </div>
+    <a class="qr-overlay-dl" href={QR_SRC} download="printopack-qr.png">
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" aria-hidden="true"><path d="M12 3v12m0 0l-4.5-4.5M12 15l4.5-4.5"/><path d="M4 17v2.5A1.5 1.5 0 0 0 5.5 21h13a1.5 1.5 0 0 0 1.5-1.5V17"/></svg>
+      <span><Bi en="Download the QR code" ar="تنزيل رمز الاستجابة" /></span>
+    </a>
+  </div>
+</div>
+
+<style>
+  .qr-overlay[hidden]{display:none}
+  .qr-overlay{position:fixed;inset:0;z-index:200;display:grid;place-items:center;padding:20px}
+  .qr-overlay-backdrop{position:absolute;inset:0;background:rgba(9,24,41,.86)}
+  .qr-overlay-panel{
+    position:relative;z-index:1;background:var(--white);border-radius:var(--radius);
+    padding:clamp(22px,4vw,34px);width:min(92vw,440px);max-height:92vh;overflow:auto;
+    display:flex;flex-direction:column;align-items:center;gap:18px;text-align:center;
+    box-shadow:0 30px 80px rgba(9,24,41,.4);
+  }
+  .qr-overlay-x{
+    position:absolute;inset-inline-end:8px;inset-block-start:8px;width:44px;height:44px;
+    display:grid;place-items:center;color:var(--muted);background:none;border:0;border-radius:50%;
+  }
+  .qr-overlay-x:hover{color:var(--navy);background:var(--surface)}
+  .qr-overlay-x svg{width:22px;height:22px}
+  .qr-overlay-title{font-size:clamp(17px,2.2vw,21px);color:var(--navy);max-width:26ch;margin-top:12px}
+  /* The code itself: as large as the panel allows, because scanning is the whole point.
+     A white frame around it preserves the quiet zone scanners need. */
+  .qr-overlay-code{width:min(74vw,320px);background:var(--white);border:1px solid var(--line);border-radius:8px;padding:10px}
+  .qr-overlay-code img{width:100%;height:auto;display:block;image-rendering:pixelated}
+  .qr-overlay-dl{
+    display:inline-flex;align-items:center;justify-content:center;gap:10px;min-height:48px;
+    width:100%;padding:0 18px;border:1px solid var(--navy);border-radius:var(--radius);
+    font-family:var(--display);font-size:14px;color:var(--navy);background:var(--white);
+  }
+  .qr-overlay-dl:hover{background:var(--navy);color:var(--white)}
+  .qr-overlay-dl svg{width:18px;height:18px}
+  /* Anything that opens the overlay reads as pressable. */
+  :global([data-qr-open]){cursor:zoom-in;background:none;border:0;padding:0;display:block}
+</style>
+
+<script>
+  const overlay = document.getElementById('qr-overlay');
+  if (overlay) {
+    let lastFocus = null;
+    const close = () => {
+      overlay.setAttribute('hidden', '');
+      document.body.style.overflow = '';
+      lastFocus?.focus?.();
+      lastFocus = null;
+    };
+    const open = (from) => {
+      lastFocus = from ?? null;
+      overlay.removeAttribute('hidden');
+      // The page behind must not scroll while the code is up.
+      document.body.style.overflow = 'hidden';
+      overlay.querySelector<HTMLButtonElement>('.qr-overlay-x')?.focus();
+    };
+
+    // Every QR on the page opens the same overlay: header popover, mobile menu, footer.
+    document.querySelectorAll<HTMLElement>('[data-qr-open]').forEach((el) => {
+      el.addEventListener('click', (e) => { e.preventDefault(); e.stopPropagation(); open(el); });
+    });
+    overlay.querySelectorAll<HTMLElement>('[data-qr-close]').forEach((el) => {
+      el.addEventListener('click', close);
+    });
+    document.addEventListener('keydown', (e) => {
+      if (e.key === 'Escape' && !overlay.hasAttribute('hidden')) close();
+    });
+    // Keep focus inside while it is open: it is a modal, and there are only two stops.
+    overlay.addEventListener('keydown', (e) => {
+      if (e.key !== 'Tab') return;
+      const stops = overlay.querySelectorAll<HTMLElement>('button, a[href]');
+      if (!stops.length) return;
+      const first = stops[0], last = stops[stops.length - 1];
+      if (e.shiftKey && document.activeElement === first) { e.preventDefault(); last.focus(); }
+      else if (!e.shiftKey && document.activeElement === last) { e.preventDefault(); first.focus(); }
+    });
+  }
+</script>

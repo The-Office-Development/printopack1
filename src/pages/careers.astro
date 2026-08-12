@@ -290,7 +290,10 @@ const c = content;
 
   @media(max-width:820px){.apply-inner{grid-template-columns:1fr;gap:32px}}
   @media(max-width:640px){
-    .counters-row{grid-template-columns:1fr;gap:40px}
+    /* Two across, not one. A counter is a big number and a short label, and six of them
+       stacked single-file made a 779px band on a 375px phone: a whole screen of scrolling
+       past numbers. Two across halves that and matches what the company page already did. */
+    .counters-row{grid-template-columns:repeat(2,1fr);gap:34px 18px}
     .field-row{grid-template-columns:1fr}
   }
 </style>

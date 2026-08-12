@@ -91,6 +91,8 @@ const c = content;
   .cert-note{display:block;margin-top:6px;font-size:13px;color:var(--muted)}
   .cert-foot{margin-top:clamp(28px,4vw,44px);color:var(--faint);font-size:14px}
   .cert-full-link{display:inline-block;margin-inline-start:6px;color:var(--navy);font-family:var(--display);font-weight:500}
+  /* the last small tap target on the site: a 25px inline link inside a sentence */
+  @media(max-width:720px){.cert-full-link{min-height:44px;display:inline-flex;align-items:center;margin-inline-start:0}}
   .cert-full-link:hover{color:var(--gold-bright)}
   .cert-full-link .arr{display:inline-block}
   [dir="rtl"] .cert-full-link .arr{transform:scaleX(-1)}

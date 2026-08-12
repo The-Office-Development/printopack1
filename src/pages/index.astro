@@ -315,6 +315,13 @@ const pad = (n: number) => String(n).padStart(2, "0");
   .news-title{margin:10px 0 16px;font-size:clamp(20px,1.7vw,25px)}
   .news-read{font-size:12px;margin-top:auto;align-self:flex-start}
 
+  /* The header switches to its mobile bar at 720px, so the hero follows it rather than
+     waiting for 560px. Without this, a 561-720px screen kept the 86vh cover and the page
+     still looked like it ended at the fold. Type is tuned further down at 560px. */
+  @media(max-width:720px){
+    .cover{min-height:64vh;min-height:64svh}
+  }
+
   @media(max-width:1000px){
     .counters-grid{grid-template-columns:repeat(2,1fr);gap:36px 24px}
     /* no column override here: auto-fit above already drops to two columns and then one,
@@ -329,10 +336,41 @@ const pad = (n: number) => String(n).padStart(2, "0");
     .contents-head{flex-direction:column;align-items:flex-start;gap:22px}
   }
   @media(max-width:560px){
-    .counters-grid{grid-template-columns:1fr}
+    /* Two across, not one. A counter is a big number and a short label, and six of them
+       stacked single-file made a 779px band on a 375px phone: a whole screen of scrolling
+       past numbers. Two across halves that and matches what the company page already did. */
+    .counters-grid{grid-template-columns:repeat(2,1fr);gap:34px 18px}
     .logo-grid{grid-template-columns:repeat(2,1fr)}
-    .cover{min-height:82vh}
+    /* The hero was 82vh: with the header that is 735px of an 812px screen, so the page
+       looked like it ended at the fold. It is also a 1800x782 landscape photo being
+       cover-cropped into a portrait box, which threw away 73% of its width and left one
+       pasta tube instead of the product lineup. A shorter hero fixes both, because a less
+       portrait box crops less. svh is the viewport WITHOUT the browser's address bar, so
+       the hero does not grow by ~60px the moment the bar retracts; vh stays as a fallback. */
+    .cover{min-height:56vh;min-height:56svh}
+    /* The height was really being set by the copy, not by min-height: the headline clamps to
+       a 36px floor, so on a 375px screen it wrapped to four lines and pushed the hero past
+       the fold on its own. Sizing the type for the screen is what actually shortens it. */
+    .cover h1{font-size:30px;margin:12px 0 16px}
+    .cover-lede{font-size:15px;line-height:1.55}
+    .cover-inner{padding-bottom:clamp(30px,6vw,52px)}
+    /* bias the crop slightly above centre: the packs sit high in the frame */
+    .cover-bg img{object-position:50% 42%}
+    /* The scrim is a percentage gradient, so shortening the hero compressed its dark end and
+       left the headline sitting on bright pasta and a white bottle. On a phone the text also
+       spans the full width, so the desktop's diagonal (dark on the left only) does not help.
+       A straight bottom-up wash, darker and reaching higher, keeps the copy legible. */
+    .cover-bg::after{background:linear-gradient(0deg,rgba(9,24,41,.95) 0%,rgba(9,24,41,.86) 38%,rgba(9,24,41,.62) 68%,rgba(9,24,41,.34) 100%)}
     .partner-counters{gap:40px}
+  }
+
+  /* Small phones (iPhone SE and similar, 320px). The headline still wraps to four lines at
+     30px there, which put the hero back at 98% of a 568px screen. */
+  @media(max-width:360px){
+    .cover{min-height:50vh;min-height:50svh}
+    .cover h1{font-size:26px;margin:10px 0 12px}
+    .cover-lede{font-size:14px}
+    .cover-inner{padding-bottom:24px}
   }
 </style>
 

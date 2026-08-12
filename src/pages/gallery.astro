@@ -237,6 +237,14 @@ const c = content;
     .media-grid{grid-template-columns:1fr;grid-auto-rows:auto}
     .gtile{aspect-ratio:3/2}
     .gtile.wide,.gtile.tall{grid-column:auto;grid-row:auto}
+    /* Three tabs at 20px of side padding came to 400px, which was the one thing on the site
+       pushing a phone sideways. Sharing the width equally was not enough on a 320px screen:
+       "ADVERTISEMENTS" needs 111px and a third of that screen is 93px, so it either clipped
+       or shrank to an unreadable size. The strip scrolls instead, which is the usual mobile
+       tab pattern, so the labels stay whole and the page stays put. */
+    .gal-tabs{gap:0;overflow-x:auto;scrollbar-width:none;-webkit-overflow-scrolling:touch}
+    .gal-tabs::-webkit-scrollbar{display:none}
+    .gal-tab{flex:0 0 auto;padding:14px 14px;font-size:12px;letter-spacing:.06em}
   }
 </style>
 

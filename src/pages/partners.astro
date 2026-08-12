@@ -325,7 +325,7 @@ const c = content;
     .reach-select.open .reach-chips{display:flex}
     .reach-chip{width:100%;border:none;border-bottom:1px solid var(--line-soft);border-radius:0;text-align:start;padding:13px 18px;font-size:15px}
     .reach-chip:last-child{border-bottom:none}
-    .reach-chip:hover{background:var(--cream)}
+    .reach-chip:hover{background:var(--surface)}
     .reach-chip.active{background:var(--gold);color:var(--navy)}
   }
   @media(max-width:620px){
@@ -334,7 +334,10 @@ const c = content;
     .map-pop{position:static;width:auto;margin-top:16px;box-shadow:none;inset:auto}
   }
   @media(max-width:560px){
-    .counters-row{grid-template-columns:1fr}
+    /* Two across, not one. A counter is a big number and a short label, and six of them
+       stacked single-file made a 779px band on a 375px phone: a whole screen of scrolling
+       past numbers. Two across halves that and matches what the company page already did. */
+    .counters-row{grid-template-columns:repeat(2,1fr);gap:34px 18px}
     .pgrid{grid-template-columns:repeat(2,1fr)}
   }
 </style>
