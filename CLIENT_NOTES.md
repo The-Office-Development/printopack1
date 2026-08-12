@@ -154,7 +154,8 @@ all pages rather than only this one.
   Each job's recipient is chosen in the admin.
 - **Mr Printo:** approved as a deliberate gift to the GM, who asked for it himself.
   Keep it unobtrusive so it does not fight his no-motion rule.
-- **Automation system** and **unify the databases**: deferred, revisit later.
+- **Automation system** and **unify the databases**: RESOLVED 2026-08-12, they are both the
+  partner-messaging tool (the separate paid module), not anything in the site build.
 
 ---
 
@@ -600,10 +601,21 @@ clarify.
 - [?] **The mascot artwork**, "Mr Printo" (blocks 11). Last item, after everything else.
 
 **Still needs Bader to clarify (deferred by Bader on 2026-08-03, unchanged):**
-- [?] **"Make the new automation system"**: too vague to act on. Publishing automation, news
-      import, something else?
-- [?] **"And unify the databases"**: which databases? The old `api.printopack.com.sa` and the new
-      D1, or the admin's localStorage demo and D1?
+- [x] **"Make the new automation system"** and **"And unify the databases"**: RESOLVED 2026-08-12.
+      Both were guessed wrong at the time. They are not about publishing, the news import, or the
+      old API versus D1: they are **the same thing**, the partner-messaging tool the GM asked
+      about in his 2026-08-12 email under "بخصوص أداة إرسال الرسائل إلى الشركاء".
+      - *"automation system"* = automating what the GM does by hand in Gmail today: one send to
+        every partner, or to a segment, in a few steps.
+      - *"unify the databases"* = merging the emails the website collects with the list Printopack
+        already owns, which lives mostly in Gmail.
+      **It is NOT part of the signed 350 JD site scope.** It is the separate paid module tracked
+      in the `project-printopack-bulk-email` memory. His answers on 2026-08-12: several thousand
+      contacts, weekly sending, and a **separate simple tool rather than a panel inside the CMS**.
+      That last answer removes the one piece that carried maintenance.
+      Cost consequence: several thousand contacts exceeds every free ESP tier (all cap at
+      2,000-2,500 subscribers), so this needs a paid plan, roughly $20-50 a month, quoted to the
+      client as a recurring cost they own.
 - [?] **"With the total experience being at the end of"**: the sentence is cut off. End of which row?
 
 ---

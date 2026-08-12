@@ -76,10 +76,10 @@ sample items in place now are placeholders and are listed for removal in `PRODUC
 
 ## 2. Brand assets
 
-- **The logo file**, ideally SVG. Two things depend on it: swapping it into the header, footer
-  and favicon, and sampling its exact blue and yellow so the site's palette can be unified to
-  the logo, which the client asked for explicitly and named the map colours for. The navbar
-  logo has already been enlarged; only the file itself is outstanding.
+- **Logos: DONE, in the repo and live. Do not ask for these again.**
+  `printopack-logo.png` (header), `printopack-logo-white.png` (footer) and `logo.png` are
+  committed in `public/images/` and serving on printopack1.pages.dev. The palette was
+  already locked to the logo colours in `BRAND.md`. Nothing here is outstanding.
 - **The approved fonts: a decision is needed, not a file.** The client named **GE Flow Regular**
   (Arabic) and **Narkisim** (English). Researched 2026-08-12:
   - **Narkisim is a Hebrew typeface**, not an English one. Microsoft's own font data lists its
