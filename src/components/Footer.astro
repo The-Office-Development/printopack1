@@ -14,20 +14,35 @@ const phone = s.phone || '+966 12 608 1074';
 const email = s.email || 'info@printopack.com.sa';
 const address = { en: s.address || '', ar: s.addressAr || s.address || '' };
 // HQ (Jeddah) is shown above as the head-office address; these are the regional sales offices.
-const offices = collection('offices')
-  .filter((o) => o.group === 'Regional & Export')
-  .map((o) => ({ en: o.city, ar: o.cityAr || o.city }));
+// Sorted alphabetically here rather than by hand, so an office added in the admin lands in
+// the right place on the next build with nobody reordering anything. Each language sorts in
+// its own alphabet, which is why there are two lists: one order cannot satisfy both.
+const _offices = collection('offices').filter((o) => o.group === 'Regional & Export');
+const officesEn = _offices.map((o) => o.city).filter(Boolean)
+  .sort((a, b) => String(a).localeCompare(String(b), 'en'));
+const officesAr = _offices.map((o) => o.cityAr || o.city).filter(Boolean)
+  .sort((a, b) => String(a).localeCompare(String(b), 'ar'));
 ---
-<!-- newsletter band -->
-<section class="news-band">
-  <div class="wrap" style="text-align:center">
-    <span class="eyebrow plain" style="color:var(--gold)"><Bi en="Stay ahead" ar="ابقَ على اطّلاع" /></span>
-    <h2 style="margin:14px 0 8px"><Bi en="News from Printopack" ar="أخبار برنتوباك" /></h2>
-    <p class="lede" style="margin:0 auto 28px"><Bi en="Be the first to hear about new capabilities, certifications and exhibitions." ar="كن أول من يعلم بأحدث الإمكانات والشهادات والمعارض." /></p>
-    <form class="news-form" onsubmit="return false">
-      <input type="email" placeholder="Your email address" data-ph-ar="بريدك الإلكتروني" required />
-      <button class="btn btn-solid" type="submit"><Bi en="Subscribe" ar="اشترك" /></button>
-    </form>
+<!-- Closing band: the quote CTA and the newsletter sign-up side by side. They used to be
+     two stacked full-width bands, one after the other, which made the foot of the page very
+     tall and said much the same thing twice. The CTA moved here from the home page, so it
+     now closes every page rather than only that one. -->
+<section class="close-band">
+  <div class="wrap-wide close-grid">
+    <div class="close-col">
+      <span class="eyebrow plain"><Bi en="Let's talk packaging" ar="لنتحدّث عن التغليف" /></span>
+      <h2><Bi en="Set the standard in your industry." ar="ارتقِ بمعيار التغليف في قطاعك." /></h2>
+      <a href="/contact" class="btn btn-solid"><Bi en="Request a quote" ar="اطلب عرض سعر" /></a>
+    </div>
+    <div class="close-col close-news">
+      <span class="eyebrow plain"><Bi en="Stay ahead" ar="ابقَ على اطّلاع" /></span>
+      <h2><Bi en="News from Printopack" ar="أخبار برنتوباك" /></h2>
+      <p class="close-lede"><Bi en="Be the first to hear about new capabilities, certifications and exhibitions." ar="كن أول من يعلم بأحدث الإمكانات والشهادات والمعارض." /></p>
+      <form class="news-form" onsubmit="return false">
+        <input type="email" placeholder="Your email address" data-ph-ar="بريدك الإلكتروني" required />
+        <button class="btn btn-solid" type="submit"><Bi en="Subscribe" ar="اشترك" /></button>
+      </form>
+    </div>
   </div>
 </section>
 
@@ -35,19 +50,12 @@ const offices = collection('offices')
   <div class="wrap-wide">
     <div class="foot-grid">
       <div class="foot-brand">
-        <a href="/" class="wordmark" aria-label="Printopack home"><img src="/images/printopack-logo-white.png" alt="Printopack, Saudi Modern Packaging Factory" width="1600" height="562" /></a>
+        <a href="/" class="wordmark" aria-label="Printopack home"><img src="/images/printopack-lockup-footer.svg" alt="Printopack, Saudi Modern Packaging Factory Co. Ltd." width="513" height="208" /></a>
         <p><Bi en={`Flexible packaging, printed and finished in Jeddah for brands across ${stats.countries}+ countries since ${stats.founded}.`} ar={`تغليف مرن، يُطبع ويُجهّز في جدة لعلامات تجارية في أكثر من ${stats.countries} دولة منذ عام ${stats.founded}.`} /></p>
-        <div class="qr">
-          <button class="qr-box" data-qr-open aria-label="Enlarge the QR code">
-            <img src="/images/printopack-qr.png" alt="Printopack QR code" width="451" height="451" />
-          </button>
-          <span><Bi en="Scan for our digital profile" ar="امسح للوصول إلى ملفنا الرقمي" /></span>
-        </div>
       </div>
 
       <div class="foot-col">
         <!-- The About Us group, in the same order as its header mega-menu. -->
-        <h4><Bi en="Company" ar="الشركة" /></h4>
         <a href="/about"><Bi en="About Us" ar="من نحن" /></a>
         <a href="/company"><Bi en="The Company" ar="الشركة" /></a>
         <a href="/factory"><Bi en="Factory Departments" ar="أقسام المصنع" /></a>
@@ -56,7 +64,6 @@ const offices = collection('offices')
       </div>
       <div class="foot-col">
         <!-- The remaining main sections, in navigation order. -->
-        <h4><Bi en="Explore" ar="استكشف" /></h4>
         <a href="/quality"><Bi en="Quality System" ar="نظام الجودة" /></a>
         <a href="/products"><Bi en="Products" ar="المنتجات" /></a>
         <a href="/partners"><Bi en="Success Partners" ar="شركاء النجاح" /></a>
@@ -65,15 +72,25 @@ const offices = collection('offices')
         <a href="/careers"><Bi en="Careers" ar="الوظائف" /></a>
       </div>
       <div class="foot-col foot-visit">
-        <h4><Bi en="Visit Us" ar="زورونا" /></h4>
         <p><Bi en={address.en} ar={address.ar} /></p>
         <a href={`mailto:${email}`}>{email}</a>
         <a href={`tel:${phone.replace(/[^+\d]/g, '')}`} dir="ltr">{phone}</a>
         <div class="offices">
           <span class="offices-label"><Bi en="Regional offices" ar="المكاتب الإقليمية" /></span>
-          <div class="offices-list">{offices.map((o) => <span><Bi en={o.en} ar={o.ar} /></span>)}</div>
+          <div class="offices-list i18n-en">{officesEn.map((o) => <span>{o}</span>)}</div>
+          <div class="offices-list i18n-ar" lang="ar">{officesAr.map((o) => <span>{o}</span>)}</div>
         </div>
       </div>
+    </div>
+
+    <!-- The QR sits on its own, centred under the columns, rather than tucked into the
+         brand column. It is the client's "unified QR", so it earns the space. Tapping it
+         still opens the full-screen overlay. -->
+    <div class="qr">
+      <button class="qr-box" data-qr-open aria-label="Enlarge the QR code">
+        <img src="/images/printopack-qr.png" alt="Printopack QR code" width="451" height="451" />
+      </button>
+      <span><Bi en="Scan for our digital profile" ar="امسح للوصول إلى ملفنا الرقمي" /></span>
     </div>
 
     <div class="foot-bottom">
@@ -89,30 +106,49 @@ const offices = collection('offices')
 </footer>
 
 <style>
-  .news-band{background:var(--cream);border-top:1px solid var(--line)}
-  .news-form{display:flex;gap:10px;max-width:480px;margin-inline:auto}
-  .news-form input{flex:1;padding:16px 18px;border:1px solid var(--line);background:var(--paper);font:inherit;font-size:15px;border-radius:var(--radius)}
-  .news-form input:focus{outline:none;border-color:var(--navy)}
+  /* Light, so it reads as its own band above the blue footer rather than merging into it.
+     This echoes the grey the home page opens on, but is set independently of it. */
+  .close-band{background:#ececec;color:var(--ink);padding-block:clamp(48px,6vw,78px);border-top:1px solid var(--line)}
+  .close-grid{display:grid;grid-template-columns:1fr 1fr;gap:clamp(30px,4.5vw,64px);align-items:start}
+  /* the rule divides the two halves and follows reading order, so it sits on the correct
+     side once the page flips to Arabic */
+  .close-news{border-inline-start:1px solid var(--line);padding-inline-start:clamp(30px,4.5vw,64px)}
+  .close-col .eyebrow{color:var(--gold)}
+  .close-col .eyebrow::before{background:var(--gold)}
+  .close-col h2{margin:14px 0 22px;max-width:18ch;color:var(--blue)}
+  .close-lede{color:var(--muted);max-width:42ch;margin:0 0 24px;font-size:15.5px;line-height:1.6}
+  .news-form{display:flex;gap:10px;max-width:460px}
+  .news-form input{flex:1;min-width:0;padding:15px 18px;border:1px solid var(--line);background:var(--white);font:inherit;font-size:15px;border-radius:var(--radius)}
+  .news-form input:focus{outline:none;border-color:var(--blue)}
+  @media(max-width:820px){
+    .close-grid{grid-template-columns:1fr;gap:36px}
+    /* stacked, the divider belongs above the second half rather than beside it */
+    .close-news{border-inline-start:0;padding-inline-start:0;border-top:1px solid var(--line);padding-top:34px}
+  }
 
   .site-footer{padding-block:clamp(56px,7vw,84px) 32px}
   .foot-grid{display:grid;grid-template-columns:2fr 1fr 1fr 1.4fr;gap:48px;padding-bottom:52px;border-bottom:1px solid var(--line-dark)}
   .foot-brand .wordmark{display:inline-block;margin-bottom:18px}
-  .foot-brand .wordmark img{height:52px;width:auto;display:block}
+  .foot-brand .wordmark img{height:clamp(100px,8.2vw,136px);width:auto;display:block}
   .foot-brand > p{color:#fff;max-width:34ch;font-size:15px}
-  .qr{display:flex;align-items:center;gap:16px;margin-top:28px}
+  /* centred column under the grid, so the code reads as a deliberate invitation rather
+     than a footnote in the corner */
+  .qr{display:flex;flex-direction:column;align-items:center;gap:14px;padding-block:clamp(34px,4.5vw,54px);border-bottom:1px solid var(--line-dark)}
   /* the QR PNG already carries its own quiet zone, so keep the frame padding tight
      and the box larger, or the code reads tiny inside a big white square */
-  .qr-box{width:96px;height:96px;background:var(--paper);border-radius:6px;padding:4px;color:var(--navy);flex:none}
+  .qr-box{width:clamp(180px,17vw,260px);height:clamp(180px,17vw,260px);background:var(--paper);border-radius:8px;padding:8px;color:var(--navy);flex:none}
   .qr-box svg,.qr-box img{width:100%;height:100%;display:block}
-  .qr span{font-size:12.5px;color:#fff;letter-spacing:.02em;line-height:1.5}
+  .qr span{font-size:13.5px;color:#fff;letter-spacing:.02em;line-height:1.5;text-align:center}
 
-  .foot-col h4{font-family:var(--display);font-size:12px;font-weight:600;letter-spacing:.18em;text-transform:uppercase;color:var(--gold-bright);margin-bottom:20px}
   .foot-col a,.foot-visit p{display:block;color:#fff;font-size:15px;margin-bottom:13px;max-width:none}
   .foot-col a:hover{color:var(--gold-bright)}
   .foot-visit p{color:#fff}
   .offices{margin-top:24px}
-  .offices-label{font-size:11px;letter-spacing:.16em;text-transform:uppercase;color:#fff}
+  .offices-label{font-size:11px;letter-spacing:.16em;text-transform:uppercase;color:color-mix(in srgb, var(--gold-bright) 62%, #fff)}
   .offices-list{display:flex;flex-wrap:wrap;gap:8px 14px;margin-top:12px}
+  .offices-list.i18n-ar{display:none}
+  :global([dir="rtl"]) .offices-list.i18n-en{display:none}
+  :global([dir="rtl"]) .offices-list.i18n-ar{display:flex}
   .offices-list span{font-size:13.5px;color:#fff}
 
   .foot-bottom{display:flex;justify-content:space-between;align-items:center;padding-top:26px;flex-wrap:wrap;gap:14px}

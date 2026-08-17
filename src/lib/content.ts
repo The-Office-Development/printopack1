@@ -52,9 +52,17 @@ const _num = (v: unknown, fallback: number) => {
   const n = parseInt(String(v ?? '').replace(/[^0-9]/g, ''), 10);
   return Number.isFinite(n) && n > 0 ? n : fallback;
 };
+/** Same, but keeps a decimal point. Average experience is the one stat that is genuinely
+ *  fractional (14.5 years), and `_num` would read "14.5" as 145 because it strips the dot
+ *  before parsing. Only the first dot is honoured, so "14.5.2" cannot produce NaN. */
+const _dec = (v: unknown, fallback: number) => {
+  const cleaned = String(v ?? '').replace(/[^0-9.]/g, '').replace(/\.(?=.*\.)/g, '');
+  const n = parseFloat(cleaned);
+  return Number.isFinite(n) && n > 0 ? n : fallback;
+};
 const _about = singleton('about');
 const _employees = _num(_about.statEmployees, 400);
-const _avgExp = _num(_about.statAvgExp, 14);
+const _avgExp = _dec(_about.statAvgExp, 14);
 export const stats = {
   founded: _num(_about.statFounded, 1997),
   countries: _num(_about.statCountries, 35),
@@ -68,7 +76,7 @@ export const stats = {
   /** Total experience across the team, in years. Derived from the two numbers the client
    *  already maintains rather than typed as a third, so it can never contradict them:
    *  change the head count or the average in the admin and this follows. */
-  totalExp: _employees * _avgExp,
+  totalExp: Math.round(_employees * _avgExp),
   customers: _num(_about.statCustomers, 1000),
   /** Production departments: the factory collection minus the warehouses entry. */
   departments: collection('factory').filter((d) => !/warehouse/i.test(d.name || '')).length || 5,

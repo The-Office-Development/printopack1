@@ -4,12 +4,16 @@ import Bi from './Bi.astro';
 // Optional `from`: when set, the number ticks up from `from` to `value` (used for the
 // "years in the market" counter). Optional `labelAr`: Arabic label; when present the
 // label becomes bilingual and shows per the document language.
-const { prefix = "", value, suffix = "", label, labelAr = null, from = null } = Astro.props;
+const { prefix = "", value, suffix = "", label, labelAr = null, from = null, lead = null, cls = "" } = Astro.props;
 ---
-<div class="counter" data-reveal>
+<div class:list={["counter", cls]} data-reveal>
   <div class="counter-num">
     {prefix && <span class="counter-fix">{prefix}</span>}
-    <span class="counter-val" data-count={value} data-from={from ?? undefined}>{value}</span>
+    {/* `lead` renders a second, static figure at the same size before the counting one,
+        for "1997 - 2026": the founding year is fixed and the current year climbs to it.
+        A plain hyphen, never a dash. */}
+    {lead != null && <><span class="counter-lead">{lead}</span><span class="counter-sep">-</span></>}
+    <span class="counter-val" data-count={value} data-from={from ?? undefined}>{from ?? value}</span>
     {suffix && <span class="counter-fix">{suffix}</span>}
   </div>
   <div class="counter-rule"></div>
@@ -20,6 +24,9 @@ const { prefix = "", value, suffix = "", label, labelAr = null, from = null } = 
   .counter{text-align:center}
   .counter-num{font-family:var(--display);font-weight:300;font-size:clamp(44px,5.5vw,76px);line-height:1;color:var(--gold);letter-spacing:-.01em;display:inline-flex;align-items:baseline}
   .counter-fix{font-size:.5em;color:var(--gold)}
+  /* the client asked for the founding year at the same size as the counting one */
+  .counter-lead{color:inherit}
+  .counter-sep{color:inherit;margin-inline:.16em;opacity:.55}
   .counter-rule{width:34px;height:1px;background:currentColor;opacity:.4;margin:18px auto 14px}
   .counter-label{font-family:var(--display);font-size:12.5px;font-weight:500;letter-spacing:.18em;text-transform:uppercase;color:var(--muted)}
   .on-navy .counter-label,.on-deep .counter-label{color:rgba(250,246,238,.62)}
@@ -32,14 +39,18 @@ const { prefix = "", value, suffix = "", label, labelAr = null, from = null } = 
 <script>
   const reduce = matchMedia('(prefers-reduced-motion: reduce)').matches;
   document.querySelectorAll('.counter-val').forEach((el) => {
-    const to = parseInt(el.dataset.count, 10);
+    const to = parseFloat(el.dataset.count);
     if (Number.isNaN(to)) return;
-    const from = el.dataset.from != null ? parseInt(el.dataset.from, 10) : 0;
-    if (reduce || Number.isNaN(from)) { el.textContent = String(to); return; }
+    const from = el.dataset.from != null ? parseFloat(el.dataset.from) : 0;
+    // Average experience is quoted with one decimal (14.5). Count in the same precision the
+    // target is written in, so a whole number never gains a spurious ".0".
+    const dp = (String(el.dataset.count).split('.')[1] || '').length;
+    const fmt = (n) => n.toFixed(dp);
+    if (reduce || Number.isNaN(from)) { el.textContent = fmt(to); return; }
     // A counter that starts from a real number (1997) has a starting value worth reading;
     // one that starts from 0 does not.
     const fromMeaningful = el.dataset.from != null && from !== 0;
-    el.textContent = String(from);
+    el.textContent = fmt(from);
     const run = (t0) => {
       // Pace the count by how far it has to travel, not by a flat duration. A flat one
       // made the years counter (1997 to this year) churn four digits at the same speed
@@ -53,9 +64,9 @@ const { prefix = "", value, suffix = "", label, labelAr = null, from = null } = 
         // enough to read it, then gather speed. Counters starting from 0 keep the ease-out,
         // since nobody needs to read the 0 and arriving gently on the real figure suits them.
         const eased = fromMeaningful ? Math.pow(p, 3) : 1 - Math.pow(1 - p, 3);
-        el.textContent = String(Math.round(from + (to - from) * eased));
+        el.textContent = fmt(from + (to - from) * eased);
         if (p < 1) requestAnimationFrame(step);
-        else el.textContent = String(to);
+        else el.textContent = fmt(to);
       };
       requestAnimationFrame(step);
     };

@@ -1,7 +1,6 @@
 ---
 import Base from '../layouts/Base.astro';
 import Bi from '../components/Bi.astro';
-import Counter from '../components/Counter.astro';
 import { reachMap } from '../data/reach-map';
 import { collection, stats } from '../lib/content';
 import { officesByCc, marketOrder, activeCcs } from '../data/offices';
@@ -41,7 +40,7 @@ const regionalOffices = _offices.filter((o) => o.group === 'Regional & Export').
 //    CV upload + optional cover letter (styled dropzones; multipart Netlify Forms).
 //  - Visitors can either submit the Netlify form or open a pre-filled draft in Outlook / Gmail
 //    / their default mail app (recipient + subject + body auto-filled from the form).
-//  - Counters sit right after the header. Reads ?office=<cc> (Partners map popup) and
+//  - Reads ?office=<cc> (Partners map popup) and
 //    ?reason=/&role= (legacy Careers) to preselect + scroll.
 // Bilingual EN/AR + RTL, responsive, no motion, template-first (content is the admin surface).
 const year = new Date().getFullYear();
@@ -66,11 +65,6 @@ const content = {
       ar: "أرسل ملخّصك أو تصاميمك أو مجرّد سؤال. اختر موضوع رسالتك والسوق الذي تعمل فيه، ونوجّهها إلى الفريق المناسب، في المقر الرئيسي بجدة أو أقرب مكتب إقليمي إليك.",
     },
   },
-  counters: [
-    { value: String(stats.offices), label: { en: "Regional offices", ar: "مكتب إقليمي" } },
-    { prefix: "+", value: String(stats.countries), label: { en: "Countries served", ar: "دولة نصل إليها" } },
-    { from: String(stats.founded), value: String(year), label: { en: `In the market since ${stats.founded}`, ar: `في السوق منذ ${stats.founded}` } },
-  ],
   // General contact channels (head office + direct management emails + customer portal).
   channels: {
     hq: {
@@ -172,12 +166,6 @@ const markets = marketOrder.map((cc) => ({ cc, ...officesByCc[cc] }));
     </div>
   </section>
 
-  <!-- STATS (right after the header) -->
-  <section class="on-deep contact-stats">
-    <div class="wrap-wide counters-row">
-      {c.counters.map((n) => <Counter from={n.from} prefix={n.prefix} value={n.value} label={n.label.en} labelAr={n.label.ar} />)}
-    </div>
-  </section>
 
   <!-- GENERAL CONTACT CHANNELS -->
   <section class="channels">
@@ -447,8 +435,6 @@ const markets = marketOrder.map((cc) => ({ cc, ...officesByCc[cc] }));
   .page-head h1{margin:20px 0 22px;font-size:clamp(40px,6vw,78px)}
   .page-head .lede{max-width:62ch}
 
-  .contact-stats{padding-block:clamp(46px,5.5vw,70px)}
-  .counters-row{display:grid;grid-template-columns:repeat(3,1fr);gap:30px}
 
   /* channels */
   .channels{padding-block:clamp(52px,7vw,92px)}
@@ -586,10 +572,6 @@ const markets = marketOrder.map((cc) => ({ cc, ...officesByCc[cc] }));
   @media(max-width:960px){.office-grid{grid-template-columns:repeat(2,1fr)}}
   @media(max-width:900px){
     .chan-grid{grid-template-columns:1fr;gap:30px}
-    /* Two across, not one. A counter is a big number and a short label, and six of them
-       stacked single-file made a 779px band on a 375px phone: a whole screen of scrolling
-       past numbers. Two across halves that and matches what the company page already did. */
-    .counters-row{grid-template-columns:repeat(2,1fr);gap:34px 18px}
   }
   @media(max-width:560px){
     .field-row{grid-template-columns:1fr}

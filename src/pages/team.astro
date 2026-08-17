@@ -1,6 +1,5 @@
 ---
 import Base from '../layouts/Base.astro';
-import Counter from '../components/Counter.astro';
 import Bi from '../components/Bi.astro';
 import { collection, stats } from '../lib/content';
 const year = new Date().getFullYear();
@@ -25,15 +24,6 @@ const content = {
       ar: "التغليف يصنعه الناس؛ نحو 400 شخص في أرضية المصنع وغرفة الحفر والمختبر والمكاتب يحوّلون كل موجزٍ إلى منتجٍ نهائي، تشغيلةً بعد أخرى.",
     },
   },
-  counters: [
-    { prefix: "~", value: stats.employees, label: { en: "Team members", ar: "عضو في الفريق" } },
-    { from: stats.founded, value: year, label: { en: `Operating since ${stats.founded}`, ar: `نعمل منذ ${stats.founded}` } },
-    { value: stats.departments, label: { en: "Production departments", ar: "أقسام إنتاجية" } },
-    { value: stats.offices, label: { en: "Regional offices", ar: "مكاتب إقليمية" } },
-    { value: stats.avgExp, label: { en: "Avg. years per employee", ar: "متوسط سنوات الخبرة للموظف" } },
-    // Total experience closes the row, at the client's request.
-    { prefix: "+", value: stats.totalExp, label: { en: "Years of combined experience", ar: "سنة خبرة مجتمعة" } },
-  ],
   leadership: {
     eyebrow: { en: "Leadership", ar: "القيادة" },
     title: { en: "Led by people who know packaging.", ar: "يقودها أشخاص يعرفون التغليف." },
@@ -81,12 +71,6 @@ const c = content;
     </div>
   </section>
 
-  <!-- COUNTERS -->
-  <section class="on-deep team-stats">
-    <div class="wrap-wide counters-row">
-      {c.counters.map((n) => <Counter from={n.from} prefix={n.prefix} value={n.value} label={n.label.en} labelAr={n.label.ar} />)}
-    </div>
-  </section>
 
   <!-- LEADERSHIP -->
   <section class="leadership">
@@ -140,9 +124,6 @@ const c = content;
   .page-head h1{margin:20px 0 22px;font-size:clamp(40px,6vw,78px)}
   .page-head .lede{max-width:60ch}
 
-  .team-stats{padding-block:clamp(52px,6vw,78px)}
-  /* Three across so the six counters make two even rows. */
-  .counters-row{display:grid;grid-template-columns:repeat(3,1fr);gap:44px 30px}
 
   .leadership .section-head{max-width:640px}
   .leadership .lede{margin-top:18px}
@@ -166,14 +147,9 @@ const c = content;
   .culture-quote{font-family:var(--display);font-weight:300;font-size:clamp(24px,3.4vw,42px);line-height:1.28;margin:22px auto 28px;max-width:24ch}
 
   @media(max-width:1000px){
-    .counters-row{grid-template-columns:repeat(2,1fr);gap:36px 24px}
     .team-grid{grid-template-columns:repeat(2,1fr);gap:40px 28px}
   }
   @media(max-width:520px){
-    /* Two across, not one. A counter is a big number and a short label, and six of them
-       stacked single-file made a 779px band on a 375px phone: a whole screen of scrolling
-       past numbers. Two across halves that and matches what the company page already did. */
-    .counters-row{grid-template-columns:repeat(2,1fr);gap:34px 18px}
     .team-grid{grid-template-columns:1fr}
   }
 </style>

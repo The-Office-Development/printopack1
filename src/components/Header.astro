@@ -100,11 +100,57 @@ const nav = [
 
 <header class="site-header">
   <div class="wrap-wide hdr-top">
-    <a href="/contact" class="hdr-icon hdr-left hdr-quote" title="Ask Printopack for a quotation">
-      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5"><rect x="3" y="5" width="18" height="14" rx="1.5"/><path d="M3.5 6.5 12 13l8.5-6.5"/></svg>
-      <span><Bi en="Request a quote" ar="اطلب عرض سعر" /></span>
+    <!-- Brand band (Nasser, 2026-08-14): English mark on the left, Arabic mark on the
+         right, the full registered name in both languages between them. Both supplied
+         lockups carry the company name under the wordmark; they are cropped to the mark
+         alone here so the name is not repeated three times across one bar. -->
+    <a href="/" class="brand brand-en" aria-label="Printopack home">
+      <img src="/images/printopack-mark-en.png" alt="Printopack" width="1007" height="280" />
+      <span class="brand-label" dir="ltr">Printopack</span>
     </a>
-    <a href="/" class="wordmark" aria-label="Printopack home"><img src="/images/printopack-logo.png" alt="Printopack, Saudi Modern Packaging Factory" width="1600" height="562" /></a>
+    <div class="brand-names">
+      <span class="brand-name-ar" lang="ar" dir="rtl">مصنع شركة التغليف السعودية الحديثة المحدودة</span>
+      <span class="brand-name-en" dir="ltr">Saudi Modern Packaging Factory Co. Ltd.</span>
+    </div>
+    <a href="/" class="brand brand-ar" aria-label="برنتوباك">
+      <img src="/images/printopack-mark-ar.png" alt="برنتوباك" width="1170" height="280" />
+      <span class="brand-label" lang="ar" dir="rtl">برنتوباك</span>
+    </a>
+    <!-- The nav row carries the controls, but it is hidden on phones, so the language
+         toggle needs its own copy up here or it becomes unreachable on mobile. -->
+    <button class="lang lang-m" aria-label="Switch language">ع</button>
+    <button class="burger" aria-label="Menu" aria-expanded="false" aria-controls="mobile-nav"><span></span><span></span><span></span></button>
+  </div>
+
+  <nav class="hdr-nav">
+    <div class="wrap-wide nav-bar">
+      <ul>
+      {nav.map((item) => (
+        <li class={item.mega ? "has-mega" : ""}>
+          <a href={item.href}><Bi en={item.label.en} ar={item.label.ar} /></a>
+          {item.mega && (
+            <div class="mega">
+              <div class="mega-inner wrap-wide">
+                <div class="mega-links">
+                  <span class="mega-kicker"><Bi en="Explore" ar="استكشف" /></span>
+                  {item.mega.links.map((l) => <a href={l.href}><Bi en={l.label.en} ar={l.label.ar} /></a>)}
+                  <a href={item.href} class="mega-all"><Bi en="View all" ar="عرض الكل" /> &rarr;</a>
+                </div>
+                <div class="mega-feature">
+                  {item.mega.featured.map((f) => (
+                    <a href={f.href} class="mega-card">
+                      <span class="mega-card-img"><img src={f.img} alt={f.label.en} /></span>
+                      <span class="mega-card-label"><Bi en={f.label.en} ar={f.label.ar} /></span>
+                    </a>
+                  ))}
+                </div>
+              </div>
+            </div>
+          )}
+        </li>
+      ))}
+      </ul>
+      <div class="nav-tools">
     <div class="hdr-right">
       <button class="lang" aria-label="Switch language">ع</button>
       <!-- Two distinct logins: customers go to their POS portal, staff to the CMS -->
@@ -131,36 +177,8 @@ const nav = [
         </div>
       </div>
     </div>
-    <button class="burger" aria-label="Menu" aria-expanded="false" aria-controls="mobile-nav"><span></span><span></span><span></span></button>
-  </div>
-
-  <nav class="hdr-nav">
-    <ul class="wrap-wide">
-      {nav.map((item) => (
-        <li class={item.mega ? "has-mega" : ""}>
-          <a href={item.href}><Bi en={item.label.en} ar={item.label.ar} /></a>
-          {item.mega && (
-            <div class="mega">
-              <div class="mega-inner wrap-wide">
-                <div class="mega-links">
-                  <span class="mega-kicker"><Bi en="Explore" ar="استكشف" /></span>
-                  {item.mega.links.map((l) => <a href={l.href}><Bi en={l.label.en} ar={l.label.ar} /></a>)}
-                  <a href={item.href} class="mega-all"><Bi en="View all" ar="عرض الكل" /> &rarr;</a>
-                </div>
-                <div class="mega-feature">
-                  {item.mega.featured.map((f) => (
-                    <a href={f.href} class="mega-card">
-                      <span class="mega-card-img"><img src={f.img} alt={f.label.en} /></span>
-                      <span class="mega-card-label"><Bi en={f.label.en} ar={f.label.ar} /></span>
-                    </a>
-                  ))}
-                </div>
-              </div>
-            </div>
-          )}
-        </li>
-      ))}
-    </ul>
+      </div>
+    </div>
   </nav>
 </header>
 
@@ -218,7 +236,20 @@ const nav = [
   @media(max-width:440px){.util-social{display:none}.util-contact{gap:14px;justify-content:center;width:100%}}
 
   .site-header{position:sticky;top:0;z-index:60;background:color-mix(in srgb, var(--paper) 92%, transparent);backdrop-filter:blur(12px);border-bottom:1px solid var(--line)}
-  .hdr-top{display:grid;grid-template-columns:1fr auto 1fr;align-items:center;height:82px}
+  /* The client fixed English left and Arabic right. That is a physical arrangement, not a
+     reading-order one, so direction is pinned to ltr and the band does not mirror in RTL. */
+  .hdr-top{display:grid;grid-template-columns:1fr auto 1fr;align-items:center;gap:clamp(16px,3vw,48px);min-height:132px;direction:ltr}
+  .brand{display:flex;flex-direction:column;align-items:center;gap:9px}
+  .brand-en{justify-self:start}
+  .brand-ar{justify-self:end}
+  /* 93px is the previous 62px mark plus the 50% the client asked for. */
+  .brand img{height:93px;width:auto;display:block;flex:none;max-width:none}
+  .brand-label{font-family:var(--display);font-size:clamp(13px,1.05vw,16px);font-weight:500;letter-spacing:.16em;text-transform:uppercase;color:var(--muted)}
+  .brand-ar .brand-label{font-family:var(--arabic);font-size:clamp(15px,1.3vw,19px);letter-spacing:normal;text-transform:none}
+  .brand-names{display:flex;flex-direction:column;align-items:center;gap:7px;text-align:center}
+  .brand-name-ar{font-family:var(--arabic);font-size:clamp(16px,1.8vw,24px);color:var(--ink);line-height:1.45}
+  .brand-name-en{font-family:var(--display);font-size:clamp(12px,1.25vw,16.5px);font-weight:500;letter-spacing:.09em;text-transform:uppercase;color:var(--muted);line-height:1.45}
+  .lang-m{display:none}
   .hdr-icon{display:inline-flex;align-items:center;gap:9px;font-size:12px;letter-spacing:.14em;text-transform:uppercase;color:var(--muted);font-family:var(--display);font-weight:500}
   .hdr-icon:hover{color:var(--gold-bright)}
   .hdr-icon svg{width:19px;height:19px}
@@ -237,15 +268,19 @@ const nav = [
   .qr-pop-box svg,.qr-pop-box img{width:100%;height:100%;display:block}
   .qr-pop-cap{display:block;margin-top:12px;font-family:var(--display);font-size:11.5px;letter-spacing:.06em;color:var(--muted);line-height:1.5}
 
-  .wordmark{display:inline-flex;align-items:center}
-  /* 62px inside an 82px bar leaves a 10px breath top and bottom: as large as the logo can
-     go without the bar growing to accommodate it. */
-  .wordmark img{height:62px;width:auto;display:block}
 
   .hdr-nav{border-top:1px solid var(--line-soft)}
-  .hdr-nav > ul{display:flex;justify-content:center;gap:clamp(20px,3vw,46px)}
+  .nav-bar{display:flex;align-items:center;gap:clamp(20px,2.6vw,44px)}
+  /* The routes keep their natural width. Letting them shrink is what folded "About Us" and
+     "Quality System" onto a second line. */
+  .nav-bar > ul{display:flex;gap:clamp(11px,1.5vw,26px);flex:0 1 auto}
+  .nav-bar > ul > li{flex:none}
+  /* Controls sit hard right, with a hairline between navigation and tools so the two do not
+     read as one twelve-item list. */
+  .nav-tools{display:flex;align-items:center;gap:clamp(12px,1.3vw,20px);flex:none;margin-inline-start:auto;
+             padding-inline-start:clamp(16px,1.7vw,28px);border-inline-start:1px solid var(--line-soft)}
   .hdr-nav li{position:static}
-  .hdr-nav li > a{display:block;padding:17px 2px;font-family:var(--display);font-size:13px;font-weight:500;letter-spacing:.1em;text-transform:uppercase;color:var(--ink);position:relative}
+  .hdr-nav li > a{display:block;padding:17px 2px;font-family:var(--display);font-size:clamp(11.5px,.72vw,13px);font-weight:500;letter-spacing:.08em;text-transform:uppercase;color:var(--ink);position:relative;white-space:nowrap}
   .hdr-nav li > a::after{content:"";position:absolute;left:0;right:0;bottom:0;height:2px;background:var(--gold);opacity:0}
   .hdr-nav li:hover > a{color:var(--gold-bright)}
   .hdr-nav li:hover > a::after{opacity:1}
@@ -273,23 +308,32 @@ const nav = [
   /* mobile nav panel */
   .mobile-nav{display:none}
 
-  @media(max-width:1080px){
-    .hdr-nav > ul{gap:20px;overflow-x:auto;justify-content:flex-start}
+  @media(max-width:1300px){
+    .nav-tools .hdr-icon span,.qr-btn span{display:none}
+  }
+  @media(max-width:1200px){
+    .nav-bar > ul{gap:20px;overflow-x:auto;min-width:0;scrollbar-width:none}
+    .nav-bar > ul::-webkit-scrollbar{display:none}
     .mega{display:none}
   }
   @media(max-width:720px){
-    .hdr-top{grid-template-columns:auto 1fr auto auto;gap:14px;height:68px}
+    /* the registered name is dropped on a phone: three brand blocks plus a burger will
+       not fit, and the name is repeated in the footer anyway */
+    .hdr-top{grid-template-columns:auto 1fr auto auto;gap:10px;min-height:76px}
+    .brand-names{display:none}
+    .brand img{height:36px}
+    .brand-label{display:none}
+    .lang-m{display:inline-flex}
     .hdr-right{gap:18px}
-    .hdr-left span,.hdr-icon span{display:none}
+    .hdr-icon span{display:none}
     /* declutter the top bar: customer login, admin and QR live inside the menu on mobile */
     .hdr-right .hdr-icon,.hdr-qr{display:none}
     /* Touch targets. With their labels hidden these controls collapse to the size of their
        glyph: search became a 19px icon, the language toggle a 10px-wide letter, and the
        burger 36x27. All three are the primary controls on a phone, so each gets a 44px box
        to be tapped in, centred on the glyph. The box is padding, so nothing moves visually. */
-    .hdr-left,.lang{min-width:44px;min-height:44px;display:inline-flex;align-items:center;justify-content:center}
+    .lang{min-width:44px;min-height:44px;display:inline-flex;align-items:center;justify-content:center}
     .lang{font-size:17px}
-    .wordmark img{height:46px}
     .hdr-nav{display:none}
     .burger{display:flex;width:44px;height:44px;align-items:center;justify-content:center;padding:0}
     .util-item{min-height:36px}
@@ -314,6 +358,14 @@ const nav = [
     .mnav-qr-box{width:92px;height:92px;background:var(--paper);border:1px solid var(--line);border-radius:8px;padding:5px;flex:none}
     .mnav-qr-box img{width:100%;height:100%;display:block}
     .mnav-qr-cap{font-family:var(--display);font-size:13px;color:var(--muted);line-height:1.5;max-width:22ch}
+  }
+  @media(max-width:430px){
+    .hdr-top{grid-template-columns:1fr auto auto;gap:8px}
+    .brand-ar{display:none}
+    .brand-en{justify-self:start}
+    :global([dir="rtl"]) .brand-ar{display:flex;justify-self:start}
+    :global([dir="rtl"]) .brand-en{display:none}
+    .brand img{height:44px}
   }
 
 </style>
@@ -379,7 +431,7 @@ const nav = [
   document.addEventListener('keydown', (e) => { if (e.key === 'Escape') setQr(false); });
 
   // Language toggle: flip EN/AR, set dir, persist, and show the OTHER language on the button.
-  const langBtn = document.querySelector('.lang');
+  const langBtns = [...document.querySelectorAll('.lang')];
   const swapAttrs = (l) => {
     document.querySelectorAll('[data-ph-ar]').forEach((el) => {
       if (!el.dataset.phEn) el.dataset.phEn = el.getAttribute('placeholder') || '';
@@ -390,13 +442,13 @@ const nav = [
     document.documentElement.lang = l;
     document.documentElement.dir = l === 'ar' ? 'rtl' : 'ltr';
     try { localStorage.setItem('lang', l); } catch (e) {}
-    if (langBtn) langBtn.textContent = l === 'ar' ? 'EN' : 'ع';
+    langBtns.forEach((b) => { b.textContent = l === 'ar' ? 'EN' : 'ع'; });
     swapAttrs(l);
   };
   const curLang = document.documentElement.dir === 'rtl' ? 'ar' : 'en';
-  if (langBtn) {
-    langBtn.textContent = curLang === 'ar' ? 'EN' : 'ع';
-    langBtn.addEventListener('click', () => applyLang(document.documentElement.dir === 'rtl' ? 'en' : 'ar'));
-  }
+  langBtns.forEach((b) => {
+    b.textContent = curLang === 'ar' ? 'EN' : 'ع';
+    b.addEventListener('click', () => applyLang(document.documentElement.dir === 'rtl' ? 'en' : 'ar'));
+  });
   swapAttrs(curLang);
 </script>

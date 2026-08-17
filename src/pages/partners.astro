@@ -1,6 +1,5 @@
 ---
 import Base from '../layouts/Base.astro';
-import Counter from '../components/Counter.astro';
 import Bi from '../components/Bi.astro';
 import { reachMap } from '../data/reach-map';
 import { officesByCc, activeCcs } from '../data/offices';
@@ -40,13 +39,7 @@ const content = {
     },
   },
   // The two counters Nasser named (countries, customers) come first; years and team add
-  // the substance he likes. Counters count up once in view; nothing else moves.
-  counters: [
-    { prefix: "+", value: stats.countries, label: { en: "Countries served", ar: "دولة نصل إليها" } },
-    { prefix: "+", value: stats.customers, label: { en: "Customers", ar: "عميل" } },
-    { from: stats.founded, value: year, label: { en: `Printing since ${stats.founded}`, ar: `نطبع منذ ${stats.founded}` } },
-    { prefix: "~", value: stats.employees, label: { en: "Team members", ar: "عضو في الفريق" } },
-  ],
+  // the substance he likes. Nothing on this page moves.
   wall: {
     eyebrow: { en: "Our partners", ar: "شركاؤنا" },
     title: { en: "Brands that trust our print.", ar: "علاماتٌ تثق بطباعتنا." },
@@ -106,12 +99,6 @@ const c = content;
     </div>
   </section>
 
-  <!-- COUNTERS (countries + customers first, per the brief) -->
-  <section class="on-deep partner-stats">
-    <div class="wrap-wide counters-row">
-      {c.counters.map((n) => <Counter from={n.from} prefix={n.prefix} value={n.value} label={n.label.en} labelAr={n.label.ar} />)}
-    </div>
-  </section>
 
   <!-- WHERE WE DELIVER: interactive regional map. It is the wall's country filter, so it
        sits directly above the wall: pick a market here and the brands below narrow to it. -->
@@ -227,8 +214,6 @@ const c = content;
   .page-head h1{margin:20px 0 22px;font-size:clamp(40px,6vw,78px)}
   .page-head .lede{max-width:60ch}
 
-  .partner-stats{padding-block:clamp(52px,6vw,78px)}
-  .counters-row{display:grid;grid-template-columns:repeat(4,1fr);gap:30px}
 
   /* partners wall: logo + name + country cards. The card body is only rendered when
      there is name/country text, so an all-logo state stays clean and a filled state
@@ -236,7 +221,7 @@ const c = content;
   /* Hairline dividers come from each card's own right/bottom border, not a line-coloured
      grid background showing through gaps. That way a partial row (e.g. a country filter
      leaving 3 of 4 columns) shows paper in the empty cells instead of a grey block. */
-  .pgrid{display:grid;grid-template-columns:repeat(4,1fr);border-top:1px solid var(--line);border-inline-start:1px solid var(--line);background:var(--paper);margin-top:clamp(30px,4vw,48px)}
+  .pgrid{display:grid;grid-template-columns:repeat(5,1fr);border-top:1px solid var(--line);border-inline-start:1px solid var(--line);background:var(--paper);margin-top:clamp(30px,4vw,48px)}
   /* filter bar: only present once the map has narrowed the wall */
   .wall-filter{display:flex;align-items:center;justify-content:space-between;gap:18px;flex-wrap:wrap;margin-top:clamp(26px,3vw,38px);padding:13px 18px;border:1px solid var(--line);background:var(--cream);border-radius:var(--radius)}
   .wall-filter[hidden]{display:none}
@@ -313,7 +298,6 @@ const c = content;
   .editorial-quote{font-family:var(--display);font-weight:300;font-size:clamp(24px,3.2vw,40px);line-height:1.28;color:var(--paper);margin:24px auto 30px;max-width:none}
 
   @media(max-width:1000px){
-    .counters-row{grid-template-columns:repeat(2,1fr);gap:36px 24px}
     .pgrid{grid-template-columns:repeat(3,1fr)}
     .reach-map-wrap{grid-template-columns:1fr;gap:24px}
     /* countries become a pull-down: full-width trigger + organised list */
@@ -334,10 +318,6 @@ const c = content;
     .map-pop{position:static;width:auto;margin-top:16px;box-shadow:none;inset:auto}
   }
   @media(max-width:560px){
-    /* Two across, not one. A counter is a big number and a short label, and six of them
-       stacked single-file made a 779px band on a 375px phone: a whole screen of scrolling
-       past numbers. Two across halves that and matches what the company page already did. */
-    .counters-row{grid-template-columns:repeat(2,1fr);gap:34px 18px}
     .pgrid{grid-template-columns:repeat(2,1fr)}
   }
 </style>

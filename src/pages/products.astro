@@ -1,6 +1,5 @@
 ---
 import Base from '../layouts/Base.astro';
-import Counter from '../components/Counter.astro';
 import Bi from '../components/Bi.astro';
 import { categories, filters } from '../data/products';
 import { stats, collection } from '../lib/content';
@@ -53,12 +52,6 @@ const content = {
       { n: "03", t: { en: "Approve and produce", ar: "اعتمدوا وننتج" }, d: { en: "Sign off the proof and we produce at volume, delivered on time to your line.", ar: "اعتمدوا البروفة وننتج بالكميات، ويُسلَّم في وقته إلى خطكم." } },
     ],
   },
-  counters: [
-    { from: stats.founded, value: year, label: { en: `Printing since ${stats.founded}`, ar: `نطبع منذ ${stats.founded}` } },
-    { prefix: "+", value: stats.countries, label: { en: "Countries served", ar: "دولة نخدمها" } },
-    { prefix: "~", value: stats.employees, label: { en: "Team members", ar: "عضو في الفريق" } },
-    { value: stats.departments, label: { en: "Production departments", ar: "أقسام إنتاجية" } },
-  ],
   cta: {
     eyebrow: { en: "Let's talk packaging", ar: "لنتحدّث عن التغليف" },
     title: { en: "Tell us what you are packing.", ar: "أخبرونا بما تعبّئون." },
@@ -162,12 +155,6 @@ const c = content;
     </div>
   </section>
 
-  <!-- STATS -->
-  <section class="on-deep prod-stats">
-    <div class="wrap-wide counters-row">
-      {c.counters.map((n) => <Counter from={n.from} prefix={n.prefix} value={n.value} label={n.label.en} labelAr={n.label.ar} />)}
-    </div>
-  </section>
 
   <!-- CTA -->
   <section class="cta">
@@ -232,8 +219,6 @@ const c = content;
   .step-t{font-size:clamp(21px,2vw,26px);margin:14px 0 12px;color:var(--paper)}
   .step-d{font-size:15px;color:rgba(250,246,238,.72);line-height:1.65;max-width:36ch}
 
-  .prod-stats{padding-block:clamp(52px,6vw,78px)}
-  .counters-row{display:grid;grid-template-columns:repeat(4,1fr);gap:30px}
 
   @media(max-width:920px){
     .cat-layout{grid-template-columns:1fr;gap:28px}
@@ -256,14 +241,9 @@ const c = content;
     .cat-grid{grid-template-columns:repeat(2,1fr)}
     .steps{grid-template-columns:1fr;gap:0}
     .step{border-top:1px solid var(--line-dark);padding:24px 0}
-    .counters-row{grid-template-columns:repeat(2,1fr);gap:36px 24px}
   }
   @media(max-width:520px){
     .cat-grid{grid-template-columns:1fr}
-    /* Two across, not one. A counter is a big number and a short label, and six of them
-       stacked single-file made a 779px band on a 375px phone: a whole screen of scrolling
-       past numbers. Two across halves that and matches what the company page already did. */
-    .counters-row{grid-template-columns:repeat(2,1fr);gap:34px 18px}
   }
 </style>
 

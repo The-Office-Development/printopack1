@@ -82,9 +82,22 @@ sample items in place now are placeholders and are listed for removal in `PRODUC
   already locked to the logo colours in `BRAND.md`. Nothing here is outstanding.
 - **The approved fonts: a decision is needed, not a file.** The client named **GE Flow Regular**
   (Arabic) and **Narkisim** (English). Researched 2026-08-12:
-  - **Narkisim is a Hebrew typeface**, not an English one. Microsoft's own font data lists its
-    design language as Hebrew, it ships as a single weight with no bold or italic, and MyFonts
-    now says "no longer available for purchase". It cannot be bought or used as the Latin face.
+  - **CORRECTED 2026-08-14. The earlier note here was wrong.** It described **Narkisim**, the
+    single-weight Hebrew font bundled with Windows. The client means **Narkissim**, the Fontef
+    commercial revival, which is a different product with a near-identical name. Narkissim **is**
+    available and **is** cleared for commercial use, on Adobe Fonts, in Regular **and Bold**, with
+    a Latin companion. Do not repeat the "cannot be bought" claim.
+  - The real constraint is *how* it can be licensed, and there are two routes:
+    - **Adobe Fonts** serves the webfont from Adobe's CDN and needs a **live Creative Cloud
+      subscription forever**. If it lapses the site silently falls back to generic sans. Adobe
+      does not permit self-hosting. This is a recurring, revocable dependency.
+    - **Fontef direct** sells a **self-hosting web licence** (the Adobe page points at it). That
+      is the only route giving a perpetual, self-hosted font with no renewal. **Price unknown,
+      must be quoted.**
+  - Two open flags before requesting that quote: **Fontef is a Tel Aviv foundry**, which the Saudi
+    client needs to be aware of before we buy in their name; and Narkissim's Latin is a **serif
+    text face optically sized for 8-12pt continuous reading**, so it suits body copy, not the
+    site's large display headings.
   - **GE Flow** is a Boutros International face from 2005, free for personal use only. It is not
     on the Boutros retail site; comparable GE-range fonts there are **GBP 80 per weight, GBP 190
     per family**, and web-font licensing is quoted separately on request. A web licence is the

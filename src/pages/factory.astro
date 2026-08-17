@@ -1,6 +1,5 @@
 ---
 import Base from '../layouts/Base.astro';
-import Counter from '../components/Counter.astro';
 import Bi from '../components/Bi.astro';
 import { collection, stats } from '../lib/content';
 const year = new Date().getFullYear();
@@ -23,11 +22,6 @@ const content = {
       ar: "من الأسطوانة المحفورة إلى اللفّة النهائية، تجري كل مراحل الإنتاج داخل مصنعنا في جدة، بما يعني بروفات أسرع، ورقابة جودة أدقّ، وتغليفاً مبنياً على مواصفاتكم بالضبط.",
     },
   },
-  counters: [
-    { value: stats.departments, label: { en: "Production departments", ar: "أقسام إنتاجية" } },
-    { from: stats.founded, value: year, label: { en: `Manufacturing since ${stats.founded}`, ar: `التصنيع منذ ${stats.founded}` } },
-    { prefix: "~", value: stats.employees, label: { en: "People on the floor", ar: "عامل في المصنع" } },
-  ],
   departments: {
     eyebrow: { en: "The production line", ar: "خط الإنتاج" },
     title: { en: "Our departments", ar: "أقسامنا" },
@@ -74,12 +68,6 @@ const c = content;
     </div>
   </section>
 
-  <!-- COUNTERS -->
-  <section class="on-deep fac-stats">
-    <div class="wrap-wide counters-row">
-      {c.counters.map((n) => <Counter from={n.from} prefix={n.prefix} value={n.value} label={n.label.en} labelAr={n.label.ar} />)}
-    </div>
-  </section>
 
   <!-- DEPARTMENTS -->
   <section class="depts">
@@ -147,8 +135,6 @@ const c = content;
   .page-head h1{margin:20px 0 22px;font-size:clamp(40px,6vw,78px)}
   .page-head .lede{max-width:60ch}
 
-  .counters-row{display:grid;grid-template-columns:repeat(3,1fr);gap:32px}
-  @media(max-width:640px){.counters-row{grid-template-columns:1fr;gap:40px}}
 
   .dept-list{display:flex;flex-direction:column;gap:clamp(48px,7vw,96px)}
   .dept-row{display:grid;grid-template-columns:1.1fr 1fr;gap:clamp(32px,5vw,72px);align-items:center}
