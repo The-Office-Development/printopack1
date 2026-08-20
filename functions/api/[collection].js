@@ -1,6 +1,6 @@
 // GET  /api/:collection      -> list records
 // POST /api/:collection      -> create or update a record (upsert by id)
-import { COLLECTIONS, json, bad, uid } from './_shared.js';
+import { COLLECTIONS, json, bad, uid, touchContent } from './_shared.js';
 
 export async function onRequestGet({ env, params }) {
   if (!COLLECTIONS.includes(params.collection)) return bad('unknown collection', 404);
@@ -32,5 +32,6 @@ export async function onRequestPost({ env, params, request }) {
     'ON CONFLICT(collection,id) DO UPDATE SET data=?3, updated_at=?5'
   ).bind(collection, rec.id, JSON.stringify(rec), sort, Date.now()).run();
 
+  await touchContent(env);
   return json({ ok: true, id: rec.id });
 }

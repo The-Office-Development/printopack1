@@ -10,7 +10,14 @@ export async function onRequest(context) {
   const { request, env, next } = context;
   const p = new URL(request.url).pathname;
   const isApi = p === '/api' || p.startsWith('/api/');
-  const isOpen = p === '/api/login' || p === '/api/logout' || p === '/api/config';
+  // /api/enquiry is the public forms endpoint: the visitor sending it has no login, and
+  // never will. It is the only open write on the site, so it carries its own defences (a
+  // honeypot, a per-IP throttle, size and type limits) inside the handler.
+  // /api/sync/* is the messaging tool reaching in from its own Cloudflare account. It carries
+  // its own shared-secret check (see that handler) rather than a session, because the caller
+  // is a machine on a cron and there is nobody signed in.
+  const isOpen = p === '/api/login' || p === '/api/logout' || p === '/api/config' || p === '/api/enquiry'
+    || p.startsWith('/api/sync/');
   if (isApi && !isOpen) {
     const ok = await verifySession(readCookie(request, COOKIE), env.SESSION_SECRET);
     if (!ok) {

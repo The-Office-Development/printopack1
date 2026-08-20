@@ -39,10 +39,6 @@ const content = {
       { date: { en: "Nov 2024", ar: "نوفمبر 2024" }, name: { en: "Gulfood Manufacturing", ar: "جلفود للتصنيع" }, place: { en: "Dubai World Trade Centre, UAE", ar: "مركز دبي التجاري العالمي، الإمارات" } },
       { date: { en: "Feb 2025", ar: "فبراير 2025" }, name: { en: "Saudi Food Expo", ar: "معرض السعودية للأغذية" }, place: { en: "Riyadh Front, Saudi Arabia", ar: "واجهة الرياض، المملكة العربية السعودية" } },
     ],
-    note: {
-      en: "Exhibitions and events are posted and kept current by Printopack through the site's admin.",
-      ar: "تُنشر المعارض والفعاليات وتُحدَّث من قِبل برنتوباك عبر لوحة تحكم الموقع.",
-    },
   },
 };
 const c = content;
@@ -59,7 +55,10 @@ const c = content;
     </div>
   </section>
 
-  <!-- FEATURED (newest) -->
+  <!-- FEATURED (newest). Rendered only when a post exists: every post can be deleted from
+       the admin, and reaching into posts[0] unguarded used to fail the build, which left
+       Publish silently doing nothing for ever. -->
+  {featured && (
   <section class="feat-wrap">
     <div class="wrap-wide">
       <article class="feat">
@@ -75,6 +74,7 @@ const c = content;
       </article>
     </div>
   </section>
+  )}
 
   <!-- ARCHIVE GRID -->
   <section class="archive">
@@ -118,7 +118,6 @@ const c = content;
       </ul>
 
       <!-- build-only helper: remove before production (see PRODUCTION_TODO.md) -->
-      <p class="evnote"><Bi en={c.events.note.en} ar={c.events.note.ar} /></p>
     </div>
   </section>
 </Base>
@@ -158,7 +157,6 @@ const c = content;
   .ex-name{display:block;font-family:var(--display);font-size:clamp(19px,1.9vw,24px);color:var(--paper);line-height:1.2}
   .ex-place{display:inline-flex;align-items:center;gap:8px;margin-top:8px;font-size:13.5px;color:rgba(250,246,238,.66)}
   .ex-place svg{width:14px;height:14px;color:var(--gold-bright);flex:none}
-  .evnote{margin-top:20px;font-size:13px;font-style:italic;color:rgba(250,246,238,.5)}
 
   @media(max-width:900px){
     .feat{grid-template-columns:1fr;gap:22px}

@@ -7,11 +7,6 @@ import { officesByCc, marketOrder, activeCcs } from '../data/offices';
 
 // Offices directory, sourced from the content store (admin-managed), split by group.
 const _offices = collection('offices');
-const saudiOffices = _offices.filter((o) => o.group === 'Saudi Arabia').map((o) => ({
-  city: { en: o.city, ar: o.cityAr }, area: { en: o.country, ar: o.countryAr },
-  staff: { en: o.staffName, ar: o.staffNameAr }, role: { en: o.staffRole, ar: o.staffRoleAr },
-  email: o.email, phone: o.phone,
-}));
 /** Initials, used as the photo placeholder until the client uploads one. Falls back to the
  *  office name when the manager has not been named yet either. */
 const monogram = (name: string, fallback: string) => {
@@ -20,6 +15,12 @@ const monogram = (name: string, fallback: string) => {
   const src = real.length ? real : String(fallback || '').trim().split(/\s+/);
   return src.slice(0, 2).map((w) => w[0] || '').join('').toUpperCase();
 };
+const saudiOffices = _offices.filter((o) => o.group === 'Saudi Arabia').map((o) => ({
+  city: { en: o.city, ar: o.cityAr }, area: { en: o.country, ar: o.countryAr },
+  staff: { en: o.staffName, ar: o.staffNameAr }, role: { en: o.staffRole, ar: o.staffRoleAr },
+  email: o.email, phone: o.phone,
+  photo: o.photo || '', mono: monogram(o.staffName, o.city),
+}));
 const regionalOffices = _offices.filter((o) => o.group === 'Regional & Export').map((o) => ({
   country: { en: o.city, ar: o.cityAr },
   staff: { en: o.staffName, ar: o.staffNameAr }, role: { en: o.staffRole, ar: o.staffRoleAr },
@@ -79,7 +80,7 @@ const content = {
       kicker: { en: "Direct lines", ar: "خطوط مباشرة" },
       title: { en: "Reach a department", ar: "تواصل مع قسم" },
       items: [
-        { label: { en: "General management", ar: "الإدارة العامة" }, email: "info@printopack.com.sa" },
+        { label: { en: "General management", ar: "الإدارة العامة" }, email: "gm@printopack.com.sa" },
         { label: { en: "Human resources", ar: "الموارد البشرية" }, email: "hr@printopack.com.sa" },
         { label: { en: "Marketing", ar: "التسويق" }, email: "mkt@printopack.com.sa", phone: "+966 531179791" },
       ],
@@ -145,10 +146,6 @@ const content = {
     staffRole: { en: "Office manager", ar: "مدير المكتب" },
     saudi: saudiOffices,
     regional: regionalOffices,
-    note: {
-      en: "The office manager names shown here are samples; Printopack sets the real names through the site's admin.",
-      ar: "أسماء مديري المكاتب المعروضة هنا عيّنات توضيحية؛ وتُدخل برنتوباك الأسماء الحقيقية عبر لوحة تحكم الموقع.",
-    },
   },
 };
 const c = content;
@@ -244,18 +241,29 @@ const markets = marketOrder.map((cc) => ({ cc, ...officesByCc[cc] }));
 
       <!-- stable office card (was the floating popup): sits below the map, never moves -->
       <div class="office-card" id="office-card">
-        <span class="oc-tag"><Bi en={c.enquire.cardHint.en} ar={c.enquire.cardHint.ar} /></span>
-        <span class="oc-role"></span>
-        <span class="oc-name"></span>
-        <span class="oc-place"></span>
-        <span class="oc-note"></span>
+        <div class="oc-text">
+          <span class="oc-tag"><Bi en={c.enquire.cardHint.en} ar={c.enquire.cardHint.ar} /></span>
+          <span class="oc-role"></span>
+          <span class="oc-name"></span>
+          <span class="oc-place"></span>
+          <span class="oc-note"></span>
+        </div>
+        {/* The manager the enquiry actually reaches. Falls back to their initials until a
+            picture is uploaded, the same as the directory below. */}
+        <span class="oc-photo" aria-hidden="true"></span>
       </div>
 
       <!-- routed enquiry form -->
       <div class="enquire-formwrap">
         <p class="enquire-success" role="status" hidden><Bi en={c.enquire.success.en} ar={c.enquire.success.ar} /></p>
-        <form class="enquire-form" name="contact" method="POST" data-netlify="true" netlify-honeypot="bot-field" enctype="multipart/form-data" action="/contact?submitted=1#enquire">
-          <input type="hidden" name="form-name" value="contact" />
+        <!-- Submits to /api/enquiry on this site: the enquiry is stored in the same database
+             the dashboard reads, and the office is notified from there. It used to carry
+             data-netlify, a Netlify Forms attribute, while the site ships on Cloudflare
+             Pages: nothing answered it and every enquiry was lost. The action and method are
+             kept so the form still submits if the script has not loaded yet. -->
+        <form class="enquire-form" name="contact" method="POST" enctype="multipart/form-data" action="/api/enquiry">
+          <input type="hidden" name="kind" value="enquiry" />
+          <input type="hidden" name="lang" class="f-lang" value="en" />
           <!-- autonomous mapper: the resolved recipient + subject are attached on every change -->
           <input type="hidden" name="department" class="f-dept" value="General enquiry" />
           <input type="hidden" name="target_market" class="f-market" value="sa" />
@@ -393,6 +401,12 @@ const markets = marketOrder.map((cc) => ({ cc, ...officesByCc[cc] }));
               <a href={`tel:${o.phone.replace(/\s/g, '')}`} dir="ltr">{o.phone}</a>
               <a href={`mailto:${o.email}`} dir="ltr">{o.email}</a>
             </div>
+            {/* Same manager square as the regional offices below, so the two groups match. */}
+            <span class="staff-photo" aria-hidden="true">
+              {o.photo
+                ? <img src={o.photo} alt="" loading="lazy" decoding="async" />
+                : <span class="staff-mono">{o.mono}</span>}
+            </span>
           </div>
         ))}
       </div>
@@ -424,19 +438,20 @@ const markets = marketOrder.map((cc) => ({ cc, ...officesByCc[cc] }));
       </div>
 
       <!-- build-only helper: remove before production (see PRODUCTION_TODO.md) -->
-      <p class="cnote"><Bi en={c.offices.note.en} ar={c.offices.note.ar} /></p>
     </div>
   </section>
 </Base>
 
 <style>
-  .page-head{padding-block:clamp(56px,8vw,104px) clamp(30px,4vw,52px);background:var(--cream);border-bottom:1px solid var(--line)}
+  .page-head{padding-block:clamp(40px,5.2vw,68px) clamp(22px,2.6vw,34px);background:var(--cream);border-bottom:1px solid var(--line)}
   .page-head-inner{max-width:840px}
   .page-head h1{margin:20px 0 22px;font-size:clamp(40px,6vw,78px)}
   .page-head .lede{max-width:62ch}
 
 
   /* channels */
+  /* Same rhythm as the rest of the site. */
+  .channels,.reach,.directory,.enquire{padding-block:var(--band-y)}
   .channels{padding-block:clamp(52px,7vw,92px)}
   .chan-grid{display:grid;grid-template-columns:repeat(3,1fr);gap:clamp(24px,3vw,44px)}
   .chan{border-top:1px solid var(--line);padding-top:26px;display:flex;flex-direction:column;align-items:flex-start}
@@ -463,10 +478,20 @@ const markets = marketOrder.map((cc) => ({ cc, ...officesByCc[cc] }));
   .reach-map{display:block;width:100%;height:auto}
   .reach-map path{stroke-linejoin:round;stroke-linecap:round}
   .rc-ctx{fill:var(--sand);stroke:var(--paper);stroke-width:.14;pointer-events:none}
-  .rc{fill:var(--blue);stroke:var(--paper);stroke-width:.18;cursor:pointer;outline:none}
+  .rc{fill:var(--blue);stroke:var(--paper);stroke-width:.18;cursor:pointer;outline:none;paint-order:stroke fill}
+  /* The small countries, widened under the fill so they can be seen and hit while keeping
+     their real outline. Bahrain draws 2px across and Qatar 8px, so they take the heaviest
+     stroke; Lebanon, Palestine and Kuwait need less. */
+  .rc[data-cc="bh"]{stroke:var(--blue);stroke-width:.4}
+  .rc[data-cc="qa"]{stroke:var(--blue);stroke-width:.6}
+  .rc[data-cc="lb"],.rc[data-cc="ps"],.rc[data-cc="kw"]{stroke:var(--blue);stroke-width:.5}
+  .rc[data-cc="bh"]:hover,.rc[data-cc="qa"]:hover,
+  .rc[data-cc="lb"]:hover,.rc[data-cc="ps"]:hover,.rc[data-cc="kw"]:hover{stroke:var(--gold-bright)}
   .rc:hover{fill:var(--gold-bright)}
   .rc:focus-visible{stroke:var(--gold);stroke-width:.45}
   .rc.active{fill:var(--gold)}
+  .rc[data-cc="bh"].active,.rc[data-cc="qa"].active,
+  .rc[data-cc="lb"].active,.rc[data-cc="ps"].active,.rc[data-cc="kw"].active{stroke:var(--gold)}
   /* Dot markers for the countries that are only a few pixels across at this scale. They
      inherit .rc's fill, hover and active colours, so a small country highlights exactly
      like a large one. */
@@ -481,7 +506,11 @@ const markets = marketOrder.map((cc) => ({ cc, ...officesByCc[cc] }));
   .map-pick-hint{font-size:12.5px;color:var(--faint);padding-bottom:12px}
 
   /* stable office card (the former floating popup) */
-  .office-card{margin-top:18px;background:var(--paper);border:1px solid var(--line);border-inline-start:3px solid var(--gold);border-radius:var(--radius);padding:16px 20px;display:flex;flex-direction:column;gap:3px}
+  .office-card{margin-top:18px;background:var(--paper);border:1px solid var(--line);border-inline-start:3px solid var(--gold);border-radius:var(--radius);padding:16px 20px;display:flex;align-items:center;justify-content:space-between;gap:16px}
+  .oc-text{display:flex;flex-direction:column;gap:3px;min-width:0}
+  .oc-photo{flex:none;width:clamp(64px,7vw,86px);aspect-ratio:1;border-radius:var(--radius);overflow:hidden;background:var(--surface);border:1px solid var(--line);display:grid;place-items:center}
+  .oc-photo img{width:100%;height:100%;object-fit:cover;display:block}
+  .oc-mono{font-family:var(--display);font-size:22px;font-weight:300;color:var(--muted)}
   .oc-tag{font-family:var(--display);font-size:10.5px;letter-spacing:.18em;text-transform:uppercase;color:var(--faint)}
   .oc-role{font-family:var(--display);font-size:11px;letter-spacing:.16em;text-transform:uppercase;color:var(--gold);margin-top:4px}
   .oc-name{font-family:var(--display);font-size:20px;color:var(--ink);line-height:1.15}
@@ -511,6 +540,12 @@ const markets = marketOrder.map((cc) => ({ cc, ...officesByCc[cc] }));
     appearance:none;-webkit-appearance:none;padding-inline-end:40px;cursor:pointer;
   }
   .enquire-form select:focus,.map-pick select:focus{outline:none;border-color:var(--navy)}
+
+  /* Form feedback. An enquiry that fails has to say so where the person is looking, in the
+     colour the site uses for a problem, and it must not look like the success panel. */
+  .form-error{margin:4px 0 0;padding:12px 14px;border:1px solid var(--red,#a60006);border-radius:var(--radius);
+    background:color-mix(in srgb, var(--red,#a60006) 7%, transparent);color:var(--red,#a60006);font-size:14px;line-height:1.5}
+  .form-note{display:block;margin-top:8px;font-size:13.5px;opacity:.85}
   .enquire-form select:disabled,.map-pick select:disabled{background:var(--surface);color:var(--faint);cursor:not-allowed}
   .select-chevron{position:absolute;inset-inline-end:14px;top:50%;transform:translateY(-50%);width:18px;height:18px;color:var(--muted);pointer-events:none}
   /* locked, auto-filled office fields: clearly outlined + visibly unchangeable */
@@ -567,7 +602,6 @@ const markets = marketOrder.map((cc) => ({ cc, ...officesByCc[cc] }));
   .staff-name{font-size:15px;color:var(--gold-bright)}
   .office a{font-size:14px;color:rgba(250,246,238,.72)}
   .office a:hover{color:var(--gold-bright)}
-  .cnote{margin-top:26px;font-size:13px;font-style:italic;color:rgba(250,246,238,.5)}
 
   @media(max-width:960px){.office-grid{grid-template-columns:repeat(2,1fr)}}
   @media(max-width:900px){
@@ -622,6 +656,7 @@ const markets = marketOrder.map((cc) => ({ cc, ...officesByCc[cc] }));
     const ocName = card.querySelector('.oc-name');
     const ocPlace = card.querySelector('.oc-place');
     const ocNote = card.querySelector('.oc-note');
+    const ocPhoto = card.querySelector('.oc-photo');
     const careerFields = form.querySelector('.career-fields');
     const cvInput = form.querySelector('.cv-input');
     const paths = Array.from(scope.querySelectorAll('.rc'));
@@ -639,6 +674,18 @@ const markets = marketOrder.map((cc) => ({ cc, ...officesByCc[cc] }));
       ocName.textContent = o.name[L];
       ocPlace.textContent = (o.place && o.place[L]) ? o.place[L] : '';
       ocNote.textContent = isCareers() ? CAREER[L] : NOTE[L];
+      const pic = o.photo || '';
+      ocPhoto.innerHTML = '';
+      if (pic) {
+        const img = document.createElement('img');
+        img.src = pic; img.alt = ''; img.loading = 'lazy'; img.decoding = 'async';
+        ocPhoto.appendChild(img);
+      } else {
+        const sp = document.createElement('span');
+        sp.className = 'oc-mono';
+        sp.textContent = o.mono || '';
+        ocPhoto.appendChild(sp);
+      }
     };
     const sync = () => {
       const o = currentOffice();
@@ -738,11 +785,58 @@ const markets = marketOrder.map((cc) => ({ cc, ...officesByCc[cc] }));
       requestAnimationFrame(() => scope.scrollIntoView({ behavior: reduce ? 'auto' : 'smooth', block: 'start' }));
     }
 
-    // Netlify redirects here with ?submitted=1 on success: show the thank-you, hide the form
-    if (qs.get('submitted') === '1') {
-      const ok = scope.querySelector('.enquire-success');
-      if (ok) ok.hidden = false;
-      form.hidden = true;
+    // Send the enquiry without leaving the page, so the visitor keeps everything they typed
+    // if anything goes wrong. The success panel replaces the form only once the server has
+    // actually confirmed it: telling someone their enquiry arrived when it did not is worse
+    // than making them press the button again.
+    const okPanel = scope.querySelector('.enquire-success');
+    const submitBtn = form.querySelector('button[type="submit"]');
+    let sending = false;
+    let errBox = form.querySelector('.form-error');
+    if (!errBox) {
+      errBox = document.createElement('p');
+      errBox.className = 'form-error';
+      errBox.setAttribute('role', 'alert');
+      errBox.hidden = true;
+      form.insertBefore(errBox, submitBtn);
     }
+    const showError = (msg) => { errBox.textContent = msg; errBox.hidden = false; };
+
+    form.addEventListener('submit', async (e) => {
+      e.preventDefault();
+      if (sending) return;
+      const langNow = document.documentElement.getAttribute('dir') === 'rtl' ? 'ar' : 'en';
+      const langField = form.querySelector('.f-lang');
+      if (langField) langField.value = langNow;
+      errBox.hidden = true;
+      sending = true;
+      const label = submitBtn ? submitBtn.innerHTML : '';
+      if (submitBtn) { submitBtn.disabled = true; submitBtn.textContent = langNow === 'ar' ? 'جارٍ الإرسال…' : 'Sending…'; }
+      try {
+        const res = await fetch('/api/enquiry', { method: 'POST', body: new FormData(form) });
+        const data = await res.json().catch(() => ({}));
+        if (!res.ok) throw new Error(data.error || '');
+        if (okPanel) {
+          okPanel.hidden = false;
+          if (data.rejected && data.rejected.length) {
+            const extra = document.createElement('span');
+            extra.className = 'form-note';
+            extra.textContent = (langNow === 'ar'
+              ? 'لم نتمكّن من إرفاق: '
+              : 'We could not attach: ') + data.rejected.join(', ') + '.';
+            okPanel.appendChild(extra);
+          }
+        }
+        form.hidden = true;
+        okPanel?.scrollIntoView({ behavior: matchMedia('(prefers-reduced-motion: reduce)').matches ? 'auto' : 'smooth', block: 'center' });
+      } catch (err) {
+        showError(err.message || (langNow === 'ar'
+          ? 'تعذّر إرسال رسالتك. يرجى المحاولة مرة أخرى، أو مراسلتنا مباشرة على info@printopack.com.sa'
+          : 'Your message could not be sent. Please try again, or email us directly at info@printopack.com.sa'));
+      } finally {
+        sending = false;
+        if (submitBtn) { submitBtn.disabled = false; submitBtn.innerHTML = label; }
+      }
+    });
   }
 </script>

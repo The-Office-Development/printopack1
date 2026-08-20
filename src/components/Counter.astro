@@ -29,8 +29,9 @@ const { prefix = "", value, suffix = "", label, labelAr = null, from = null, lea
   .counter-sep{color:inherit;margin-inline:.16em;opacity:.55}
   .counter-rule{width:34px;height:1px;background:currentColor;opacity:.4;margin:18px auto 14px}
   .counter-label{font-family:var(--display);font-size:12.5px;font-weight:500;letter-spacing:.18em;text-transform:uppercase;color:var(--muted)}
-  .on-navy .counter-label,.on-deep .counter-label{color:rgba(250,246,238,.62)}
-  .on-navy .counter-num,.on-deep .counter-num,.on-navy .counter-fix,.on-deep .counter-fix{color:var(--gold-bright)}
+  :global(.on-navy) .counter-label,:global(.on-deep) .counter-label{color:rgba(255,255,255,.72)}
+  :global(.on-navy) .counter-num,:global(.on-deep) .counter-num,
+  :global(.on-navy) .counter-fix,:global(.on-deep) .counter-fix{color:var(--gold-on-dark)}
 </style>
 
 <!-- Counters count up once when they scroll into view: the years counter from 1997,

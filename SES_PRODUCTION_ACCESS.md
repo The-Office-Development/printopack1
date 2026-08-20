@@ -46,14 +46,46 @@ twice, and a second rejection is much harder to reverse than a first.
 3. **Set a custom MAIL FROM** on `bounce.printopack.com.sa`. See the DNS safety note below.
 4. **Add DMARC.** They have none today, which blocks compliant bulk sending regardless of
    which sender we end up using.
-5. **Build the unsubscribe and suppression endpoint** on the Cloudflare Pages and D1 stack that
-   is already deployed, and wire the SES event destination to it.
+5. **Build the unsubscribe and suppression endpoint.** DONE, 2026-08-20. It is not an
+   endpoint, it turned out to be the whole tool: `/Users/bader/printopack-mailer`, a Worker
+   sharing the website's D1 database. What now exists, and what the request text below can
+   therefore honestly claim:
+   - a `contacts` table the website's forms write into directly, each row carrying the basis
+     for writing to that person and the date it was recorded
+   - a permanent `suppression` table that survives re-imports
+   - one-click unsubscribe with RFC 8058 `List-Unsubscribe-Post`, signed so it cannot be
+     forged, acting immediately with no confirmation page
+   - an SNS webhook that suppresses hard bounces and complaints automatically, and counts
+     soft bounces until an address retires itself
+   - bounce and complaint rates measured per campaign, with the send pausing itself below
+     Amazon's thresholds
+   - transactional notifications already flowing: every website enquiry is emailed to the
+     office that should answer it
+   See that repo's README for the setup order, which must be followed before this request.
 6. **Submit the request** using the text below.
 7. **Gate the quote on the answer.** Approved, quote SES at roughly $2 to $4 a month. Declined,
    quote a paid ESP at roughly $20 to $50 a month. Do not quote before this resolves.
 
 Steps 5 and 6 are in that order deliberately. The request describes bounce, complaint and
 unsubscribe handling as things that exist. They should exist.
+
+**Still to do before submitting, as of 2026-08-20.** The code is built; these are the
+account-side facts the request text asserts and that a reviewer can check:
+
+- [ ] Create the AWS account in Printopack's name, and RECORD THE REGION. Identity, DKIM,
+      MAIL FROM, the configuration set and the event destination are all region-scoped, and
+      changing region later means redoing every DNS record.
+- [ ] Verify the domain, enable DKIM, set the custom MAIL FROM, add DMARC.
+- [ ] Deploy the mailer, set its secrets, subscribe the SNS topic to its webhook.
+- [ ] Run the sandbox checklist in the mailer's README, including Amazon's simulator
+      addresses, so every claim below is one that has actually been exercised.
+- [ ] Publish the website's privacy page. DONE 2026-08-20 (`src/pages/privacy.astro`), but it
+      has to be LIVE on the domain named in the request before the request is sent, because
+      the request says the website explains how addresses are used.
+
+Two claims in the text below are now true and were not before: the website records an
+enquiry with a timestamp (the forms used to post to a Netlify handler that does not exist on
+this host, so nothing was recorded at all), and unsubscribes are honoured immediately.
 
 ## DNS safety note
 

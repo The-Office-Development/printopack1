@@ -11,6 +11,8 @@ const s = singleton('settings');
 const stop = (t: string) => String(t || '').trim().replace(/\.$/, '');
 const company = stop(s.company) || 'Printopack - Saudi Modern Packaging Factory Co. Ltd';
 const phone = s.phone || '+966 12 608 1074';
+// Optional second number; the footer simply omits the line when it is blank.
+const phone2 = s.phone2 || '';
 const email = s.email || 'info@printopack.com.sa';
 const address = { en: s.address || '', ar: s.addressAr || s.address || '' };
 // HQ (Jeddah) is shown above as the head-office address; these are the regional sales offices.
@@ -38,10 +40,18 @@ const officesAr = _offices.map((o) => o.cityAr || o.city).filter(Boolean)
       <span class="eyebrow plain"><Bi en="Stay ahead" ar="ابقَ على اطّلاع" /></span>
       <h2><Bi en="News from Printopack" ar="أخبار برنتوباك" /></h2>
       <p class="close-lede"><Bi en="Be the first to hear about new capabilities, certifications and exhibitions." ar="كن أول من يعلم بأحدث الإمكانات والشهادات والمعارض." /></p>
-      <form class="news-form" onsubmit="return false">
-        <input type="email" placeholder="Your email address" data-ph-ar="بريدك الإلكتروني" required />
+      <!-- A real subscription. This form used to be onsubmit="return false" with nothing
+           behind it: it accepted an address on every page of the site and threw it away.
+           It now writes to the same contact book the mailing tool sends from, recorded as a
+           newsletter opt-in, which is the strongest basis there is for writing to someone. -->
+      <form class="news-form" method="POST" action="/api/enquiry">
+        <input type="hidden" name="kind" value="newsletter" />
+        <input type="hidden" name="lang" class="f-lang" value="en" />
+        <p class="hp" hidden><label>Do not fill this in: <input name="bot-field" /></label></p>
+        <input type="email" name="email" placeholder="Your email address" data-ph-ar="بريدك الإلكتروني" required />
         <button class="btn btn-solid" type="submit"><Bi en="Subscribe" ar="اشترك" /></button>
       </form>
+      <p class="news-msg" role="status" hidden></p>
     </div>
   </div>
 </section>
@@ -54,43 +64,27 @@ const officesAr = _offices.map((o) => o.cityAr || o.city).filter(Boolean)
         <p><Bi en={`Flexible packaging, printed and finished in Jeddah for brands across ${stats.countries}+ countries since ${stats.founded}.`} ar={`تغليف مرن، يُطبع ويُجهّز في جدة لعلامات تجارية في أكثر من ${stats.countries} دولة منذ عام ${stats.founded}.`} /></p>
       </div>
 
-      <div class="foot-col">
-        <!-- The About Us group, in the same order as its header mega-menu. -->
-        <a href="/about"><Bi en="About Us" ar="من نحن" /></a>
-        <a href="/company"><Bi en="The Company" ar="الشركة" /></a>
-        <a href="/factory"><Bi en="Factory Departments" ar="أقسام المصنع" /></a>
-        <a href="/team"><Bi en="Our Team" ar="فريق العمل" /></a>
-        <a href="/responsibility"><Bi en="Social Responsibility" ar="المسؤولية الاجتماعية" /></a>
+      <!-- The QR takes the place of the two link columns the client removed. Every route in
+           them is already in the header nav, so the footer was repeating itself; the code is
+           the thing he wanted given room. -->
+      <div class="qr">
+        <button class="qr-box" data-qr-open aria-label="Enlarge the QR code">
+          <img src="/images/printopack-qr.png" alt="Printopack QR code" width="451" height="451" />
+        </button>
+        <span><Bi en="Scan for our digital profile" ar="امسح للوصول إلى ملفنا الرقمي" /></span>
       </div>
-      <div class="foot-col">
-        <!-- The remaining main sections, in navigation order. -->
-        <a href="/quality"><Bi en="Quality System" ar="نظام الجودة" /></a>
-        <a href="/products"><Bi en="Products" ar="المنتجات" /></a>
-        <a href="/partners"><Bi en="Success Partners" ar="شركاء النجاح" /></a>
-        <a href="/news"><Bi en="News & Events" ar="الأخبار والأحداث" /></a>
-        <a href="/gallery"><Bi en="Gallery" ar="معرض الصور" /></a>
-        <a href="/careers"><Bi en="Careers" ar="الوظائف" /></a>
-      </div>
+
       <div class="foot-col foot-visit">
         <p><Bi en={address.en} ar={address.ar} /></p>
         <a href={`mailto:${email}`}>{email}</a>
         <a href={`tel:${phone.replace(/[^+\d]/g, '')}`} dir="ltr">{phone}</a>
+        {phone2 && <a href={`tel:${phone2.replace(/[^+\d]/g, '')}`} dir="ltr">{phone2}</a>}
         <div class="offices">
           <span class="offices-label"><Bi en="Regional offices" ar="المكاتب الإقليمية" /></span>
           <div class="offices-list i18n-en">{officesEn.map((o) => <span>{o}</span>)}</div>
           <div class="offices-list i18n-ar" lang="ar">{officesAr.map((o) => <span>{o}</span>)}</div>
         </div>
       </div>
-    </div>
-
-    <!-- The QR sits on its own, centred under the columns, rather than tucked into the
-         brand column. It is the client's "unified QR", so it earns the space. Tapping it
-         still opens the full-screen overlay. -->
-    <div class="qr">
-      <button class="qr-box" data-qr-open aria-label="Enlarge the QR code">
-        <img src="/images/printopack-qr.png" alt="Printopack QR code" width="451" height="451" />
-      </button>
-      <span><Bi en="Scan for our digital profile" ar="امسح للوصول إلى ملفنا الرقمي" /></span>
     </div>
 
     <div class="foot-bottom">
@@ -108,7 +102,7 @@ const officesAr = _offices.map((o) => o.cityAr || o.city).filter(Boolean)
 <style>
   /* Light, so it reads as its own band above the blue footer rather than merging into it.
      This echoes the grey the home page opens on, but is set independently of it. */
-  .close-band{background:#ececec;color:var(--ink);padding-block:clamp(48px,6vw,78px);border-top:1px solid var(--line)}
+  .close-band{background:#ececec;color:var(--ink);padding-block:var(--band-y);border-top:1px solid var(--line)}
   .close-grid{display:grid;grid-template-columns:1fr 1fr;gap:clamp(30px,4.5vw,64px);align-items:start}
   /* the rule divides the two halves and follows reading order, so it sits on the correct
      side once the page flips to Arabic */
@@ -117,6 +111,9 @@ const officesAr = _offices.map((o) => o.cityAr || o.city).filter(Boolean)
   .close-col .eyebrow::before{background:var(--gold)}
   .close-col h2{margin:14px 0 22px;max-width:18ch;color:var(--blue)}
   .close-lede{color:var(--muted);max-width:42ch;margin:0 0 24px;font-size:15.5px;line-height:1.6}
+  .hp{position:absolute;left:-9999px}
+  .news-msg{margin-top:12px;font-size:13.5px;color:#fff;max-width:460px}
+  .news-msg.err{color:var(--gold-bright)}
   .news-form{display:flex;gap:10px;max-width:460px}
   .news-form input{flex:1;min-width:0;padding:15px 18px;border:1px solid var(--line);background:var(--white);font:inherit;font-size:15px;border-radius:var(--radius)}
   .news-form input:focus{outline:none;border-color:var(--blue)}
@@ -127,16 +124,16 @@ const officesAr = _offices.map((o) => o.cityAr || o.city).filter(Boolean)
   }
 
   .site-footer{padding-block:clamp(56px,7vw,84px) 32px}
-  .foot-grid{display:grid;grid-template-columns:2fr 1fr 1fr 1.4fr;gap:48px;padding-bottom:52px;border-bottom:1px solid var(--line-dark)}
+  .foot-grid{display:grid;grid-template-columns:repeat(3,1fr);gap:clamp(28px,3.4vw,48px);padding-bottom:clamp(34px,3.6vw,48px);border-bottom:1px solid var(--line-dark);align-items:start}
   .foot-brand .wordmark{display:inline-block;margin-bottom:18px}
   .foot-brand .wordmark img{height:clamp(100px,8.2vw,136px);width:auto;display:block}
   .foot-brand > p{color:#fff;max-width:34ch;font-size:15px}
   /* centred column under the grid, so the code reads as a deliberate invitation rather
      than a footnote in the corner */
-  .qr{display:flex;flex-direction:column;align-items:center;gap:14px;padding-block:clamp(34px,4.5vw,54px);border-bottom:1px solid var(--line-dark)}
+  .qr{display:flex;flex-direction:column;align-items:center;gap:12px;justify-self:center;max-width:100%}
   /* the QR PNG already carries its own quiet zone, so keep the frame padding tight
      and the box larger, or the code reads tiny inside a big white square */
-  .qr-box{width:clamp(180px,17vw,260px);height:clamp(180px,17vw,260px);background:var(--paper);border-radius:8px;padding:8px;color:var(--navy);flex:none}
+  .qr-box{width:clamp(150px,15vw,215px);height:clamp(150px,15vw,215px);background:var(--paper);border-radius:8px;padding:8px;color:var(--navy);flex:none}
   .qr-box svg,.qr-box img{width:100%;height:100%;display:block}
   .qr span{font-size:13.5px;color:#fff;letter-spacing:.02em;line-height:1.5;text-align:center}
 
@@ -157,7 +154,7 @@ const officesAr = _offices.map((o) => o.cityAr || o.city).filter(Boolean)
   .foot-legal a{font-size:12.5px;color:#fff}
   .foot-legal a:hover{color:var(--gold-bright)}
 
-  @media(max-width:900px){.foot-grid{grid-template-columns:1fr 1fr;gap:36px}}
+  @media(max-width:900px){.foot-grid{grid-template-columns:1fr 1fr;gap:36px}.qr{grid-column:1 / -1}}
   @media(max-width:560px){
     .foot-grid{grid-template-columns:1fr}
     .news-form{flex-direction:column}
@@ -169,3 +166,46 @@ const officesAr = _offices.map((o) => o.cityAr || o.city).filter(Boolean)
     .foot-legal a{padding-block:10px;min-height:40px;display:inline-flex;align-items:center}
   }
 </style>
+
+<script>
+  // The newsletter box, on every page. Subscribing writes the address into the shared
+  // contact book as an opt-in, which is what the mailing tool sends from. It answers in
+  // place: leaving the page to say "thank you" for one field is a poor trade.
+  const form = document.querySelector<HTMLFormElement>('.news-form');
+  const msg = document.querySelector<HTMLElement>('.news-msg');
+  if (form && msg) {
+    let sending = false;
+    form.addEventListener('submit', async (e) => {
+      e.preventDefault();
+      if (sending) return;
+      const ar = document.documentElement.getAttribute('dir') === 'rtl';
+      const langField = form.querySelector<HTMLInputElement>('.f-lang');
+      if (langField) langField.value = ar ? 'ar' : 'en';
+      const btn = form.querySelector<HTMLButtonElement>('button[type="submit"]');
+      const label = btn ? btn.innerHTML : '';
+      sending = true;
+      if (btn) { btn.disabled = true; btn.textContent = ar ? '…' : '…'; }
+      msg.hidden = true;
+      msg.classList.remove('err');
+      try {
+        const res = await fetch('/api/enquiry', { method: 'POST', body: new FormData(form) });
+        const data = await res.json().catch(() => ({}));
+        if (!res.ok) throw new Error(data.error || '');
+        form.reset();
+        msg.textContent = ar
+          ? 'شكراً لكم. سيصلكم كل جديد من برنتوباك على هذا البريد، ويمكنكم إلغاء الاشتراك من أي رسالة.'
+          : 'Thank you. News from Printopack will reach you at this address, and every message carries a one-click unsubscribe.';
+        msg.hidden = false;
+      } catch (err) {
+        msg.textContent = (err as Error).message || (ar
+          ? 'تعذّر إتمام الاشتراك. يرجى المحاولة مرة أخرى.'
+          : 'That did not go through. Please try again.');
+        msg.classList.add('err');
+        msg.hidden = false;
+      } finally {
+        sending = false;
+        if (btn) { btn.disabled = false; btn.innerHTML = label; }
+      }
+    });
+  }
+</script>

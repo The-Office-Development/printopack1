@@ -9,7 +9,129 @@ Sister documents: `CLIENT_NOTES.md` (every client note, by page), `ASSETS_NEEDED
 client still owes), `SES_PRODUCTION_ACCESS.md` (the plan for the email tool's sending account),
 `db/CAPS.md` (per-section record limits).
 
-Last updated: 2026-08-18 (client edit round complete)
+Last updated: 2026-08-20 (client notes round 2 complete, page by page)
+
+---
+
+## DONE 2026-08-20: the audit fixes, the enquiry pipeline, and the messaging tool
+
+A full audit of the repo (93 verified findings) was run first; these are the items acted on.
+Branch `feat/enquiries-and-mailer`, not yet merged or deployed.
+
+**Critical, both fixed**
+- [x] **`formats` and `standard` were missing from the API's `COLLECTIONS`**, so Bag Formats
+      and The Printopack Standard were permanently read-only in production: every save
+      returned 404 while the admin showed an optimistic "saved" and a misleading connection
+      error. One line in `functions/api/_shared.js`.
+- [x] **Every form on the live site was losing its submission.** Contact and careers posted
+      with `data-netlify`, which nothing answers on Cloudflare Pages (405, no notification),
+      and the footer newsletter was `onsubmit="return false"` with no handler at all. All
+      three now post to a new open, throttled `POST /api/enquiry` which stores the enquiry,
+      its attachments, and the address as a contact.
+
+**High**
+- [x] Draft news posts were being published; `src/data/news.ts` now filters on status.
+- [x] Deleting the last news post, or the International Sales office, crashed the build.
+      Both guarded.
+- [x] The deploy hook's HTTP status was ignored, so a failed rebuild reported "deployed".
+- [x] Deletions never marked the site as having unpublished changes (`site_meta.last_change`).
+- [x] A transient `/content` failure during a rebuild silently shipped the stale committed
+      baseline. The build now fails instead, which leaves the previous deploy serving.
+- [x] The office form's "country on the map" select was missing 8 of the 20 country codes, so
+      switching on UAE, Bahrain, Oman, Qatar, Lebanon, Palestine, Mauritania or Djibouti wiped
+      the map link on the first save. Built from `COUNTRIES` now, and showing names not codes.
+- [x] A 12-hour session expiring mid-afternoon lost every edit made after it, behind a
+      "check your connection" toast. Writes now detect it, keep the work, and offer to sign
+      in again and save.
+- [x] The admin was unreachable below 900px: the sidebar was off-canvas with nothing to open
+      it. Menu button added.
+- [x] Safari cannot encode WebP, so transparent logos were being flattened onto black. The
+      fallback keeps the alpha.
+- [x] Renaming a product group orphaned every product in it. The rename now carries through,
+      and deleting a group that still holds products is refused with a count.
+- [x] `/privacy` and `/conditions` 404'd sitewide. Both written, bilingual.
+
+**Medium**
+- [x] A failed image upload was stored as raw base64 inside the record; it now fails the save.
+- [x] Closing the drawer discarded typed work without asking; double-clicking Save duplicated
+      the record; leaving the page with unsaved writes said nothing. All three fixed.
+- [x] `esc()` did not escape quotes, so a title containing `"` corrupted on save.
+- [x] The publish dialog showed a change list fetched once at boot.
+
+**The messaging tool (the client's "automation system" + "unify the databases")**
+- [x] Built: `/Users/bader/printopack-mailer`. A Worker on the SAME D1 database as the site.
+      Contacts, segments, import with dedup against what the website already collected, CSV
+      export, bilingual composer with live audience count, test sends, resumable chunked
+      sending on a cron, one-click RFC 8058 unsubscribe, SNS bounce/complaint handling with
+      automatic suppression, and self-pausing bounce and complaint thresholds.
+- [x] SigV4 signing verified against AWS's published test vector; MIME output verified for
+      Arabic subject encoding and the unsubscribe headers.
+- [ ] **Not deployed and not connected to a real SES account.** Everything account-side is
+      still to do: see the checklist now in `SES_PRODUCTION_ACCESS.md` and the mailer README.
+- [ ] Quote the client. `SES_PRODUCTION_ACCESS.md` is the single source of truth for the
+      figures; `CLIENT_NOTES.md` item 10 and `HANDOFF.md` still disagree with it.
+
+**Still open from the audit, not done here**
+- [ ] The dev login bypass still ships (tracked below).
+- [ ] Placeholder content and the test records are still live.
+- [ ] `HANDOVER-CLIENT.md` still describes the Cloudflare Access email login that was never
+      built, and there is no Arabic edition. `db/README.md` still calls its destructive seed
+      load safe. Both mislead anyone who follows them.
+- [ ] Uploaded pictures are still never deleted from D1.
+
+---
+
+## DONE 2026-08-20: the GM's second notes round, every page
+
+His 2026-08-19 reply, worked page by page. All of it builds (43 pages) and was measured in a
+browser rather than eyeballed.
+
+**Global, from his two general notes**
+- [x] **One rhythm.** Every boundary between main-page sections is now 108px, from a single
+      `--band-y` token each band takes half of. They ranged 108 to 204 before, which is why
+      nothing looked settled. The token also drives the footer's closing band.
+- [x] **Colour separation between sections.** News & Events, the products catalogue, the
+      partners wall and the careers roles list all moved onto the logo blue; the closing band
+      onto `#ececec`. His three colours: navy, white, grey.
+
+**Per page**
+- [x] **Home:** counter order set to his sequence (reach on top, company below); hero gap under
+      the lede cut 113px to 30px; partner logos five per row.
+- [x] **About / Quality / News & Gallery:** one card, 300px, photograph filling it with the
+      words over a scrim. His nine images converted, 6.5MB to 536KB.
+- [x] **Products:** dark blue, "Price on request" removed from the cards.
+- [x] **Partners:** wall on blue, closing blocks merged side by side, Lebanon, Palestine,
+      Qatar and Bahrain added.
+- [x] **Careers:** roles list on blue, rows and page head tightened.
+- [x] **Contact:** general management now `gm@printopack.com.sa`; the four Saudi areas renamed
+      to his convention; manager square added to the Saudi directory and to the selected-office
+      card; spacing onto the site rhythm.
+- [x] **Footer:** three equal columns, QR centred in the middle one, second phone
+      (+966 53 117 9791) as an editable `phone2` setting.
+- [x] **All "these are placeholders, Printopack adds them from the admin" copy removed**, six
+      notes across gallery, partners, careers, contact and news. Verified absent from the built
+      HTML in both languages, not just the source.
+
+**The map, rebuilt from source**
+- [x] Regenerated every country from mledoze/countries via a new, reproducible
+      `scripts/build-reach-map.mjs`. Worst bounding-box error against the source is now
+      **0.0097 deg, about 1.1km**, from 3,116 of 11,502 vertices.
+- [x] Two real errors fixed: **Yemen was missing Socotra** (1.43 deg out) and **Bahrain was
+      missing the Hawar Islands**.
+- [x] **No dot markers anywhere.** Qatar and Bahrain are drawn as themselves; the small
+      countries get a widened stroke under the fill instead, which grows the hit area without
+      changing the shape. Verified by probing pixels: every centre resolves to its own country.
+- [x] Selected and hovered states now repaint the same region. `.rc.active` was repainting only
+      the fill, so a selected Qatar looked smaller than a hovered one.
+
+**Three recurring traps worth remembering**
+- **Astro scoping.** `.on-deep .counter-num` never applied, because `.on-deep` sits on the page
+      and the rule is scoped to the component. Third instance in this project; `:global()` on
+      the ancestor half is the fix.
+- **Light-surface colours surviving a switch to dark.** Each section moved onto blue had two or
+      three values drawn for white (`--muted` text, `--line-soft` hairlines, `btn-solid` whose
+      background *is* the blue, so the products CTA was invisible).
+- **The dev server serves stale CSS.** Repeatedly. Restart before believing a change failed.
 
 ---
 
@@ -106,6 +228,26 @@ The GM sent two emails on 2026-08-13: seven section images, and a marked-up PDF 
 
       Real names and photos are client-gated, so this closes when the content arrives.
 
+- [!] **The contact and careers forms ship on the wrong host and fail silently.** Both use
+      Netlify Forms (`data-netlify="true"`, `method="POST"`, `action="/contact?submitted=1"` and
+      `/careers?submitted=1`), but the site ships on Cloudflare Pages, where nothing handles those
+      POSTs. `contact.astro` has a mailto/Gmail/Outlook compose fallback so an enquiry can still
+      reach someone; **`careers.astro` has no fallback and is completely dead** - an applicant
+      submits and nothing is sent, stored, or acknowledged. Fix depends on the host decision:
+      either add a Pages Function that handles the POST (writes to D1 or forwards by email), or
+      convert both to the compose-only flow contact already uses. Decide the host first.
+
+- [!] **Footer links `/privacy` and `/conditions` 404 on every page.** `Footer.astro:99-100`
+      point to pages that do not exist, and the footer is sitewide, so every page carries two
+      broken links. Either write the two pages or remove the links before launch.
+
+- [!] **Canonical, OG and sitemap URLs all point at the old site.** `astro.config.mjs` hardcodes
+      `site: 'https://www.printopack.com.sa'`, which currently serves the OLD site, so every
+      `<link rel="canonical">`, OG URL, `sitemap-index.xml` entry, and the `robots.txt` sitemap
+      line names a domain that is not this deployment. Until the domain is cut over (see Phase 1),
+      search engines are told the canonical home is the old site. Coordinate this flip with the
+      DNS cutover: change `site` and redeploy at the same moment the domain moves.
+
 ---
 
 ## Needs a decision from Bader
@@ -120,9 +262,54 @@ The GM sent two emails on 2026-08-13: seven section images, and a marked-up PDF 
       (both components, `content.ts`, seven inner pages, `index.astro`, `admin.js`,
       `seed.json`) plus 13 new files (seven section images, four logo assets,
       `SES_PRODUCTION_ACCESS.md`, this file). Nothing from this round is committed yet.
-- [ ] **`statOffices`: 10 or 12?** Long-standing unanswered question.
+- [ ] **`statOffices`: 10 or 12?** Long-standing unanswered question. The counter now derives to
+      **12** live: `stats.offices` counts the `Regional & Export` offices in the collection and only
+      falls back to `about.statOffices` (10) when that count is zero. So the site currently shows 12,
+      the docs say 10, and the GM's original brief said 6. Decide the intended number, then either
+      prune the collection or override `statOffices`.
 - [ ] **Confirm the Nuts product was deliberately removed.** Absent from Amal's approved taxonomy
       and removed here, but it still exists on their current site.
+
+---
+
+## Audit findings, deep page-by-page pass 2026-08-18
+
+Everything below build-passes (41 pages, EXIT 0) and every one of the 113 local asset references
+resolves. These are the smaller loose ends the full read-through surfaced, none launch-blocking on
+their own. Verified clean and NOT listed here: bilingual coverage (every `Bi` has both languages,
+zero Arabic gaps), product taxonomy parity (no orphans, no slug collisions, no filter mismatches),
+and the brand-palette migration, which is in fact complete (`global.css` tokens now resolve to the
+locked four: blue `#0046a2`, orange `#f89900`, red `#a60006`, white) despite CLAUDE.md 13.5 still
+calling it "partly migrated."
+
+- [ ] **Remove the build-only helper notes before launch.** Six sample-content notes flagged in
+      `PRODUCTION_TODO.md` are still in the tree: `contact.astro:426`, `careers.astro:160`,
+      `news.astro:120`, and the two `.sample-note` blocks in `gallery.astro:140,154`.
+- [ ] **Sample past-dated exhibitions are hardcoded, not admin-managed.** `news.astro:38-40`
+      hardcodes Gulfood "Nov 2024" and Saudi Food Expo "Feb 2025", both already in the past.
+      Move to the content store or remove before launch.
+- [ ] **Dead social links.** Facebook and Instagram are `href="#"` in `Header.astro:91,94` and
+      Facebook is `href="#"` in `Footer.astro:102`. Supply the real URLs or drop the icons.
+- [ ] **Footer newsletter form is inert.** `Footer.astro:41` is `onsubmit="return false"` with no
+      handler, so a subscribe does nothing. Wire it to a Pages Function/list or remove the field.
+- [ ] **Gallery videos have no URL.** Both entries in the Videos tab carry empty embed URLs, so the
+      tab renders placeholders. Client-gated content, tracked in the asset backlog, noted here for
+      completeness.
+- [ ] **`cert-brcgs.jpg` is unreferenced.** Nothing imports it (per `PRODUCTION_TODO.md`); safe to
+      delete, or wire it into the quality/responsibility cert cards if it was meant to show.
+- [ ] **`Base.astro` hardcodes `<html lang="en">`.** The inline script fixes `dir`/`lang` client
+      side, but crawlers and no-JS reads see `en` even in Arabic. Minor SEO/accessibility.
+- [ ] **Image `alt` text is English-only in Arabic mode.** Alt strings are not run through `Bi`, so
+      RTL visitors and screen readers get English descriptions. Minor accessibility.
+- [ ] **Harden lightbox `innerHTML`.** The partners and gallery lightbox JS assembles markup with
+      `innerHTML` from record fields. Inputs are admin-controlled so the risk is low, but escaping
+      or `textContent` would close it off.
+- [ ] **Mobile-nav panel overlaps the header by 8px.** The panel is `top:68px` against a 76px
+      header, so it tucks under the bar slightly on phones. Cosmetic.
+- [ ] **Stale comment.** `index.astro:309` carries an out-of-date comment; tidy-up only.
+- [ ] **`netlify.toml` contradicts the Cloudflare Pages deployment.** It configures a Netlify build
+      the project does not use. Remove it once the host is settled, so nobody is misled about where
+      the site runs (this is the same host ambiguity that breaks the forms above).
 
 ---
 

@@ -60,6 +60,12 @@ h1,h2,h3,h4{font-family:var(--disp);font-weight:400;letter-spacing:-.01em;line-h
 /* ---------- MAIN ---------- */
 .main{display:flex;flex-direction:column;min-width:0;background:var(--cream)}
 .topbar{background:var(--paper);border-bottom:1px solid var(--line);padding:20px 36px;display:flex;align-items:center;justify-content:space-between;gap:20px;position:sticky;top:0;z-index:20}
+.topbar-head{flex:1;min-width:0}
+/* The off-canvas menu button. Hidden on a desktop, where the sidebar is always open. */
+.navtog{display:none;flex:none;width:42px;height:42px;border:1px solid var(--line);background:#fff;border-radius:10px;color:var(--navy);cursor:pointer;padding:9px}
+.navtog svg{width:100%;height:100%;stroke-width:1.8}
+.navtog:hover{border-color:var(--gold)}
+.navscrim{position:fixed;inset:0;background:rgba(14,35,64,.42);z-index:60}
 .topbar .crumb{font-family:var(--disp);font-size:11px;letter-spacing:.18em;text-transform:uppercase;color:var(--gold);margin-bottom:4px}
 .topbar h1{font-size:25px}
 .topbar-actions{display:flex;gap:10px;align-items:center}
@@ -204,6 +210,10 @@ h1,h2,h3,h4{font-family:var(--disp);font-weight:400;letter-spacing:-.01em;line-h
 
 @media(max-width:900px){
   .app{grid-template-columns:1fr}
+  .navtog{display:block}
+  .topbar{padding:14px 16px;gap:12px}
+  .topbar h1{font-size:20px}
+  .view{padding:18px 16px}
   .sidebar{position:fixed;left:0;top:0;bottom:0;width:264px;z-index:70;transform:translateX(-100%);transition:transform .3s}
   .app.nav-open .sidebar{transform:none}
   .stat-grid{grid-template-columns:repeat(2,1fr)}
@@ -305,3 +315,45 @@ h1,h2,h3,h4{font-family:var(--disp);font-weight:400;letter-spacing:-.01em;line-h
   background:#fff;box-shadow:0 1px 3px rgba(0,0,0,.25)}
 .sw.on{background:#3f7a4a}
 .sw.on .sw-k{left:23px}
+
+
+/* Work that has not reached the server yet. Deliberately loud and persistent: a toast that
+   disappears in two and a half seconds is how an afternoon of edits used to be lost without
+   anyone noticing. It sits above everything, including the drawer. */
+.failbar{position:fixed;left:0;right:0;bottom:0;z-index:120;display:none;gap:16px;align-items:center;justify-content:space-between;flex-wrap:wrap;
+  padding:14px 20px;background:var(--navy);color:#fff;box-shadow:0 -8px 26px rgba(14,35,64,.28)}
+.failbar.show{display:flex}
+.failbar.expired{background:#7a1116}
+.failbar .fb-text{font-size:13.5px;line-height:1.5;max-width:74ch}
+.failbar .fb-text b{font-weight:600}
+.failbar .fb-acts{display:flex;gap:8px;flex-shrink:0}
+.failbar .btn-ghost{color:#fff;border-color:rgba(255,255,255,.45)}
+.failbar .btn-ghost:hover{background:rgba(255,255,255,.12)}
+@media(max-width:640px){.failbar{padding:12px 14px}.failbar .fb-acts{width:100%}.failbar .btn{flex:1;justify-content:center}}
+
+/* ---------------- enquiries inbox ----------------
+   The half of the dashboard that receives rather than publishes. An unread row is marked
+   with a gold rule on its leading edge rather than a bold typeface, so a full inbox stays
+   calm to read and the unread ones still count themselves at a glance. */
+.badge.alert{background:var(--gold);color:var(--navy);font-weight:600}
+.stat-card.alert{border-color:var(--gold)}
+.stat-card.alert .ic{background:var(--gold);color:var(--navy)}
+.tbl tr.unread td:first-child{box-shadow:inset 3px 0 0 var(--gold)}
+.tbl tr.unread .t-title{font-weight:600}
+
+.enq-meta{display:grid;gap:2px;margin-bottom:20px;border:1px solid var(--line);border-radius:10px;overflow:hidden}
+.enq-row{display:grid;grid-template-columns:132px 1fr;gap:14px;padding:11px 14px;background:var(--paper);font-size:13.5px}
+.enq-row+.enq-row{border-top:1px solid var(--line-soft,var(--line))}
+.enq-k{color:var(--muted);font-family:var(--disp);font-size:11.5px;letter-spacing:.1em;text-transform:uppercase;padding-top:2px}
+.enq-v{color:var(--ink);word-break:break-word}
+.enq-msg{white-space:pre-wrap;background:var(--cream);border:1px solid var(--line);border-radius:10px;padding:16px 18px;font-size:14.5px;line-height:1.7;margin-bottom:20px}
+.enq-msg[dir="rtl"]{font-family:var(--arabic,inherit);text-align:right}
+.enq-note{font-size:13px;color:var(--muted);background:var(--cream);border-radius:8px;padding:10px 12px}
+.enq-files h3{font-size:12px;letter-spacing:.12em;text-transform:uppercase;color:var(--muted);font-family:var(--disp);margin-bottom:10px}
+.enq-file{display:flex;align-items:center;gap:10px;padding:11px 14px;border:1px solid var(--line);border-radius:10px;margin-bottom:8px;color:var(--ink);text-decoration:none;transition:.2s}
+.enq-file:hover{border-color:var(--gold);background:var(--cream)}
+.enq-file svg{width:18px;height:18px;flex:none;color:var(--gold);stroke-width:1.6;fill:none;stroke:currentColor}
+.enq-file span{flex:1;min-width:0;font-size:14px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.enq-file em{font-style:normal;font-size:12px;color:var(--faint)}
+.drawer-foot .btn-ok{display:inline-flex;align-items:center;gap:8px;text-decoration:none}
+.drawer-foot .btn-ok svg{width:16px;height:16px;fill:none;stroke:currentColor;stroke-width:1.7}

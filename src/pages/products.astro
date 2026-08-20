@@ -32,7 +32,7 @@ const content = {
     note: { en: "Catalogue and enquiry only. No online checkout, every order is made to order and priced on request.", ar: "كتالوج واستفسار فقط. لا شراء إلكتروني؛ كل طلبٍ يُصنع حسب الطلب ويُسعَّر عند الطلب." },
     cta: { en: "Request a quote", ar: "اطلب عرض سعر" },
   },
-  card: { meta: { en: "Price on request", ar: "السعر عند الطلب" }, link: { en: "View & enquire", ar: "عرض واستفسار" } },
+  card: { link: { en: "View & enquire", ar: "عرض واستفسار" } },
   empty: { en: "No products in this group yet. Please get in touch and we will scope it with you.", ar: "لا توجد منتجات في هذه المجموعة بعد. يرجى التواصل معنا وسنحدّدها معكم." },
   // Bag & pouch formats (from Printopack's own catalogue).
   formats: {
@@ -78,7 +78,7 @@ const c = content;
   </section>
 
   <!-- CATALOGUE: filter rail + group grid -->
-  <section class="catalogue">
+  <section class="catalogue on-deep">
     <div class="wrap-wide cat-layout">
       <aside class="cat-rail">
         <span class="rail-kicker"><Bi en={c.rail.kicker.en} ar={c.rail.kicker.ar} /></span>
@@ -109,7 +109,6 @@ const c = content;
                 <h3 class="prod2-name"><a href={`/products/${cat.slug}`}><Bi en={cat.name.en} ar={cat.name.ar} /></a></h3>
                 <p class="prod2-desc"><Bi en={cat.desc.en} ar={cat.desc.ar} /></p>
                 <div class="prod2-foot">
-                  <span class="prod2-meta"><Bi en={c.card.meta.en} ar={c.card.meta.ar} /></span>
                   <a href={`/products/${cat.slug}`} class="link-line prod2-link"><Bi en={c.card.link.en} ar={c.card.link.ar} /></a>
                 </div>
               </div>
@@ -193,6 +192,28 @@ const c = content;
   .prod2{display:flex;flex-direction:column;border:1px solid var(--line);background:var(--paper)}
   .prod2[hidden]{display:none}
   .prod2:hover{border-color:var(--gold-bright);box-shadow:0 24px 44px rgba(0,70,162,.07)}
+  /* The client asked for this page on the dark blue. The cards keep a light face so the
+     product photographs, which are shot on white, still read; only the field behind them
+     changes. */
+  .catalogue .prod2{background:var(--white);color:var(--ink)}
+  .catalogue .prod2-name a{color:var(--ink)}
+  .catalogue .prod2-name a:hover{color:var(--blue)}
+  .catalogue .prod2-desc{color:var(--muted)}
+  .catalogue .prod2-link{color:var(--blue)}
+  .catalogue .prod2-link:hover{color:var(--gold)}
+  .catalogue .rail-kicker{color:var(--gold-on-dark)}
+  /* The note was --muted, a dark grey drawn for white, so it nearly vanished on the blue. */
+  .catalogue .rail-note p{color:rgba(255,255,255,.82)}
+  /* Filters: the dividers were a dark hairline, invisible here, and every row looked the
+     same. The selected one is now a filled pill so the current filter is unmistakable. */
+  .catalogue .rail-btn{color:rgba(255,255,255,.84);border-bottom-color:var(--line-dark);padding-inline:12px;border-radius:var(--radius)}
+  .catalogue .rail-btn:hover{color:#fff;background:rgba(255,255,255,.08)}
+  .catalogue .rail-btn.active{color:var(--blue);background:var(--gold-on-dark);font-weight:600;border-bottom-color:transparent}
+  /* btn-solid paints itself --navy, which is this very background: a blue button on blue.
+     Inverted so it reads as the primary action it is. */
+  .catalogue .rail-cta{background:var(--gold-on-dark);color:var(--blue);border-color:transparent}
+  .catalogue .rail-cta:hover{background:#fff;color:var(--blue)}
+  .catalogue .cat-empty{color:#fff}
   .prod2-img{display:block;aspect-ratio:4/3;background:var(--cream);overflow:hidden}
   .prod2-img img{width:100%;height:100%;object-fit:contain;padding:22px;mix-blend-mode:multiply}
   /* A measurements cover is a size chart, so it wants every pixel it can get. The card keeps
@@ -204,8 +225,7 @@ const c = content;
   .prod2-name{font-size:clamp(19px,1.5vw,22px);margin-bottom:9px}
   .prod2-name a:hover{color:var(--gold-bright)}
   .prod2-desc{font-size:14.5px;color:var(--muted);line-height:1.6;margin-bottom:20px}
-  .prod2-foot{display:flex;align-items:center;justify-content:space-between;gap:12px;margin-top:auto;padding-top:16px;border-top:1px solid var(--line-soft)}
-  .prod2-meta{font-family:var(--display);font-size:11px;letter-spacing:.14em;text-transform:uppercase;color:var(--faint)}
+  .prod2-foot{display:flex;align-items:center;justify-content:flex-end;gap:12px;margin-top:auto;padding-top:16px;border-top:1px solid var(--line-soft)}
   .prod2-link{font-size:11.5px!important}
   .cat-empty{margin-top:30px;color:var(--muted)}
 

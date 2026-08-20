@@ -58,15 +58,18 @@ const content = {
     // Every counter on the site now lives here: the client asked for them off the inner
     // pages and gathered on the home page, five to a row. This is the union of what the
     // seven pages used to show, with duplicates folded together.
+    // Order set by the client, 2026-08-19. Top row is reach: how long, how far, how many
+    // customers. Second row is the company itself: people, experience, plant. The
+    // `counter-rowstart` marker has to travel with whichever counter opens the second row.
     { lead: stats.founded, from: stats.founded, value: year, label: "In the market", labelAr: "في السوق" },
     { prefix: "+", value: stats.countries, label: "Countries served", labelAr: "دولة حول العالم" },
     { value: stats.offices, label: "Regional offices", labelAr: "مكاتب إقليمية" },
-    { prefix: "~", value: stats.employees, label: "Team members", labelAr: "من أفراد الفريق" },
-    { value: stats.avgExp, label: "Avg. years per employee", labelAr: "متوسط سنوات الخبرة للموظف" },
-    { prefix: "+", value: stats.totalExp, label: "Years of combined experience", labelAr: "سنة خبرة مجتمعة", cls: "counter-rowstart" },
-    { value: stats.departments, label: "Production departments", labelAr: "أقسام إنتاجية" },
     { prefix: "+", value: stats.customers, label: "Customers", labelAr: "عميل" },
     { prefix: "+", value: stats.partners, label: "Brand partners", labelAr: "علامة شريكة" },
+    { prefix: "~", value: stats.employees, label: "Team members", labelAr: "من أفراد الفريق", cls: "counter-rowstart" },
+    { value: stats.avgExp, label: "Avg. years per employee", labelAr: "متوسط سنوات الخبرة للموظف" },
+    { prefix: "+", value: stats.totalExp, label: "Years of combined experience", labelAr: "سنة خبرة مجتمعة" },
+    { value: stats.departments, label: "Production departments", labelAr: "أقسام إنتاجية" },
   ],
   partners: {
     eyebrow: { en: "Success partners", ar: "شركاء النجاح" },
@@ -156,7 +159,7 @@ const pad = (n: number) => String(n).padStart(2, "0");
   </section>
 
   <!-- ============ SUCCESS PARTNERS ============ -->
-  <section>
+  <section class="partners-home">
     <div class="wrap-wide">
       <div class="section-head center">
         <span class="eyebrow plain" style="color:var(--gold)"><Bi en={c.partners.eyebrow.en} ar={c.partners.eyebrow.ar} /></span>
@@ -186,14 +189,14 @@ const pad = (n: number) => String(n).padStart(2, "0");
   </section>
 
   <!-- ============ NEWS ============ -->
-  <section style="background:var(--cream)">
+  <section class="news-band on-deep">
     <div class="wrap-wide">
       <div class="section-head split-head">
         <div>
           <span class="eyebrow"><Bi en={c.news.eyebrow.en} ar={c.news.eyebrow.ar} /></span>
           <h2 style="margin-top:16px"><Bi en={c.news.title.en} ar={c.news.title.ar} /></h2>
         </div>
-        <a href="/news" class="link-line"><Bi en={c.news.link.en} ar={c.news.link.ar} /></a>
+        <a href="/news" class="link-line on-dark"><Bi en={c.news.link.en} ar={c.news.link.ar} /></a>
       </div>
       <div class="news-grid">
         {c.news.items.map((n) => (
@@ -201,7 +204,7 @@ const pad = (n: number) => String(n).padStart(2, "0");
             <span class="card-img news-img"><img src={n.img} alt="" loading="lazy" decoding="async" /></span>
             <span class="news-meta"><Bi en={n.cat.en} ar={n.cat.ar} /> · <span dir="ltr">{n.date}</span></span>
             <h3 class="news-title"><Bi en={n.title.en} ar={n.title.ar} /></h3>
-            <span class="link-line news-read"><Bi en={c.news.read.en} ar={c.news.read.ar} /></span>
+            <span class="link-line on-dark news-read"><Bi en={c.news.read.en} ar={c.news.read.ar} /></span>
           </a>
         ))}
       </div>
@@ -222,7 +225,14 @@ const pad = (n: number) => String(n).padStart(2, "0");
      when the frame is 43.4vw tall (782/1800). That is as large as it can be drawn: past
      it `contain` starts letterboxing at the sides instead of growing. Capped at the
      image's own 782px so a very wide screen never upscales it into softness. */
-  .cover-bg{position:relative;height:clamp(300px,43.4vw,782px)}
+  /* One variable drives both the frame and the pull below, so the narrow breakpoints only
+     have to restate --frame. */
+  .cover-bg{--frame:clamp(300px,43.4vw,782px);position:relative;height:var(--frame);
+    /* hero.jpg carries roughly 16% empty sweep above the products, which reads as a gap
+       under the lede rather than as part of the picture. Pull the frame up so most of it is
+       absorbed. That sweep is the same #ececec as the section, so nothing is visibly
+       clipped, and the products keep about 30px of clearance from the text. */
+    margin-top:calc(var(--frame) * -0.133)}
   .cover-bg img{width:100%;height:100%;object-fit:contain;object-position:center bottom;display:block}
   /* order:-1 puts the copy above the photograph without reordering the markup, so the
      image still preloads first. */
@@ -240,7 +250,11 @@ const pad = (n: number) => String(n).padStart(2, "0");
   [dir="rtl"] .cover-scroll{transform:translateX(50%)}
 
   /* ---------- contents (الفهرس) ---------- */
-  .contents{padding-bottom:clamp(56px,7vw,90px)}
+  /* One rhythm for the whole page. Each band carries half the gap, so every boundary
+     between two of them is the same height. The contents block takes a full gap on top
+     because the hero bleeds to its own edge and contributes nothing to that join. */
+  .contents,.counters,.partners-home,.news-band{padding-block:var(--band-y)}
+  .contents{padding-top:calc(var(--band-y) * 2)}
   .contents-head{display:flex;justify-content:space-between;align-items:flex-end;gap:24px}
   .contents-head .lede{max-width:56ch}
 
@@ -292,7 +306,6 @@ const pad = (n: number) => String(n).padStart(2, "0");
   [dir="rtl"] .fcard-arrow{display:inline-block;transform:scaleX(-1)}
 
   /* ---------- counters ---------- */
-  .counters{padding-block:clamp(48px,6vw,72px)}
   /* Five to a row, at the client's request. Ten tracks rather than five: every counter
      spans 2, so all nine are one width, and the second row of four starts one track in,
      which leaves a single spare track each side and keeps it centred under the first. */
@@ -330,6 +343,20 @@ const pad = (n: number) => String(n).padStart(2, "0");
      to one. Between roughly 700 and 920px the fixed three-column version squeezed each
      card to ~200px, which is what the client saw as "not responsive". auto-fit drops to
      two columns and then one at the widths where the cards actually stop fitting. */
+  /* The global section rhythm puts 132px under the partners wall and another 132px over
+     the band below it, a 264px trough the client reads as dead space. Halved on the
+     partners side; the band keeps its own padding because a coloured band needs the room
+     to read as a band. */
+  /* Both sides of this boundary take the same value, so the blue band does not read
+     as having more air above its heading than the white has below the logos. */
+  /* Dark blue, matching the footer, per the client's note that sections need colour
+     separation between them. */
+  .news-band .news-meta{color:var(--gold-on-dark)}
+  .news-band .news-title,.news-band .section-head h2{color:var(--white)}
+  .news-band .eyebrow{color:var(--gold-on-dark);display:flex;line-height:1;justify-content:inherit}
+  .news-band .eyebrow::before{background:var(--gold-on-dark)}
+  .news-band .link-line.on-dark{color:var(--gold-on-dark)}
+  .news-band .link-line.on-dark:hover{color:var(--white)}
   .news-grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(290px,1fr));gap:34px;align-items:stretch}
   .news-card{display:flex;flex-direction:column}
   .news-img{aspect-ratio:3/2}
@@ -341,7 +368,7 @@ const pad = (n: number) => String(n).padStart(2, "0");
      waiting for 560px. Without this, a 561-720px screen kept the 86vh cover and the page
      still looked like it ended at the fold. Type is tuned further down at 560px. */
   @media(max-width:720px){
-    .cover-bg{height:clamp(200px,52vw,300px)}
+    .cover-bg{--frame:clamp(200px,52vw,300px)}
   }
 
   @media(max-width:1000px){
@@ -375,7 +402,7 @@ const pad = (n: number) => String(n).padStart(2, "0");
        pasta tube instead of the product lineup. A shorter hero fixes both, because a less
        portrait box crops less. svh is the viewport WITHOUT the browser's address bar, so
        the hero does not grow by ~60px the moment the bar retracts; vh stays as a fallback. */
-    .cover-bg{height:clamp(170px,46vw,240px)}
+    .cover-bg{--frame:clamp(170px,46vw,240px)}
     /* The height was really being set by the copy, not by min-height: the headline clamps to
        a 36px floor, so on a 375px screen it wrapped to four lines and pushed the hero past
        the fold on its own. Sizing the type for the screen is what actually shortens it. */

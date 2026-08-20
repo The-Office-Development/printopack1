@@ -1,0 +1,140 @@
+---
+import Base from '../layouts/Base.astro';
+import Bi from '../components/Bi.astro';
+import { singleton } from '../lib/content';
+
+// Privacy notice. The footer has linked to /privacy on every page of the site since it was
+// built and the page never existed, so every visitor who followed it got a 404.
+//
+// It is also load-bearing for the mailing tool: Saudi Arabia's PDPL requires a stated basis
+// and a working opt-out before marketing email goes out, and Amazon's SES review asks where
+// addresses come from. This page is the written answer to both, and it describes what the
+// system actually does: addresses arrive through the forms on this site, they are stored in
+// Printopack's own database, and every marketing message carries one-click unsubscribe.
+const s = singleton('settings');
+const company = s.company || 'Printopack - Saudi Modern Packaging Factory Co. Ltd.';
+const companyAr = s.companyAr || 'برنتوباك - مصنع التغليف السعودي الحديث المحدود';
+const email = s.email || 'info@printopack.com.sa';
+const address = s.address || 'Industrial Area 5, Unit 10, 8508, Jeddah 22428, Saudi Arabia';
+const addressAr = s.addressAr || 'المنطقة الصناعية 5، وحدة 10، 8508، جدة 22428، المملكة العربية السعودية';
+
+const content = {
+  meta: {
+    title: "Privacy - Printopack",
+    description: "How Printopack collects, uses and protects the personal data you send through this website, and how to ask for it to be removed.",
+  },
+  header: {
+    eyebrow: { en: "Privacy", ar: "الخصوصية" },
+    title: { en: "Your data, and what we do with it.", ar: "بياناتكم، وما نفعله بها." },
+    lede: {
+      en: "This notice explains what we collect through this website, why we hold it, how long we keep it, and how to have it removed. It is written to be read, not to be waived through.",
+      ar: "يوضّح هذا الإشعار ما نجمعه عبر هذا الموقع، ولماذا نحتفظ به، وإلى متى، وكيف تطلبون حذفه. وقد كُتب ليُقرأ، لا ليُمرَّر.",
+    },
+  },
+  sections: [
+    {
+      title: { en: "Who is responsible", ar: "الجهة المسؤولة" },
+      body: [{
+        en: `${company}, ${address}. For anything on this page, write to ${email} and a person will answer.`,
+        ar: `${companyAr}، ${addressAr}. لأي أمر يخص هذه الصفحة، راسلونا على ${email} وسيردّ عليكم شخص مسؤول.`,
+      }],
+    },
+    {
+      title: { en: "What we collect, and only when you send it", ar: "ما نجمعه، وعند إرسالكم له فقط" },
+      body: [{
+        en: "We collect what you type into a form on this site: your name, your email address, and where you provide them, your telephone number, company and message. If you apply for a role, the CV and covering letter you attach. We record the date, and the country you selected so your enquiry reaches the right office.",
+        ar: "نجمع ما تكتبونه في نماذج هذا الموقع: الاسم والبريد الإلكتروني، وعند تزويدنا بها، رقم الهاتف واسم الشركة والرسالة. وإن تقدّمتم لوظيفة، السيرة الذاتية وخطاب التقديم المرفقان. ونسجّل التاريخ والدولة التي اخترتموها ليصل طلبكم إلى المكتب المختص.",
+      }, {
+        en: "We do not use advertising trackers, we do not build profiles, and we do not sell or rent your details to anyone. This site sets no marketing cookies.",
+        ar: "لا نستخدم أدوات تتبّع إعلانية، ولا نبني ملفات شخصية، ولا نبيع بياناتكم أو نؤجّرها لأي جهة. ولا يضع هذا الموقع أي ملفات ارتباط تسويقية.",
+      }],
+    },
+    {
+      title: { en: "Why we are allowed to hold it", ar: "الأساس النظامي لحفظها" },
+      body: [{
+        en: "If you sent an enquiry or applied for a role, we hold your details to answer you and to carry out the business relationship that follows. That is the basis, and it is recorded against your record together with the date.",
+        ar: "إذا أرسلتم استفساراً أو تقدّمتم لوظيفة، فنحن نحتفظ ببياناتكم للردّ عليكم ولإتمام العلاقة التجارية المترتبة على ذلك. هذا هو الأساس، ويُسجَّل مع بياناتكم مقروناً بالتاريخ.",
+      }, {
+        en: "If you subscribed to our news, that is your consent to receive it, and you may withdraw it at any time. Withdrawing it does not affect anything else, and it does not stop us answering an enquiry you sent.",
+        ar: "وإذا اشتركتم في نشرتنا الإخبارية، فذلك موافقتكم على استلامها، ويمكنكم سحبها في أي وقت. ولا يؤثّر سحبها على أي شيء آخر، ولا يمنعنا من الردّ على استفسار أرسلتموه.",
+      }],
+    },
+    {
+      title: { en: "Email from us, and how to stop it", ar: "رسائلنا البريدية وكيفية إيقافها" },
+      body: [{
+        en: "We send two kinds of email. A reply to your enquiry, which is between you and the office handling it. And, if you subscribed or are a customer of ours, occasional news about our capabilities, certifications and exhibitions.",
+        ar: "نرسل نوعين من الرسائل. ردّاً على استفساركم، وهو بينكم وبين المكتب الذي يتولّاه. وأخباراً متفرّقة عن إمكاناتنا وشهاداتنا ومعارضنا، إن كنتم مشتركين أو من عملائنا.",
+      }, {
+        en: "Every news message carries an unsubscribe link that works with one click and takes effect immediately, with nothing to log into and no reason to give. You can also write to us and we will remove you ourselves.",
+        ar: "تحمل كل رسالة إخبارية رابط إلغاء اشتراك يعمل بنقرة واحدة ويسري فوراً، دون تسجيل دخول ودون إبداء سبب. ويمكنكم أيضاً مراسلتنا وسنتولّى إزالتكم بأنفسنا.",
+      }],
+    },
+    {
+      title: { en: "How long we keep it", ar: "مدة الاحتفاظ" },
+      body: [{
+        en: "Enquiries are kept for as long as the business relationship or the record of it is useful, and reviewed periodically. Job applications are kept for twelve months from the date they are sent, then deleted, unless you ask us to keep them longer. An address that has unsubscribed is kept on a do-not-send list rather than deleted, because that is the only way to be certain we never write to it again.",
+        ar: "تُحفظ الاستفسارات ما دامت العلاقة التجارية أو سجلّها ذا فائدة، وتُراجَع دورياً. وتُحفظ طلبات التوظيف اثني عشر شهراً من تاريخ إرسالها ثم تُحذف، ما لم تطلبوا الاحتفاظ بها مدة أطول. أمّا العنوان الذي أُلغي اشتراكه فيُحفَظ في قائمة المنع لا يُحذف، لأن ذلك وحده يضمن ألّا نراسله مرة أخرى.",
+      }],
+    },
+    {
+      title: { en: "Your rights", ar: "حقوقكم" },
+      body: [{
+        en: "You may ask what we hold about you, ask for it to be corrected, ask for a copy, or ask for it to be deleted. Write to us at the address above and we will answer within thirty days. If you are not satisfied with our answer, you may raise it with the Saudi Data & Artificial Intelligence Authority.",
+        ar: "لكم أن تطلبوا معرفة ما نحتفظ به عنكم، أو تصحيحه، أو الحصول على نسخة منه، أو حذفه. راسلونا على العنوان أعلاه وسنردّ خلال ثلاثين يوماً. وإن لم يرضكم ردّنا، فلكم رفع الأمر إلى الهيئة السعودية للبيانات والذكاء الاصطناعي.",
+      }],
+    },
+    {
+      title: { en: "Where it is kept", ar: "مكان الحفظ" },
+      body: [{
+        en: "Your details are held in Printopack's own database on our hosting provider's infrastructure, reachable only by our marketing team through a password-protected dashboard. Attachments you send are held with the enquiry they came with. Email is sent through a reputable delivery provider under our own account.",
+        ar: "تُحفظ بياناتكم في قاعدة بيانات برنتوباك الخاصة لدى مزوّد الاستضافة، ولا يصل إليها إلا فريق التسويق لدينا عبر لوحة تحكّم محمية بكلمة مرور. وتُحفظ المرفقات التي ترسلونها مع الطلب الذي وردت معه. وتُرسَل الرسائل عبر مزوّد إرسال موثوق تحت حسابنا الخاص.",
+      }],
+    },
+  ],
+  updated: {
+    en: "This notice was last updated in August 2026.",
+    ar: "حُدِّث هذا الإشعار آخر مرة في أغسطس 2026.",
+  },
+};
+const c = content;
+---
+<Base title={c.meta.title} description={c.meta.description}>
+  <section class="page-head">
+    <div class="wrap-wide">
+      <div class="page-head-inner">
+        <span class="eyebrow"><Bi en={c.header.eyebrow.en} ar={c.header.eyebrow.ar} /></span>
+        <h1><Bi en={c.header.title.en} ar={c.header.title.ar} /></h1>
+        <p class="lede"><Bi en={c.header.lede.en} ar={c.header.lede.ar} /></p>
+      </div>
+    </div>
+  </section>
+
+  <section class="legal">
+    <div class="wrap-wide">
+      <div class="legal-body">
+        {c.sections.map((s) => (
+          <article class="legal-sec">
+            <h2><Bi en={s.title.en} ar={s.title.ar} /></h2>
+            {s.body.map((p) => (<p><Bi en={p.en} ar={p.ar} /></p>))}
+          </article>
+        ))}
+        <p class="legal-updated"><Bi en={c.updated.en} ar={c.updated.ar} /></p>
+      </div>
+    </div>
+  </section>
+</Base>
+
+<style>
+  .page-head{padding-block:clamp(56px,8vw,104px) clamp(30px,4vw,52px);background:var(--cream);border-bottom:1px solid var(--line)}
+  .page-head-inner{max-width:820px}
+  .page-head h1{margin:20px 0 22px;font-size:clamp(36px,5vw,64px)}
+  .page-head .lede{max-width:62ch}
+  .legal{padding-block:clamp(44px,6vw,84px)}
+  .legal-body{max-width:74ch}
+  .legal-sec{padding-block:clamp(22px,2.6vw,32px);border-bottom:1px solid var(--line)}
+  .legal-sec:last-of-type{border-bottom:none}
+  .legal-sec h2{font-size:clamp(20px,2.2vw,26px);margin-bottom:14px}
+  .legal-sec p{margin-bottom:12px;line-height:1.75;color:var(--muted)}
+  .legal-sec p:last-child{margin-bottom:0}
+  .legal-updated{margin-top:26px;font-size:13.5px;color:var(--faint)}
+</style>

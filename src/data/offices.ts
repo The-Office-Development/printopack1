@@ -15,7 +15,18 @@ import { collection } from '../lib/content';
 import { reachMap } from './reach-map';
 
 export type Bi = { en: string; ar: string };
-export type MapOffice = { cc: string; name: Bi; role: Bi; place: Bi; email: string; phone: string };
+export type MapOffice = { cc: string; name: Bi; role: Bi; place: Bi; email: string; phone: string;
+  /** The manager's picture and, until one is uploaded, their initials. Shown on the selected
+   *  office card so the enquiry has a face against it. */
+  photo: string; mono: string };
+
+/** Initials for the photo placeholder: the manager's, falling back to the office name. */
+const initials = (name: string, fallback: string) => {
+  const parts = String(name || '').trim().split(/\s+/).filter(Boolean);
+  const real = parts.filter((w) => w.toLowerCase() !== 'name');
+  const src = real.length ? real : String(fallback || '').trim().split(/\s+/);
+  return src.slice(0, 2).map((w) => w[0] || '').join('').toUpperCase();
+};
 
 /** Country labels for the map. These are country names, not client copy, so they live in code
  *  rather than becoming another thing for the creative manager to maintain and mistype. When
@@ -74,6 +85,8 @@ for (const o of collection('offices')) {
     place: redundant ? { en: '', ar: '' } : label,
     email: o.email || '',
     phone: o.phone || '',
+    photo: o.photo || '',
+    mono: initials(o.staffName, o.city),
   };
 }
 

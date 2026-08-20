@@ -7,7 +7,12 @@ export type Post = { date: string; img: string; cat: Bi; title: Bi; link?: strin
 
 export const category: Bi = { en: "General Information", ar: "معلومات عامة" };
 
-export const posts: Post[] = collection('news').map((r) => ({
+// Draft posts stay off the public site. The admin offers a Draft/Published switch on every
+// post and it has to mean something: careers already filtered on the same field, news did not,
+// so a half-written post went live at the next publish.
+export const posts: Post[] = collection('news')
+  .filter((r) => (r.status || 'published') === 'published')
+  .map((r) => ({
   date: displayDate(r.date),
   img: r.image,
   cat: { en: r.category || category.en, ar: r.categoryAr || category.ar },

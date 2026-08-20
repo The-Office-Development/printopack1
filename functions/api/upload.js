@@ -17,7 +17,11 @@ const FLOOR_KB = 40, CEIL_KB = 600, DEFAULT_KB = 400;
 // those are the only two types that ever legitimately arrive. This is the security boundary, so
 // the allowlist is enforced again rather than trusted: anything else (PNG/GIF/SVG/HEIC/etc.) is
 // refused, which keeps the served site to a single, fast, predictable image format.
-const EXT = { 'image/webp': 'webp', 'image/jpeg': 'jpg' };
+// PNG is here for one reason: Safari's canvas cannot export WebP, and flattening a
+// transparent logo to JPEG puts it on a black background. On that path the admin sends PNG
+// and keeps the alpha. SVG stays refused (it can carry script and would be served from this
+// origin) and video never belongs here at all.
+const EXT = { 'image/webp': 'webp', 'image/jpeg': 'jpg', 'image/png': 'png' };
 
 async function maxBytes(env) {
   try {

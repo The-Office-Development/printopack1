@@ -6,7 +6,11 @@
 "use strict";
 var $=function(s,c){return (c||document).querySelector(s);};
 var root=document.getElementById('root');
-function esc(s){var d=document.createElement('div');d.textContent=s==null?'':String(s);return d.innerHTML;}
+function esc(s){var d=document.createElement('div');d.textContent=s==null?'':String(s);
+ /* textContent escapes &, < and >, but not quotes, and almost every use of this is inside a
+    double-quoted HTML attribute. A product called 24" Reel used to truncate the field at the
+    quote and save the truncated text back over the record. */
+ return d.innerHTML.replace(/"/g,'&quot;').replace(/'/g,'&#39;');}
 function uid(){return 'x'+Date.now().toString(36)+Math.random().toString(36).slice(2,6);}
 function today(){return new Date().toISOString().slice(0,10);}
 function fmtDate(d){if(!d)return '';var p=new Date(d);if(isNaN(p))return d;return p.toLocaleDateString('en-GB',{day:'numeric',month:'short',year:'numeric'});}
@@ -36,7 +40,11 @@ var ICON={
  publish:'<path d="M12 19V5"/><path d="M6 11l6-6 6 6"/><path d="M4 21h16"/>',
  up:'<path d="M18 15l-6-6-6 6"/>',
  down:'<path d="M6 9l6 6 6-6"/>',
- external:'<path d="M18 13v6a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V8a2 2 0 0 1 2-2h6"/><path d="M15 3h6v6"/><path d="M10 14L21 3"/>'
+ external:'<path d="M18 13v6a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V8a2 2 0 0 1 2-2h6"/><path d="M15 3h6v6"/><path d="M10 14L21 3"/>',
+ inbox:'<path d="M3 13h5l2 3h4l2-3h5"/><path d="M4.5 6.5h15L21 13v5a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-5z"/>',
+ archive:'<rect x="3" y="4" width="18" height="4" rx="1"/><path d="M5 8v10a2 2 0 0 0 2 2h10a2 2 0 0 0 2-2V8"/><path d="M10 12h4"/>',
+ attach:'<path d="M21 12.5l-8.5 8.5a5 5 0 0 1-7-7l9-9a3.5 3.5 0 0 1 5 5l-9 9a2 2 0 0 1-3-3l8-8"/>',
+ mail:'<rect x="3" y="5" width="18" height="14" rx="2"/><path d="M3 7l9 6 9-6"/>'
 };
 function svg(n){return '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-linecap="round" stroke-linejoin="round">'+(ICON[n]||'')+'</svg>';}
 
@@ -66,6 +74,16 @@ function dataKB(d){return Math.round((d.length-d.indexOf(',')-1)*0.75/1024);}
    input is fenced too: HEIC/TIFF/BMP/AVIF decode inconsistently across browsers and would fail
    confusingly, GIF is animated (against the no-motion brief), and SVG can carry script. */
 var OK_UPLOAD_TYPES={'image/jpeg':1,'image/png':1,'image/webp':1};
+/* True when any pixel is not fully opaque. Sampling the alpha channel is what decides whether
+   a picture may be flattened to JPEG; a photograph never trips it, a cut-out logo always does. */
+function hasAlpha(c){
+ try{
+  var d=c.getContext('2d').getImageData(0,0,c.width,c.height).data;
+  /* Every 40th pixel: a transparent background is thousands of pixels, never a lone one. */
+  for(var i=3;i<d.length;i+=4*40){if(d[i]<250)return true;}
+  return false;
+ }catch(e){return true;} /* unreadable canvas: assume alpha and keep PNG, never flatten */
+}
 function prepImage(f,box,cb){
  if(!OK_UPLOAD_TYPES[f.type]){toast('Only JPG, PNG or WebP images are accepted (they load fastest). Save or export other formats as one of these first. A video goes in as a YouTube or Vimeo link.','err');return;}
  var url=URL.createObjectURL(f),im=new Image();
@@ -77,11 +95,32 @@ function prepImage(f,box,cb){
   c.getContext('2d').drawImage(im,0,0,c.width,c.height);
   /* WebP keeps transparency, so logos on a transparent background survive. A browser that
      cannot encode WebP silently returns a PNG data URL, in which case fall back to JPEG. */
-  var q=0.82,out=c.toDataURL('image/webp',q);
-  var type=out.slice(0,15)==='data:image/webp'?'image/webp':'image/jpeg';
-  if(type==='image/jpeg')out=c.toDataURL(type,q);
   var cap=imgMaxKB();
-  while(dataKB(out)>cap&&q>0.4){q=Math.round((q-0.1)*100)/100;out=c.toDataURL(type,q);}
+  /* WebP keeps transparency and is what every modern browser encodes. Safari's canvas cannot
+     export WebP and silently hands back a PNG data URL instead. The old fallback then re-encoded
+     to JPEG, which has no alpha, so on a Mac or an iPhone every transparent partner logo and
+     product cut-out was saved onto a black background. Now the fallback keeps the alpha: a
+     picture that needs transparency stays PNG and is fitted under the limit by size rather
+     than by quality, and only a photograph (no alpha) falls back to JPEG. */
+  var q=0.82,out=c.toDataURL('image/webp',q);
+  var isWebp=out.slice(0,15)==='data:image/webp';
+  if(isWebp){
+   while(dataKB(out)>cap&&q>0.4){q=Math.round((q-0.1)*100)/100;out=c.toDataURL('image/webp',q);}
+  }else if(hasAlpha(c)){
+   out=c.toDataURL('image/png');
+   /* PNG has no quality dial, so shrink the picture itself until it fits. 900px on the long
+      edge is the floor: below that a logo starts to look soft on a retina screen. */
+   var w=c.width,h=c.height;
+   while(dataKB(out)>cap&&Math.max(w,h)>900){
+    w=Math.round(w*0.85);h=Math.round(h*0.85);
+    var c2=document.createElement('canvas');c2.width=w;c2.height=h;
+    c2.getContext('2d').drawImage(im,0,0,w,h);
+    c=c2;out=c.toDataURL('image/png');
+   }
+  }else{
+   out=c.toDataURL('image/jpeg',q);
+   while(dataKB(out)>cap&&q>0.4){q=Math.round((q-0.1)*100)/100;out=c.toDataURL('image/jpeg',q);}
+  }
   if(dataKB(out)>cap){toast('That picture is '+dataKB(out)+' KB and will not compress under the '+cap+' KB limit. Crop it or use a smaller one.','err');return;}
   cb(out,dataKB(out));
  };
@@ -128,6 +167,16 @@ var COUNTRIES=[
  {cc:'mr',en:'Mauritania',ar:'موريتانيا'},
  {cc:'dj',en:'Djibouti',ar:'جيبوتي'}
 ];
+
+/* The options for an office's "Country on the map". Built from COUNTRIES rather than typed
+   out a second time: the hand-written list had only 13 of the 20 codes, so switching on any
+   of UAE, Bahrain, Oman, Qatar, Lebanon, Palestine, Mauritania or Djibouti produced an office
+   whose stored cc matched no option. The select then rendered blank and the first save wrote
+   that blank back, silently unlinking the country from the map. Labels are shown instead of
+   codes because "sa" means nothing to the person choosing. */
+var CC_OPTIONS=[{v:'',l:'Not on the map (a branch inside a country that already has an office)'}]
+ .concat(COUNTRIES.map(function(c){return {v:c.cc,l:c.en};}))
+ .concat([{v:'int',l:'International Sales (no country to colour)'}]);
 
 var IMG={cat:function(i){return '/images/cat-'+i+'.png';},dept:function(i){return '/images/dept-'+i+'.jpg';},client:function(i){return '/images/clients/client-'+i+'.png';}};
 var SEED={
@@ -293,28 +342,62 @@ function loadLocal(){
 }
 
 /* api backend calls */
+/* A picture is sent to /api/upload first and the record then stores the path it came back
+   with. An upload that fails must fail the whole save: letting it through left the raw
+   base64 picture sitting inside the record, which the server stores as ordinary text, so a
+   400 KB photograph quietly became a 400 KB row that no page could ever display. */
 function apiUploadDataUrls(rec){
- var jobs=[];Object.keys(rec).forEach(function(k){var v=rec[k];if(typeof v==='string'&&v.slice(0,5)==='data:'){jobs.push(fetch(API+'/upload',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({field:k,dataUrl:v})}).then(function(r){return r.json();}).then(function(o){if(o&&o.url)rec[k]=o.url;}));}});
+ var jobs=[];
+ Object.keys(rec).forEach(function(k){
+  var v=rec[k];
+  if(typeof v==='string'&&v.slice(0,5)==='data:'){
+   jobs.push(apiSend(API+'/upload',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({field:k,dataUrl:v})})
+    .then(function(r){return r.json();})
+    .then(function(o){
+     if(!o||!o.url)throw new Error('upload returned no address');
+     rec[k]=o.url;
+    }));
+  }
+ });
  return Promise.all(jobs).then(function(){return rec;});
 }
-function apiSaveRecord(collection,rec){return apiUploadDataUrls(rec).then(function(r){return fetch(API+'/'+collection,{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify(r)});}).then(function(r){if(!r.ok)throw 0;});}
-function apiDeleteRecord(collection,id){return fetch(API+'/'+collection+'/'+encodeURIComponent(id),{method:'DELETE'}).then(function(r){if(!r.ok)throw 0;});}
-function apiSaveOrder(collection,ids){return fetch(API+'/order/'+collection,{method:'PUT',headers:{'Content-Type':'application/json'},body:JSON.stringify({ids:ids})}).then(function(r){if(!r.ok)throw 0;});}
-function apiSaveSingleton(key,o){return fetch(API+'/singleton/'+key,{method:'PUT',headers:{'Content-Type':'application/json'},body:JSON.stringify(o)}).then(function(r){if(!r.ok)throw 0;});}
+function apiSaveRecord(collection,rec){return apiUploadDataUrls(rec).then(function(r){return apiSend(API+'/'+collection,{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify(r)});});}
+function apiDeleteRecord(collection,id){return apiSend(API+'/'+collection+'/'+encodeURIComponent(id),{method:'DELETE'});}
+function apiSaveOrder(collection,ids){return apiSend(API+'/order/'+collection,{method:'PUT',headers:{'Content-Type':'application/json'},body:JSON.stringify({ids:ids})});}
+function apiSaveSingleton(key,o){return apiSend(API+'/singleton/'+key,{method:'PUT',headers:{'Content-Type':'application/json'},body:JSON.stringify(o)});}
 
 /* unified writes (optimistic: update CACHE now, persist in the background) */
+function labelOf(collection,rec){
+ var m=MODELS[collection];var nm=rec&&(rec.name||rec.title||rec.city);
+ return (m?m.singular:collection)+(nm?' \u201c'+String(nm).slice(0,40)+'\u201d':'');
+}
 function saveRecord(collection,rec){
  var arr=coll(collection);var i=arr.findIndex(function(x){return x.id===rec.id;});
  if(i>-1)arr[i]=rec;else arr.unshift(rec);
  pubTouch();
- if(MODE==='api')apiSaveRecord(collection,rec).catch(function(){toast('Save failed - check your connection','err');});
- else persistLocal();
+ if(MODE!=='api'){persistLocal();return;}
+ /* A snapshot, so a replay sends the record as it was when it was saved rather than as the
+    screen happens to be now. The SAME snapshot is reused on every retry: apiSaveRecord
+    swaps a picture's base64 for the address it was stored at, and starting from a fresh
+    copy each time would upload the same picture again on every attempt. */
+ var copy=JSON.parse(JSON.stringify(rec));
+ runWrite(labelOf(collection,rec),function(){
+  return apiSaveRecord(collection,copy).then(function(){
+   /* Put the stored addresses back into the record on screen, so editing it again does not
+      re-upload a picture that is already on the server. */
+   var live=coll(collection).filter(function(x){return x.id===copy.id;})[0];
+   if(live)Object.keys(copy).forEach(function(k){
+    if(typeof copy[k]==='string'&&copy[k].slice(0,9)==='/uploads/')live[k]=copy[k];
+   });
+  });
+ });
 }
 function deleteRecord(collection,id){
+ var gone=coll(collection).filter(function(x){return x.id===id;})[0];
  CACHE.entries[collection]=coll(collection).filter(function(x){return x.id!==id;});
  pubTouch();
- if(MODE==='api')apiDeleteRecord(collection,id).catch(function(){toast('Delete failed','err');});
- else persistLocal();
+ if(MODE!=='api'){persistLocal();return;}
+ runWrite('Deleting '+labelOf(collection,gone),function(){return apiDeleteRecord(collection,id);});
 }
 /* Every page renders its collection in stored order and none of them re-sort, so this is
    what decides what comes first on the public site. Swapping with the neighbour keeps it
@@ -325,11 +408,143 @@ function moveRecord(collection,id,dir){
  if(i<0||j<0||j>=arr.length)return false;
  var t=arr[i];arr[i]=arr[j];arr[j]=t;
  pubTouch();
- if(MODE==='api')apiSaveOrder(collection,arr.map(function(x){return x.id;})).catch(function(){toast('Could not save the new order','err');});
- else persistLocal();
+ if(MODE!=='api'){persistLocal();return true;}
+ var ids=arr.map(function(x){return x.id;});
+ runWrite('New order in '+((MODELS[collection]||{}).label||collection),function(){return apiSaveOrder(collection,ids);});
  return true;
 }
-function setObj(k,o){CACHE.singletons[k]=o;pubTouch();if(MODE==='api')apiSaveSingleton(k,o).catch(function(){toast('Save failed','err');});else persistLocal();}
+function setObj(k,o){
+ CACHE.singletons[k]=o;pubTouch();
+ if(MODE!=='api'){persistLocal();return;}
+ var copy=JSON.parse(JSON.stringify(o));
+ runWrite(k==='about'?'About & Home':'Settings',function(){return apiSaveSingleton(k,copy);});
+}
+
+/* Cloudflare Turnstile, mounted on demand. Both places that ask for the password (the login
+   screen and the re-authentication dialog) need the same widget under the same rules, and the
+   bot wall is server-driven: /api/config decides whether there is one at all. */
+function tsMount(host){
+ var st={on:false,token:null,widget:null,reset:function(){}};
+ fetch(API+'/config').then(function(r){return r.json();}).then(function(c){
+  if(!c||!c.turnstile)return;                                       /* no key configured: skip the wall */
+  st.on=true;
+  function draw(){st.widget=window.turnstile.render(host,{sitekey:c.turnstile,
+   callback:function(t){st.token=t;},
+   'expired-callback':function(){st.token=null;},
+   'error-callback':function(){st.token=null;}});}
+  if(window.turnstile&&window.turnstile.render){draw();return;}
+  var s=document.createElement('script');
+  s.src='https://challenges.cloudflare.com/turnstile/v0/api.js?render=explicit';
+  s.async=true;s.defer=true;s.onload=draw;document.head.appendChild(s);
+ }).catch(function(){});                                            /* config unreachable: submit will fail cleanly */
+ st.reset=function(){if(st.on&&window.turnstile&&st.widget!=null){window.turnstile.reset(st.widget);st.token=null;}};
+ return st;
+}
+
+/* ---------------- writes that cannot be lost quietly ----------------
+   Every edit updates the screen first and is sent to the server behind it, which is what
+   makes the dashboard feel instant. The cost is that a failed send is invisible unless
+   something says so, and the sign-in lasts 12 hours: an afternoon of work after it expired
+   used to look completely saved, show a 2.6-second "check your connection", and be gone on
+   the next reload.
+   So a failed write is kept, named, and shown in a bar that stays until it is dealt with;
+   an expired sign-in opens the password dialog and replays the work the moment it is back. */
+var FAILED=[];
+function apiSend(url,opts){
+ return fetch(url,opts||{}).then(function(r){
+  if(r.ok)return r;
+  var e=new Error('http '+r.status);e.status=r.status;throw e;
+ });
+}
+/* label: what the client would call the thing they just did, so the bar can name it. */
+function runWrite(label,fn){
+ fn().catch(function(e){
+  var expired=!!(e&&e.status===401);
+  FAILED.push({label:label,run:fn,expired:expired});
+  renderFailBar();
+  if(expired)openReauth();
+ });
+}
+function failBarEl(){
+ var el=document.getElementById('failbar');
+ if(!el){el=document.createElement('div');el.id='failbar';el.className='failbar';document.body.appendChild(el);}
+ return el;
+}
+function renderFailBar(){
+ var el=failBarEl();
+ if(!FAILED.length){el.className='failbar';el.innerHTML='';return;}
+ var expired=FAILED.some(function(f){return f.expired;});
+ var names=FAILED.map(function(f){return f.label;}).filter(function(v,i,a){return a.indexOf(v)===i;}).slice(0,3).join(', ');
+ el.className='failbar show'+(expired?' expired':'');
+ el.innerHTML='<div class="fb-text"><b>'+FAILED.length+' change'+(FAILED.length===1?'':'s')+' not saved on the server.</b> '+
+  esc(names)+(FAILED.length>3?' and more':'')+'. '+
+  (expired?'Your sign-in expired while you were working. Sign in again and they will be saved.'
+          :'The server could not be reached. Keep this page open and try again.')+'</div>'+
+  '<div class="fb-acts">'+(expired
+   ?'<button class="btn btn-ok btn-sm" id="fbAuth">Sign in and save</button>'
+   :'<button class="btn btn-ok btn-sm" id="fbRetry">Try again</button>')+
+  '<button class="btn btn-ghost btn-sm" id="fbReload">Discard and reload</button></div>';
+ var a=document.getElementById('fbAuth');if(a)a.addEventListener('click',openReauth);
+ var r=document.getElementById('fbRetry');if(r)r.addEventListener('click',function(){retryFailed();});
+ var d=document.getElementById('fbReload');
+ if(d)d.addEventListener('click',function(){
+  if(!confirm('Discard the '+FAILED.length+' unsaved change'+(FAILED.length===1?'':'s')+' and reload what is on the server?'))return;
+  FAILED=[];renderFailBar();boot();
+ });
+}
+/* Replays every failed write in the order it was made, so a create followed by an edit of the
+   same record cannot land the wrong way round. Anything that fails again stays in the list. */
+function retryFailed(){
+ var queue=FAILED.slice();FAILED=[];renderFailBar();
+ var still=[];
+ return queue.reduce(function(chain,item){
+  return chain.then(function(){
+   return item.run().catch(function(e){item.expired=!!(e&&e.status===401);still.push(item);});
+  });
+ },Promise.resolve()).then(function(){
+  FAILED=still;renderFailBar();
+  if(!still.length)toast('All changes saved','ok');
+  else if(still.some(function(f){return f.expired;}))openReauth();
+  else toast('Still could not save. Please check your connection.','err');
+  pubRefresh();
+ });
+}
+/* Sign in again without losing the page. The dashboard stays exactly as it is behind this. */
+function openReauth(){
+ if(document.getElementById('reauthHost'))return;                    /* one dialog at a time */
+ var host=document.createElement('div');host.id='reauthHost';
+ host.innerHTML='<div class="overlay show"></div>'+
+  '<div class="pubm" role="dialog" aria-modal="true">'+
+   '<div class="pubm-head"><h2>Please sign in again</h2></div>'+
+   '<div class="pubm-body">'+
+    '<p class="pubm-intro">Your sign-in lasts 12 hours and has expired. Nothing you typed is lost: sign in and the changes waiting here are saved straight away.</p>'+
+    '<div class="field"><label>Password</label><input type="password" id="rapw" autocomplete="current-password" autofocus></div>'+
+    '<div id="rats" style="margin:8px 0 0"></div>'+
+    '<p class="pubm-err" id="raerr" hidden></p>'+
+   '</div>'+
+   '<div class="pubm-foot"><button class="btn btn-ghost" id="raCancel">Not now</button>'+
+    '<button class="btn btn-ok" id="raGo">Sign in and save</button></div>'+
+  '</div>';
+ document.body.appendChild(host);
+ var ts=tsMount('#rats');
+ var err=host.querySelector('#raerr'),go=host.querySelector('#raGo');
+ function fail(m){go.disabled=false;go.textContent='Sign in and save';err.textContent=m;err.hidden=false;ts.reset();}
+ host.querySelector('#raCancel').addEventListener('click',function(){host.remove();});
+ function submit(){
+  var pw=host.querySelector('#rapw').value;err.hidden=true;
+  if(ts.on&&!ts.token){fail('Please complete the verification.');return;}
+  go.disabled=true;go.textContent='Signing in...';
+  fetch(API+'/login',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({password:pw,turnstileToken:ts.token})})
+   .then(function(r){
+    if(r.ok){try{localStorage.setItem(SKEY,'1');}catch(e){}host.remove();retryFailed();return;}
+    return r.json().catch(function(){return {};}).then(function(o){
+     fail(r.status===401?'Wrong password. Please try again.':((o&&o.error)||'Sign in failed. Please try again.'));
+    });
+   }).catch(function(){fail('Network error. Please check your connection and try again.');});
+ }
+ go.addEventListener('click',submit);
+ host.querySelector('#rapw').addEventListener('keydown',function(e){if(e.key==='Enter')submit();});
+}
 
 /* boot: ask the backend for content. Three outcomes:
    - 200  -> deployed and the session cookie is valid: load content, show the dashboard.
@@ -347,6 +562,7 @@ function boot(){
   COLLECTIONS.forEach(function(k){if(!CACHE.entries[k])CACHE.entries[k]=[];});
   try{localStorage.setItem(SKEY,'1');}catch(e){}
   render();pubRefresh();
+  enqLoad(function(){syncSidebar();if(view==='dashboard')renderView();});
  }).catch(function(){renderLogin('Cannot reach the backend. The admin requires the live backend to sign in.');});
 }
 
@@ -395,7 +611,7 @@ var MODELS={
   note:"Shown on every product group page under \"What every order includes\"."},
  offices:{label:"Offices & Contact",singular:"Office",icon:"offices",group:"Site",
   columns:[{type:"title",field:"city",sub:"staffName"},{type:"text",field:"phone"},{type:"text",field:"email"}],
-  fields:[{name:"photo",type:"image",label:"Office manager's photo",rec:"420 × 420px, square. Shown beside the office on the contact page; initials stand in until one is added."},{name:"city",type:"text",label:"Office (English)",half:true},{name:"cityAr",type:"text",label:"Office",ar:"Arabic",rtl:true,half:true},{name:"group",type:"select",label:"Group",half:true,options:["Saudi Arabia","Regional & Export"]},{name:"cc",type:"select",label:"Country on the map",half:true,options:["","sa","kw","jo","iq","eg","sd","tn","ly","dz","ma","ye","sy","int"],rec:"Which country this office lights up on the map, and whose details the map shows. Leave blank for a branch inside a country that already has an office (Riyadh, Dammam). 'int' is International Sales, which appears in the selector but has no country to colour."},{name:"country",type:"text",label:"Country / area (English)",half:true},{name:"countryAr",type:"text",label:"Country / area",ar:"Arabic",rtl:true,half:true},{name:"staffName",type:"text",label:"Manager name (English)",half:true},{name:"staffNameAr",type:"text",label:"Manager name",ar:"Arabic",rtl:true,half:true},{name:"staffRole",type:"text",label:"Manager title (English)",half:true},{name:"staffRoleAr",type:"text",label:"Manager title",ar:"Arabic",rtl:true,half:true},{name:"phone",type:"text",label:"Phone",half:true},{name:"email",type:"text",label:"Email",half:true}]}
+  fields:[{name:"photo",type:"image",label:"Office manager's photo",rec:"420 × 420px, square. Shown beside the office on the contact page; initials stand in until one is added."},{name:"city",type:"text",label:"Office (English)",half:true},{name:"cityAr",type:"text",label:"Office",ar:"Arabic",rtl:true,half:true},{name:"group",type:"select",label:"Group",half:true,options:["Saudi Arabia","Regional & Export"]},{name:"cc",type:"select",label:"Country on the map",half:true,options:CC_OPTIONS,rec:"Which country this office lights up on the map, and whose details the map shows. Leave blank for a branch inside a country that already has an office (Riyadh, Dammam). 'int' is International Sales, which appears in the selector but has no country to colour."},{name:"country",type:"text",label:"Country / area (English)",half:true},{name:"countryAr",type:"text",label:"Country / area",ar:"Arabic",rtl:true,half:true},{name:"staffName",type:"text",label:"Manager name (English)",half:true},{name:"staffNameAr",type:"text",label:"Manager name",ar:"Arabic",rtl:true,half:true},{name:"staffRole",type:"text",label:"Manager title (English)",half:true},{name:"staffRoleAr",type:"text",label:"Manager title",ar:"Arabic",rtl:true,half:true},{name:"phone",type:"text",label:"Phone",half:true},{name:"email",type:"text",label:"Email",half:true}]}
 };
 /* The fields that MUST be filled before a record can be saved, per model. These are the
    identifying names/titles, the visual-anchor images, and the categorisation each record needs
@@ -455,27 +671,15 @@ function renderLogin(msg){
  if(msg){err.textContent=msg;err.hidden=false;}
  /* Turnstile: the bot wall is optional and server-driven. Ask /api/config whether a site key is
     set; if so, render the widget and hold its token, requiring it before we allow a submit. */
- var tsToken=null,tsOn=false,tsWidget=null;
- fetch(API+'/config').then(function(r){return r.json();}).then(function(c){
-  if(!c||!c.turnstile)return;                                       /* no key configured: skip the wall */
-  tsOn=true;
-  function draw(){tsWidget=window.turnstile.render('#lts',{sitekey:c.turnstile,
-   callback:function(t){tsToken=t;},
-   'expired-callback':function(){tsToken=null;},
-   'error-callback':function(){tsToken=null;}});}
-  if(window.turnstile&&window.turnstile.render){draw();return;}
-  var s=document.createElement('script');
-  s.src='https://challenges.cloudflare.com/turnstile/v0/api.js?render=explicit';
-  s.async=true;s.defer=true;s.onload=draw;document.head.appendChild(s);
- }).catch(function(){});                                            /* config unreachable: submit will fail cleanly */
- function resetTs(){if(tsOn&&window.turnstile&&tsWidget!=null){window.turnstile.reset(tsWidget);tsToken=null;}}
+ var ts=tsMount('#lts');
+ function resetTs(){ts.reset();}
  $('#lf').addEventListener('submit',function(e){
   e.preventDefault();
   var pw=$('#lpw').value;err.hidden=true;
   function fail(msg){btn.disabled=false;btn.textContent='Sign in';err.textContent=msg;err.hidden=false;}
-  if(tsOn&&!tsToken){fail('Please complete the verification.');return;}
+  if(ts.on&&!ts.token){fail('Please complete the verification.');return;}
   btn.disabled=true;btn.textContent='Signing in...';
-  fetch(API+'/login',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({password:pw,turnstileToken:tsToken})}).then(function(r){
+  fetch(API+'/login',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({password:pw,turnstileToken:ts.token})}).then(function(r){
    if(r.ok){localStorage.setItem(SKEY,'1');boot();return;}          /* cookie set: reload content */
    if(r.status===404){resetTs();return fail('The backend is not reachable, so sign in is unavailable here. Use the live site.');}
    return r.json().catch(function(){return {};}).then(function(o){  /* backend present but rejected */
@@ -499,13 +703,14 @@ function renderLogin(msg){
 
 /* ---------------- shell ---------------- */
 var view='dashboard';
-var NAV=[{k:'dashboard',label:'Dashboard',icon:'dash'},{grp:'Content'},{k:'news'},{k:'products'},{k:'team'},{k:'careers'},{k:'partners'},{k:'formats'},{k:'standard'},{grp:'Company'},{k:'factory'},{k:'quality'},{k:'responsibility'},{k:'values'},{k:'gallery'},{grp:'Site'},{k:'about',label:'About & Home',icon:'about'},{k:'offices'},{k:'countries',label:'Countries on the map',icon:'offices'},{k:'settings',label:'Settings',icon:'settings'},{k:'security',label:'Password',icon:'logout'}];
+var NAV=[{k:'dashboard',label:'Dashboard',icon:'dash'},{k:'enquiries',label:'Enquiries',icon:'inbox'},{grp:'Content'},{k:'news'},{k:'products'},{k:'team'},{k:'careers'},{k:'partners'},{k:'formats'},{k:'standard'},{grp:'Company'},{k:'factory'},{k:'quality'},{k:'responsibility'},{k:'values'},{k:'gallery'},{grp:'Site'},{k:'about',label:'About & Home',icon:'about'},{k:'offices'},{k:'countries',label:'Countries on the map',icon:'offices'},{k:'settings',label:'Settings',icon:'settings'},{k:'security',label:'Password',icon:'logout'}];
 function sidebar(){
  var items=NAV.map(function(n){
   if(n.grp)return '<div class="sb-group">'+n.grp+'</div>';
   if(n.k==='security'&&MODE!=='api')return ''; /* password change needs the live backend */
   var m=MODELS[n.k]; var label=n.label||(m&&m.label)||n.k; var icon=n.icon||(m&&m.icon)||'dash';
   var badge=m?'<span class="badge">'+coll(n.k).length+'</span>':'';
+  if(n.k==='enquiries')badge=ENQ.counts.unread?'<span class="badge alert">'+ENQ.counts.unread+'</span>':'';
   return '<div class="sb-item'+(view===n.k?' on':'')+'" data-nav="'+n.k+'">'+svg(icon)+'<span>'+label+'</span>'+badge+'</div>';
  }).join('');
  return '<aside class="sidebar"><div class="sb-brand"><img class="sb-logo" src="/images/printopack-logo-white.png" alt="Printopack"><small>System · Admin</small></div>'+
@@ -598,6 +803,18 @@ function pubRefresh(){
    client is never left guessing whether the website changed. */
 function openPubModal(){
  if(MODE!=='api'){toast('This is a preview copy. Publishing works on the live site.','err');return;}
+ if(FAILED.length){
+  toast('Some changes are not saved on the server yet. Save them before publishing.','err');
+  renderFailBar();return;
+ }
+ /* The change list was fetched once when the dashboard loaded, so after an afternoon of
+    editing the dialog described a site that no longer existed. Ask again, then draw. */
+ fetch(API+'/publish').then(function(r){return r.json();}).then(function(s){
+  if(s){PUB.pending=!!s.pending;PUB.publishedAt=s.publishedAt;PUB.canDeploy=s.canDeploy!==false;
+   PUB.changes=s.changes||[];PUB.firstPublish=!!s.firstPublish;pubRender();}
+ }).catch(function(){}).then(function(){drawPubModal();});
+}
+function drawPubModal(){
  var warn=PUB.canDeploy?'':'<p class="pubm-warn">The automatic rebuild is not set up, so publishing will save your changes but will not update the public website yet.</p>';
  var host=document.createElement('div');host.id='pubmHost';
  host.innerHTML='<div class="overlay show" id="pubmOv"></div>'+
@@ -631,6 +848,7 @@ function runPublish(host){
  fetch(API+'/publish',{method:'POST'}).then(function(r){if(!r.ok)throw 0;return r.json();}).then(function(o){
   PUB.busy=false;PUB.pending=false;PUB.publishedAt=Date.now();PUB.changes=[];PUB.firstPublish=false;pubRender();
   var deployed=!(o&&o.deployed===false);
+  var why=(o&&o.deployError)?' ('+o.deployError+')':'';
   /* A snapshot with no rebuild behind it looks identical from in here, so say so plainly
      rather than let the client believe the website changed. */
   body.innerHTML='<div class="pubm-done"><div class="pubm-check'+(deployed?'':' warnc')+'">'+svg(deployed?'publish':'edit')+'</div>'+
@@ -640,7 +858,7 @@ function runPublish(host){
       '<ul class="pubm-steps"><li><b>Now</b><span>changes saved</span></li>'+
       '<li><b>~1 to 2 min</b><span>the new version goes live at your web address</span></li></ul>'+
       '<p class="pubm-hint">You can close this and keep editing. Open your website in a minute or two, and refresh the page, to see the update.</p>'
-    : '<p>Your changes were saved, but the automatic rebuild is not switched on, so the public website will not change yet. Please let your developer know.</p>')+
+    : '<p>Your changes were saved, but the website was not asked to rebuild'+esc(why)+', so the public site will not change yet. Please let your developer know.</p>')+
    '</div>';
   foot.innerHTML='<button class="btn btn-ok" id="pubmDone">Done</button>';
   host.querySelector('#pubmDone').addEventListener('click',function(){host.remove();});
@@ -652,7 +870,37 @@ function runPublish(host){
   toast('Publish failed. Nothing was changed on the live site.','err');
  });
 }
-function topbar(title,crumb,actions){return '<div class="topbar"><div><div class="crumb">'+esc(crumb||'Printopack System')+'</div><h1>'+esc(title)+'</h1></div><div class="topbar-actions">'+(actions||'')+'</div></div>';}
+/* The menu button is rendered on every screen and hidden by CSS above 900px. Below that the
+   sidebar is off-canvas, and it holds the section list, Publish and Sign out, so without this
+   button the dashboard was a dead end on a phone: you could sign in and go nowhere. */
+function topbar(title,crumb,actions){
+ return '<div class="topbar">'+
+  '<button class="navtog" id="navtog" aria-label="Menu" aria-expanded="false">'+
+   '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-linecap="round"><path d="M4 7h16M4 12h16M4 17h16"/></svg>'+
+  '</button>'+
+  '<div class="topbar-head"><div class="crumb">'+esc(crumb||'Printopack System')+'</div><h1>'+esc(title)+'</h1></div>'+
+  '<div class="topbar-actions">'+(actions||'')+'</div></div>';
+}
+/* Opens and closes the off-canvas sidebar. navigate() already closes it after a section is
+   chosen, so choosing a section behaves the way a phone menu is expected to. */
+function setNav(open){
+ var app=root.querySelector('.app');if(!app)return;
+ app.classList.toggle('nav-open',!!open);
+ var t=document.getElementById('navtog');if(t)t.setAttribute('aria-expanded',open?'true':'false');
+ var scrim=document.getElementById('navscrim');
+ if(open&&!scrim){
+  scrim=document.createElement('div');scrim.id='navscrim';scrim.className='navscrim';
+  scrim.addEventListener('click',function(){setNav(false);});
+  document.body.appendChild(scrim);
+ }else if(!open&&scrim){scrim.remove();}
+}
+function bindNavToggle(){
+ var t=document.getElementById('navtog');
+ if(t)t.addEventListener('click',function(){
+  var app=root.querySelector('.app');
+  setNav(!(app&&app.classList.contains('nav-open')));
+ });
+}
 /* Full mount: build the shell once. The sidebar is deliberately NOT rebuilt on every click
    (that was what made navigation feel laggy and reload the logo); only the main panel is
    swapped by navigate(). The sidebar nav is bound here; each view binds its own controls. */
@@ -673,7 +921,7 @@ function navigate(v){
  view=v;
  renderView();
  syncSidebar();
- var app=root.querySelector('.app');if(app)app.classList.remove('nav-open');
+ setNav(false);
  // The window is the scroll container for long sections (.main has no overflow of its own),
  // so bring the window to the top on a section change. Without this, navigating from a long
  // section to a shorter one leaves the page scrolled past the new content and the browser
@@ -692,9 +940,18 @@ function syncSidebar(){
   el.classList.toggle('on',k===view);
   var b=el.querySelector('.badge');
   if(b&&MODELS[k])b.textContent=coll(k).length;
+  if(k==='enquiries'){
+   /* The unread count appears and disappears, so the badge itself has to be added and
+      removed rather than only having its number changed. */
+   if(ENQ.counts.unread){
+    if(!b){b=document.createElement('span');b.className='badge alert';el.appendChild(b);}
+    b.className='badge alert';b.textContent=ENQ.counts.unread;
+   }else if(b)b.remove();
+  }
  });
 }
-function renderView(){var m=$('#main');if(view==='dashboard')return dashView(m);if(view==='about')return aboutView(m);if(view==='countries')return countriesView(m);if(view==='settings')return settingsView(m);if(view==='security')return securityView(m);if(MODELS[view])return listView(m,view);}
+function renderView(){var m=$('#main');paintView(m);bindNavToggle();}
+function paintView(m){if(view==='dashboard')return dashView(m);if(view==='enquiries')return enquiriesView(m);if(view==='about')return aboutView(m);if(view==='countries')return countriesView(m);if(view==='settings')return settingsView(m);if(view==='security')return securityView(m);if(MODELS[view])return listView(m,view);}
 /* Rotate the single marketing password from inside the dashboard (API mode only). The new
    password takes effect immediately and is stored hashed in the database, so it is never
    frozen the way a hardcoded credential would be. */
@@ -737,11 +994,160 @@ function storageMeter(){
  }).catch(function(){});
 }
 
+/* ---------------- enquiries ----------------
+   Every message and job application sent from the website, in one place, with the CV
+   attached to the one it came with. This is the half of the dashboard that receives rather
+   than publishes: nothing here goes near the Publish button, and reading one changes
+   nothing on the public site.
+
+   The same rows are the mailing list's source. An address that arrives here is already a
+   contact in the mailing tool, in this same database, with the date and the reason it is
+   there recorded beside it. */
+var ENQ={items:[],counts:{},filter:'open',loading:false};
+function enqLoad(cb){
+ ENQ.loading=true;
+ fetch(API+'/enquiries?status='+encodeURIComponent(ENQ.filter)).then(function(r){
+  if(r.status===401){openReauth();throw 0;}
+  if(!r.ok)throw 0;return r.json();
+ }).then(function(d){
+  ENQ.items=(d&&d.items)||[];ENQ.counts=(d&&d.counts)||{};ENQ.loading=false;cb&&cb();
+ }).catch(function(){ENQ.loading=false;cb&&cb('Could not load the enquiries. Please check your connection.');});
+}
+function enqKindLabel(k){return k==='application'?'Job application':(k==='newsletter'?'Newsletter':'Enquiry');}
+function enquiriesView(m){
+ if(MODE!=='api'){
+  m.innerHTML=topbar('Enquiries','Inbox','')+'<div class="view"><div class="panel"><div class="empty">'+svg('inbox')+
+   '<h3>Available on the live site</h3><p>Enquiries are sent to the website itself, so they appear here once this dashboard is running on the live address.</p></div></div></div>';
+  bindNavToggle();return;
+ }
+ var seg='<div class="seg" id="enqseg">'+
+   ['open','archived','all'].map(function(f){
+    return '<button'+(ENQ.filter===f?' class="on"':'')+' data-f="'+f+'">'+(f==='open'?'Open':(f==='archived'?'Archived':'Everything'))+'</button>';
+   }).join('')+'</div>';
+ m.innerHTML=topbar('Enquiries','Inbox','<button class="btn btn-ghost" id="enqRefresh">Refresh</button>')+
+  '<div class="view"><div class="toolbar"><div class="search">'+svg('search')+'<input id="eq" placeholder="Search by name, company or address…"></div>'+seg+'</div>'+
+  '<div id="enqhost"><div class="panel"><div class="empty"><h3>Loading…</h3></div></div></div></div>';
+ bindNavToggle();
+ var host=$('#enqhost');
+ function paint(f){
+  var list=ENQ.items.filter(function(r){
+   if(!f)return true;
+   return JSON.stringify([r.name,r.email,r.company,r.subject,r.position,r.message]).toLowerCase().indexOf(f.toLowerCase())>-1;
+  });
+  if(!list.length){
+   host.innerHTML='<div class="panel"><div class="empty">'+svg('inbox')+'<h3>'+(f?'Nothing matches that search':'No enquiries here yet')+'</h3>'+
+    '<p>'+(f?'Try a different name or address.':'Messages sent from the contact page, job applications and newsletter sign-ups all arrive here.')+'</p></div></div>';
+   return;
+  }
+  host.innerHTML='<div class="panel"><table class="tbl"><thead><tr><th>From</th><th>About</th><th>Sent</th><th></th></tr></thead><tbody>'+
+   list.map(function(r){
+    var unread=r.status==='new';
+    var att=r.files?'<span class="pill tag" title="'+r.files+' attachment'+(r.files===1?'':'s')+'">'+r.files+' file'+(r.files===1?'':'s')+'</span>':'';
+    var notify=r.notified?'':'<span class="pill draft" title="'+esc(r.notify_error||'The office has not been emailed yet')+'">not emailed yet</span>';
+    return '<tr class="row'+(unread?' unread':'')+'" data-enq="'+esc(r.id)+'">'+
+     '<td><div class="t-title">'+esc(r.name||r.email)+'</div><div class="t-sub" dir="ltr">'+esc(r.email)+(r.company?' · '+esc(r.company):'')+'</div></td>'+
+     '<td><div class="t-title">'+esc(r.subject||r.position||enqKindLabel(r.kind))+'</div><div class="t-sub">'+esc(enqKindLabel(r.kind))+(r.reason?' · '+esc(r.reason):'')+' '+att+' '+notify+'</div></td>'+
+     '<td>'+esc(fmtDate(new Date(r.created_at).toISOString().slice(0,10)))+'</td>'+
+     '<td><div class="cell-actions"><button class="icon-btn" data-enq-open="'+esc(r.id)+'" title="Open">'+svg('edit')+'</button></div></td>'+
+    '</tr>';
+   }).join('')+'</tbody></table></div>';
+  host.querySelectorAll('[data-enq]').forEach(function(el){
+   el.addEventListener('click',function(){openEnquiry(el.getAttribute('data-enq'));});
+  });
+ }
+ enqLoad(function(err){
+  if(err){host.innerHTML='<div class="panel"><div class="empty"><h3>'+esc(err)+'</h3></div></div>';return;}
+  paint($('#eq').value);syncSidebar();
+ });
+ $('#eq').addEventListener('input',function(){paint(this.value);});
+ $('#enqRefresh').addEventListener('click',function(){enqLoad(function(){paint($('#eq').value);});});
+ $('#enqseg').querySelectorAll('button').forEach(function(b){
+  b.addEventListener('click',function(){
+   ENQ.filter=b.getAttribute('data-f');
+   $('#enqseg').querySelectorAll('button').forEach(function(x){x.classList.remove('on');});
+   b.classList.add('on');
+   enqLoad(function(){paint($('#eq').value);});
+  });
+ });
+}
+/* One enquiry, in full, with its attachments and a reply button that opens the mail client
+   with the address and subject already filled in. */
+function openEnquiry(id){
+ var r=ENQ.items.filter(function(x){return x.id===id;})[0];
+ if(!r)return;
+ var host=document.createElement('div');
+ var when=new Date(r.created_at);
+ var rows=[
+  ['From',esc(r.name||'')+' &lt;<span dir="ltr">'+esc(r.email)+'</span>&gt;'],
+  ['Company',esc(r.company||'')],
+  ['Telephone',r.phone?'<span dir="ltr">'+esc(r.phone)+'</span>':''],
+  ['About',esc(r.subject||r.position||enqKindLabel(r.kind))],
+  ['Type',esc(enqKindLabel(r.kind))+(r.reason?' · '+esc(r.reason):'')],
+  ['Routed to',r.route_email?'<span dir="ltr">'+esc(r.route_email)+'</span>':'<span class="muted">not routed</span>'],
+  ['Received',esc(when.toLocaleString('en-GB'))],
+  ['Language',r.lang==='ar'?'Arabic':'English']
+ ].filter(function(x){return x[1];}).map(function(x){
+  return '<div class="enq-row"><span class="enq-k">'+x[0]+'</span><span class="enq-v">'+x[1]+'</span></div>';
+ }).join('');
+ var subject=encodeURIComponent('Re: '+(r.subject||r.position||'Your enquiry to Printopack'));
+ host.innerHTML='<div class="overlay" id="ov"></div><div class="drawer" id="dw">'+
+  '<div class="drawer-head"><h2>'+esc(enqKindLabel(r.kind))+'</h2><button class="x" id="xc">\u2715</button></div>'+
+  '<div class="drawer-body">'+
+   '<div class="enq-meta">'+rows+'</div>'+
+   (r.message?'<div class="enq-msg"'+(r.lang==='ar'?' dir="rtl"':'')+'>'+esc(r.message).replace(/\n/g,'<br>')+'</div>':'')+
+   '<div id="enqfiles"></div>'+
+   (r.notified?'':'<p class="enq-note">'+esc(r.notify_error||'The office has not been emailed about this yet. The mailing tool sends these; the enquiry itself is safely stored here either way.')+'</p>')+
+  '</div>'+
+  '<div class="drawer-foot">'+
+   '<button class="btn btn-ghost" id="enqDel">Delete</button>'+
+   '<button class="btn btn-ghost" id="enqArch">'+(r.status==='archived'?'Move back to open':'Archive')+'</button>'+
+   '<a class="btn btn-ok" href="mailto:'+esc(r.email)+'?subject='+subject+'">'+svg('mail')+'Reply by email</a>'+
+  '</div></div>';
+ document.body.appendChild(host);
+ requestAnimationFrame(function(){$('#ov',host).classList.add('show');$('#dw',host).classList.add('show');});
+ function close(){$('#ov',host).classList.remove('show');$('#dw',host).classList.remove('show');setTimeout(function(){host.remove();},350);}
+ $('#xc',host).addEventListener('click',close);$('#ov',host).addEventListener('click',close);
+
+ if(r.files){
+  fetch(API+'/enquiry-file?e='+encodeURIComponent(r.id)).then(function(x){return x.json();}).then(function(fs){
+   if(!fs||!fs.length)return;
+   $('#enqfiles',host).innerHTML='<div class="enq-files"><h3>Attachments</h3>'+fs.map(function(f){
+    return '<a class="enq-file" href="'+API+'/enquiry-file?f='+encodeURIComponent(f.id)+'&dl=1">'+svg('attach')+
+     '<span>'+esc(f.filename)+'</span><em>'+Math.max(1,Math.round(f.size/1024))+' KB</em></a>';
+   }).join('')+'</div>';
+  }).catch(function(){});
+ }
+ /* Opening it is reading it. */
+ if(r.status==='new'){
+  r.status='read';
+  fetch(API+'/enquiries/'+encodeURIComponent(r.id),{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({status:'read'})}).catch(function(){});
+ }
+ $('#enqArch',host).addEventListener('click',function(){
+  var next=r.status==='archived'?'read':'archived';
+  fetch(API+'/enquiries/'+encodeURIComponent(r.id),{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({status:next})})
+   .then(function(){toast(next==='archived'?'Archived':'Moved back to open','ok');close();enqLoad(function(){renderView();});})
+   .catch(function(){toast('Could not update that enquiry','err');});
+ });
+ $('#enqDel',host).addEventListener('click',function(){
+  if(!confirm('Delete this enquiry and anything attached to it? This cannot be undone.'))return;
+  fetch(API+'/enquiries/'+encodeURIComponent(r.id),{method:'DELETE'})
+   .then(function(){toast('Enquiry deleted','ok');close();enqLoad(function(){renderView();});})
+   .catch(function(){toast('Could not delete that enquiry','err');});
+ });
+}
+
 /* ---------------- dashboard ---------------- */
 function dashView(m){
  var cards=[{k:'news',l:'News posts',icon:'news'},{k:'products',l:'Products',icon:'products'},{k:'team',l:'Team members',icon:'team'},{k:'partners',l:'Partners',icon:'partners'}].map(function(c){
   return '<div class="stat-card" data-nav="'+c.k+'"><div class="ic">'+svg(c.icon)+'</div><div class="n">'+coll(c.k).length+'</div><div class="l">'+c.l+'</div></div>';
  }).join('');
+ /* The inbox card leads, and turns gold when something is waiting: it is the only number on
+    this screen that somebody outside the company is waiting on. */
+ if(MODE==='api'){
+  var un=ENQ.counts.unread||0;
+  cards='<div class="stat-card'+(un?' alert':'')+'" data-nav="enquiries"><div class="ic">'+svg('inbox')+'</div><div class="n">'+un+'</div><div class="l">'+
+   (un?'Unanswered enquiries':'Enquiries, all read')+'</div></div>'+cards;
+ }
  var recent=coll('news').slice(0,4).map(function(p){return '<tr class="row" data-open="news:'+p.id+'"><td><span class="t-title">'+esc(p.title)+'</span></td><td><span class="pill tag">'+esc(p.category)+'</span></td><td>'+statusPill(p.status)+'</td><td>'+fmtDate(p.date)+'</td></tr>';}).join('');
  var quick=['news','careers','team','factory'].map(function(k){return '<button class="btn btn-ghost" data-open="'+k+':new">'+svg('plus')+'New '+MODELS[k].singular.toLowerCase()+'</button>';}).join('');
  m.innerHTML=topbar('Welcome back','Dashboard','<button class="btn btn-gold" data-open="news:new">'+svg('plus')+'New post</button>')+
@@ -823,7 +1229,16 @@ function fieldHTML(f,val){
  var hint=f.rec?'<div class="hint">'+esc(f.rec)+'</div>':'';
  if(f.type==='image'){var has=val?' has':'';var cn=f.contain?' contain':'';var rec=f.rec?'<span class="imgrec">'+svg('image')+'Recommended: <b>'+esc(f.rec)+'</b> for a flawless fit</span>':'';return '<div class="field full"><label>'+esc(f.label)+req+'</label>'+rec+'<div class="imgpick'+has+cn+'" data-imgpick="'+f.name+'" data-box="'+recBox(f.rec)+'"><img src="'+esc(imgSrc(val))+'"><div class="ph">'+svg('image')+'Click to upload</div></div><input type="file" accept="image/*" data-imgfile="'+f.name+'" hidden></div>';}
  if(f.type==='textarea')return '<div class="field full">'+lab+'<textarea data-f="'+f.name+'"'+rtl+'>'+esc(val||'')+'</textarea>'+hint+'</div>';
- if(f.type==='select'){var src=f.optionsFrom?coll(f.optionsFrom).map(function(g){return g.name;}).filter(Boolean):f.options;var list=f.optionsFrom?[''].concat(src):src;var opts=list.map(function(o){return '<option'+(String(val)===String(o)?' selected':'')+'>'+esc(o)+'</option>';}).join('');return '<div class="field'+(f.half?'':' full')+'">'+lab+'<select data-f="'+f.name+'">'+opts+'</select>'+hint+'</div>';}
+ if(f.type==='select'){
+  var src=f.optionsFrom?coll(f.optionsFrom).map(function(g){return g.name;}).filter(Boolean):f.options;
+  var list=f.optionsFrom?[''].concat(src):src;
+  /* An option is either a plain string (value and label are the same) or {v,l}, which is how
+     a code-valued select shows a human label. */
+  var opts=list.map(function(o){
+   var v=(o&&typeof o==='object')?o.v:o, l=(o&&typeof o==='object')?o.l:o;
+   return '<option value="'+esc(v)+'"'+(String(val==null?'':val)===String(v)?' selected':'')+'>'+esc(l)+'</option>';
+  }).join('');
+  return '<div class="field'+(f.half?'':' full')+'">'+lab+'<select data-f="'+f.name+'">'+opts+'</select>'+hint+'</div>';}
  var t=f.type==='date'?'date':(f.type==='number'?'number':(f.type==='url'?'url':'text'));
  return '<div class="field'+(f.half?'':' full')+'">'+lab+'<input type="'+t+'" data-f="'+f.name+'"'+rtl+' value="'+esc(val==null?'':val)+'">'+hint+'</div>';
 }
@@ -837,12 +1252,25 @@ function openForm(key,id){
  host.innerHTML='<div class="overlay" id="ov"></div><div class="drawer" id="dw"><div class="drawer-head"><h2>'+(id==='new'?'New ':'Edit ')+esc(mdl.singular)+'</h2><button class="x" id="xc">✕</button></div><div class="drawer-body">'+imp+body+'</div><div class="drawer-foot"><button class="btn btn-ghost" id="cx">Cancel</button><button class="btn btn-ok" id="sv">Save '+esc(mdl.singular.toLowerCase())+'</button></div></div>';
  document.body.appendChild(host);
  requestAnimationFrame(function(){$('#ov',host).classList.add('show');$('#dw',host).classList.add('show');});
+ var dirty=false,saving=false;
  function close(){$('#ov',host).classList.remove('show');$('#dw',host).classList.remove('show');setTimeout(function(){host.remove();},350);}
- $('#xc',host).addEventListener('click',close);$('#cx',host).addEventListener('click',close);$('#ov',host).addEventListener('click',close);
- host.querySelectorAll('[data-f]').forEach(function(el){el.addEventListener('input',function(){draft[el.getAttribute('data-f')]=el.value;var fl=el.closest('.field');if(fl&&String(el.value).trim()!=='')fl.classList.remove('missing');});});
- host.querySelectorAll('[data-imgpick]').forEach(function(p){var name=p.getAttribute('data-imgpick');var file=host.querySelector('[data-imgfile="'+name+'"]');p.addEventListener('click',function(){file.click();});file.addEventListener('change',function(e){var f=e.target.files[0];if(!f)return;prepImage(f,+p.getAttribute('data-box')||IMG_BOX,function(out,kb){draft[name]=out;p.classList.add('has');$('img',p).src=out;var fl=p.closest('.field');if(fl)fl.classList.remove('missing');toast('Picture ready, '+kb+' KB','ok');});file.value='';});});
+ /* Clicking the dark area beside the drawer used to throw away everything typed, instantly
+    and without asking. An accidental click while writing a long Arabic description cost the
+    whole description. */
+ function closeGuarded(){
+  if(dirty&&!confirm('Close without saving? Everything you have typed here will be lost.'))return;
+  close();
+ }
+ $('#xc',host).addEventListener('click',closeGuarded);$('#cx',host).addEventListener('click',closeGuarded);$('#ov',host).addEventListener('click',closeGuarded);
+ host.querySelectorAll('[data-f]').forEach(function(el){el.addEventListener('input',function(){dirty=true;draft[el.getAttribute('data-f')]=el.value;var fl=el.closest('.field');if(fl&&String(el.value).trim()!=='')fl.classList.remove('missing');});});
+ host.querySelectorAll('select[data-f]').forEach(function(el){el.addEventListener('change',function(){dirty=true;});});
+ host.querySelectorAll('[data-imgpick]').forEach(function(p){var name=p.getAttribute('data-imgpick');var file=host.querySelector('[data-imgfile="'+name+'"]');p.addEventListener('click',function(){file.click();});file.addEventListener('change',function(e){var f=e.target.files[0];if(!f)return;prepImage(f,+p.getAttribute('data-box')||IMG_BOX,function(out,kb){dirty=true;draft[name]=out;p.classList.add('has');$('img',p).src=out;var fl=p.closest('.field');if(fl)fl.classList.remove('missing');toast('Picture ready, '+kb+' KB','ok');});file.value='';});});
  if(mdl.hasImport){$('#lib',host).addEventListener('click',function(){importLI(host);});$('#liu',host).addEventListener('keydown',function(e){if(e.key==='Enter')importLI(host);});}
  $('#sv',host).addEventListener('click',function(){
+  /* One press is one record. The drawer stays on screen for 350ms while it slides away, and
+     a second click inside that window used to run the whole handler again, minting a second
+     id and creating a duplicate. */
+  if(saving)return;
   // Pull the live value of every field into the draft first, so a select left on its default
   // (never touched, so no input event fired) is captured and the required-check sees it.
   host.querySelectorAll('[data-f]').forEach(function(el){draft[el.getAttribute('data-f')]=el.value;});
@@ -879,10 +1307,25 @@ function openForm(key,id){
     if(others>=MAIN_PARTNERS){toast('Already '+MAIN_PARTNERS+' main partners. Turn one off first.','err');return;}
    }
   }
+  /* Products are joined to their group by the group's English name, so renaming a group used
+     to strand every product inside it: the products vanished from the site and the next time
+     one was opened its Group select showed blank, which then saved the blank. The rename is
+     carried through to them here instead, which is what the client means by renaming. */
+  if(key==='productGroups'&&id!=='new'){
+   var before=coll('productGroups').filter(function(x){return x.id===draft.id;})[0];
+   var oldName=before&&before.name,newName=draft.name;
+   if(oldName&&newName&&oldName!==newName){
+    var moved=coll('products').filter(function(pr){return pr.category===oldName;});
+    if(moved.length&&!confirm('Rename this group to \u201c'+newName+'\u201d? '+moved.length+' product'+(moved.length===1?'':'s')+' inside it will move with it.'))return;
+    moved.forEach(function(pr){pr.category=newName;saveRecord('products',pr);});
+   }
+  }
+  saving=true;
+  var sv=$('#sv',host);if(sv){sv.disabled=true;sv.textContent='Saving...';}
   if(id==='new')draft.id=uid();
   saveRecord(key,draft);
   toast(mdl.singular+(id==='new'?' created':' updated'),'ok');
-  close();refresh();
+  dirty=false;close();refresh();
  });
 }
 function importLI(host){
@@ -971,7 +1414,7 @@ function aboutView(m){
 function settingsView(m){
  var s=obj('settings');
  m.innerHTML=topbar('Settings','Site','<button class="btn btn-ok" id="save">Save changes</button>')+'<div class="view">'+
-  formPanel('Company details','Shown in the footer of every page and on the contact page.',[{name:'company',type:'text',label:'Company name (English)'},{name:'companyAr',type:'text',label:'Company name',ar:'Arabic',rtl:true},{name:'phone',type:'text',label:'Phone',half:true},{name:'fax',type:'text',label:'Fax',half:true},{name:'email',type:'text',label:'Email',half:true},{name:'hours',type:'text',label:'Office hours',half:true},{name:'address',type:'textarea',label:'Address (English)'},{name:'addressAr',type:'textarea',label:'Address',ar:'Arabic',rtl:true},{name:'addressShort',type:'text',label:'Short address (English)',rec:'The compact version shown in the bar at the very top of every page.'},{name:'addressShortAr',type:'text',label:'Short address',ar:'Arabic',rtl:true}],s)+formPanel('Pictures','How large an uploaded picture may be. Every picture is shrunk and re-encoded in your browser before it is sent, so most land far under this on their own. Lower it if the storage meter on the dashboard climbs; anything that will not fit is refused rather than quietly accepted.',[{name:'maxImageKb',type:'number',label:'Largest picture (KB)',half:true,rec:'Between 40 and 600. The default is 400 KB. A phone photo normally lands around 65 KB.'}],s)+'</div>';
+  formPanel('Company details','Shown in the footer of every page and on the contact page.',[{name:'company',type:'text',label:'Company name (English)'},{name:'companyAr',type:'text',label:'Company name',ar:'Arabic',rtl:true},{name:'phone',type:'text',label:'Phone',half:true},{name:'phone2',type:'text',label:'Second phone',half:true,rec:'Optional. Shown in the footer under the main number. Leave blank to hide it.'},{name:'fax',type:'text',label:'Fax',half:true},{name:'email',type:'text',label:'Email',half:true},{name:'hours',type:'text',label:'Office hours',half:true},{name:'address',type:'textarea',label:'Address (English)'},{name:'addressAr',type:'textarea',label:'Address',ar:'Arabic',rtl:true},{name:'addressShort',type:'text',label:'Short address (English)',rec:'The compact version shown in the bar at the very top of every page.'},{name:'addressShortAr',type:'text',label:'Short address',ar:'Arabic',rtl:true}],s)+formPanel('Pictures','How large an uploaded picture may be. Every picture is shrunk and re-encoded in your browser before it is sent, so most land far under this on their own. Lower it if the storage meter on the dashboard climbs; anything that will not fit is refused rather than quietly accepted.',[{name:'maxImageKb',type:'number',label:'Largest picture (KB)',half:true,rec:'Between 40 and 600. The default is 400 KB. A phone photo normally lands around 65 KB.'}],s)+'</div>';
  var d={};m.querySelectorAll('[data-f]').forEach(function(el){el.addEventListener('input',function(){d[el.getAttribute('data-f')]=el.value;});});
  $('#save').addEventListener('click',function(){var cur=obj('settings');Object.keys(d).forEach(function(k){cur[k]=d[k];});setObj('settings',cur);toast('Saved','ok');});
 }
@@ -979,8 +1422,30 @@ function settingsView(m){
 /* ---------------- shared bindings ---------------- */
 function bind(scope){
  scope.querySelectorAll('[data-open]').forEach(function(el){el.addEventListener('click',function(e){e.stopPropagation();var p=el.getAttribute('data-open').split(':');openForm(p[0],p[1]);});});
- scope.querySelectorAll('[data-del]').forEach(function(el){el.addEventListener('click',function(e){e.stopPropagation();var p=el.getAttribute('data-del').split(':');if(!confirm('Delete this '+MODELS[p[0]].singular.toLowerCase()+'? This cannot be undone.'))return;deleteRecord(p[0],p[1]);toast(MODELS[p[0]].singular+' deleted');refresh();});});
+ scope.querySelectorAll('[data-del]').forEach(function(el){el.addEventListener('click',function(e){
+  e.stopPropagation();
+  var p=el.getAttribute('data-del').split(':');
+  /* A group holds products, and deleting it strands them: they keep a group name that no
+     longer exists, so they disappear from the site with nothing to say why. Name them. */
+  if(p[0]==='productGroups'){
+   var g=coll('productGroups').filter(function(x){return x.id===p[1];})[0];
+   var inside=g?coll('products').filter(function(pr){return pr.category===g.name;}):[];
+   if(inside.length){
+    toast('This group still holds '+inside.length+' product'+(inside.length===1?'':'s')+'. Move them to another group first, or delete them.','err');
+    return;
+   }
+  }
+  if(!confirm('Delete this '+MODELS[p[0]].singular.toLowerCase()+'? This cannot be undone.'))return;
+  deleteRecord(p[0],p[1]);toast(MODELS[p[0]].singular+' deleted');refresh();
+ });});
  scope.querySelectorAll('[data-nav]').forEach(function(el){el.addEventListener('click',function(){navigate(el.getAttribute('data-nav'));});});
 }
+/* The last line of defence: closing the tab with writes still queued would lose them for
+   good, because the queue lives in this page. The browser's own "leave site?" prompt is the
+   only thing that can interrupt that. */
+window.addEventListener('beforeunload',function(e){
+ if(!FAILED.length)return;
+ e.preventDefault();e.returnValue='';
+});
 boot();
 })();

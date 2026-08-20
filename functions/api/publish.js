@@ -2,7 +2,7 @@
 // POST /api/publish  -> copy the current content into the `published` row, then trigger a
 // site rebuild via the Cloudflare Pages Deploy Hook. The build reads /content, which serves
 // that row. Editing is instant and private; this is the step that goes live.
-import { json, readAll, COLLECTIONS, SINGLETONS } from './_shared.js';
+import { json, readAll, COLLECTIONS, SINGLETONS, lastChangeAt } from './_shared.js';
 
 // Compare the current content against the last published snapshot and report, per section,
 // how many items were added, edited or removed. This is what lets the dashboard show the
@@ -36,7 +36,10 @@ export async function onRequestGet({ env }) {
     'SELECT MAX(t) AS t FROM (SELECT MAX(updated_at) AS t FROM entries UNION ALL SELECT MAX(updated_at) FROM singletons)'
   ).first();
   const publishedAt = pub ? pub.updated_at : null;
-  const editedAt = edit ? edit.t : null;
+  // MAX(updated_at) cannot see a deletion (the row is gone), so the change stamp counts too.
+  // Either one being newer than the last publish means something is waiting to go live.
+  const changedAt = await lastChangeAt(env);
+  const editedAt = Math.max(edit && edit.t ? edit.t : 0, changedAt || 0) || null;
   const pending = editedAt != null && (publishedAt == null || editedAt > publishedAt);
 
   // Only pay for the full diff when something is actually pending; a clean site skips it.
@@ -71,9 +74,21 @@ export async function onRequestPost({ env }) {
     'ON CONFLICT(key) DO UPDATE SET data=excluded.data, updated_at=excluded.updated_at'
   ).bind('content', JSON.stringify(snapshot), Date.now()).run();
 
+  // The hook's HTTP status is the whole point of calling it. Only catching a thrown network
+  // error meant a 401 from a rotated hook URL still reported "deployed", and the client was
+  // told the site was rebuilding when nothing had been asked to rebuild.
   let deployed = false;
+  let deployError = null;
   if (env.DEPLOY_HOOK_URL) {
-    try { await fetch(env.DEPLOY_HOOK_URL, { method: 'POST' }); deployed = true; } catch (e) { /* reported below */ }
+    try {
+      const r = await fetch(env.DEPLOY_HOOK_URL, { method: 'POST' });
+      deployed = r.ok;
+      if (!r.ok) deployError = 'the rebuild service answered ' + r.status;
+    } catch (e) {
+      deployError = 'the rebuild service could not be reached';
+    }
+  } else {
+    deployError = 'no rebuild is configured';
   }
-  return json({ ok: true, deployed });
+  return json({ ok: true, deployed, deployError });
 }

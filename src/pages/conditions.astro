@@ -1,0 +1,116 @@
+---
+import Base from '../layouts/Base.astro';
+import Bi from '../components/Bi.astro';
+import { singleton } from '../lib/content';
+
+// Terms of use. Linked from the footer of every page since the site was built, and never
+// written, so the link 404'd sitewide. Deliberately short: this is a manufacturer's
+// catalogue and enquiry site, not a shop, so the only things worth stating are that
+// nothing here is a binding offer, that the pictures and text belong to Printopack, and
+// where a dispute would be heard.
+const s = singleton('settings');
+const company = s.company || 'Printopack - Saudi Modern Packaging Factory Co. Ltd.';
+const companyAr = s.companyAr || 'برنتوباك - مصنع التغليف السعودي الحديث المحدود';
+const email = s.email || 'info@printopack.com.sa';
+
+const content = {
+  meta: {
+    title: "Terms of use - Printopack",
+    description: "The terms on which Printopack offers this website: product information, quotations, intellectual property and governing law.",
+  },
+  header: {
+    eyebrow: { en: "Terms of use", ar: "شروط الاستخدام" },
+    title: { en: "Terms of use.", ar: "شروط الاستخدام." },
+    lede: {
+      en: "The terms on which this website is offered. Short, because this is a catalogue and an enquiry desk rather than a shop.",
+      ar: "الشروط التي يُقدَّم بها هذا الموقع. وهي موجزة، لأن هذا الموقع دليل منتجات ومكتب استفسارات لا متجراً.",
+    },
+  },
+  sections: [
+    {
+      title: { en: "Product information", ar: "معلومات المنتجات" },
+      body: [{
+        en: "Everything shown here describes what Printopack manufactures, and it is kept current. Specifications, materials, formats and photographs are indicative: flexible packaging is made to a brief, so the structure, barrier, print and finish of your order are the ones agreed with you in writing, not the ones illustrated on a page.",
+        ar: "كل ما يُعرض هنا يصف ما تصنعه برنتوباك، ويُحدَّث أولاً بأول. أمّا المواصفات والمواد والمقاسات والصور فهي استرشادية: فالتغليف المرن يُصنع وفق طلب محدّد، وبالتالي فإن تركيب طلبكم وحاجزه وطباعته وتشطيبه هي ما يُتّفق عليه معكم كتابةً، لا ما تُظهره الصفحة.",
+      }],
+    },
+    {
+      title: { en: "Quotations and orders", ar: "عروض الأسعار والطلبات" },
+      body: [{
+        en: "Nothing on this website is an offer capable of acceptance, and no price is shown. Sending an enquiry starts a conversation; an order exists once Printopack has issued a quotation and you have accepted it in writing, on the commercial terms stated there.",
+        ar: "لا شيء في هذا الموقع يُعدّ إيجاباً قابلاً للقبول، ولا تُعرض فيه أسعار. وإرسال الاستفسار يفتح محادثة؛ أمّا الطلب فينعقد متى أصدرت برنتوباك عرض سعر وقبلتموه كتابةً، وفق الشروط التجارية الواردة فيه.",
+      }],
+    },
+    {
+      title: { en: "What you send us", ar: "ما ترسلونه إلينا" },
+      body: [{
+        en: `Send us only what you have the right to send, and nothing unlawful. Artwork and files you provide stay yours; you allow us to use them for the purpose of quoting for and producing your order. How we handle personal details is set out in our privacy notice.`,
+        ar: "أرسلوا إلينا ما تملكون حق إرساله فقط، ولا شيء مخالفاً للنظام. وتبقى التصاميم والملفات التي تزوّدوننا بها ملككم؛ وتأذنون لنا باستخدامها لغرض تسعير طلبكم وإنتاجه. وطريقة تعاملنا مع البيانات الشخصية موضّحة في إشعار الخصوصية.",
+      }],
+    },
+    {
+      title: { en: "Our material", ar: "موادّنا" },
+      body: [{
+        en: `The text, photographs, drawings and marks on this website belong to ${company} or are used with permission. You are welcome to read, print and share them for the purpose of evaluating Printopack as a supplier. Republishing them, or using them commercially, needs our written agreement first: write to ${email}.`,
+        ar: `النصوص والصور والرسومات والعلامات في هذا الموقع مملوكة لـ${companyAr} أو مستخدمة بإذن. ولكم أن تطالعوها وتطبعوها وتشاركوها لغرض تقييم برنتوباك كمورّد. أمّا إعادة نشرها أو استخدامها تجارياً فيتطلّب موافقتنا الكتابية المسبقة: راسلونا على ${email}.`,
+      }],
+    },
+    {
+      title: { en: "Availability and links", ar: "الإتاحة والروابط" },
+      body: [{
+        en: "We keep this website available and accurate, but do not promise it will be uninterrupted or error-free. Where it links elsewhere, including the customer portal and our pages on other services, those are run by others under their own terms.",
+        ar: "نحرص على إتاحة هذا الموقع ودقّة محتواه، دون أن نضمن استمراريته أو خلوّه من الأخطاء. وحيث يُحيل إلى مواقع أخرى، ومنها بوابة العملاء وصفحاتنا على خدمات أخرى، فتلك تديرها جهات أخرى وفق شروطها.",
+      }],
+    },
+    {
+      title: { en: "Governing law", ar: "النظام الواجب التطبيق" },
+      body: [{
+        en: "These terms, and any dispute arising from this website, are governed by the laws of the Kingdom of Saudi Arabia and heard by its competent courts.",
+        ar: "تخضع هذه الشروط وأي نزاع ينشأ عن هذا الموقع لأنظمة المملكة العربية السعودية، وتختصّ بنظره محاكمها المختصّة.",
+      }],
+    },
+  ],
+  updated: { en: "These terms were last updated in August 2026.", ar: "حُدِّثت هذه الشروط آخر مرة في أغسطس 2026." },
+};
+const c = content;
+---
+<Base title={c.meta.title} description={c.meta.description}>
+  <section class="page-head">
+    <div class="wrap-wide">
+      <div class="page-head-inner">
+        <span class="eyebrow"><Bi en={c.header.eyebrow.en} ar={c.header.eyebrow.ar} /></span>
+        <h1><Bi en={c.header.title.en} ar={c.header.title.ar} /></h1>
+        <p class="lede"><Bi en={c.header.lede.en} ar={c.header.lede.ar} /></p>
+      </div>
+    </div>
+  </section>
+
+  <section class="legal">
+    <div class="wrap-wide">
+      <div class="legal-body">
+        {c.sections.map((s) => (
+          <article class="legal-sec">
+            <h2><Bi en={s.title.en} ar={s.title.ar} /></h2>
+            {s.body.map((p) => (<p><Bi en={p.en} ar={p.ar} /></p>))}
+          </article>
+        ))}
+        <p class="legal-updated"><Bi en={c.updated.en} ar={c.updated.ar} /></p>
+      </div>
+    </div>
+  </section>
+</Base>
+
+<style>
+  .page-head{padding-block:clamp(56px,8vw,104px) clamp(30px,4vw,52px);background:var(--cream);border-bottom:1px solid var(--line)}
+  .page-head-inner{max-width:820px}
+  .page-head h1{margin:20px 0 22px;font-size:clamp(36px,5vw,64px)}
+  .page-head .lede{max-width:62ch}
+  .legal{padding-block:clamp(44px,6vw,84px)}
+  .legal-body{max-width:74ch}
+  .legal-sec{padding-block:clamp(22px,2.6vw,32px);border-bottom:1px solid var(--line)}
+  .legal-sec:last-of-type{border-bottom:none}
+  .legal-sec h2{font-size:clamp(20px,2.2vw,26px);margin-bottom:14px}
+  .legal-sec p{margin-bottom:12px;line-height:1.75;color:var(--muted)}
+  .legal-sec p:last-child{margin-bottom:0}
+  .legal-updated{margin-top:26px;font-size:13.5px;color:var(--faint)}
+</style>

@@ -62,6 +62,13 @@ if (!url) {
       console.log('[content] wrote ' + done + ' uploaded picture(s)' + (failed ? ', ' + failed + ' missing' : ''));
     }
   } catch (e) {
-    console.warn('[content] snapshot fetch failed (' + e.message + '); falling back to committed db/seed.json');
+    // Fail loudly rather than quietly shipping the committed baseline. CONTENT_URL being set
+    // means this is a real production build, and the baseline is months behind the database:
+    // a transient blip here used to revert the whole live site to old content, with the build
+    // reported as successful and nothing to say why the site had changed on its own. A failed
+    // build leaves the previous deploy serving, which is the safe outcome.
+    console.error('[content] snapshot fetch FAILED (' + e.message + ')');
+    console.error('[content] refusing to build from the stale committed baseline. Retry the deploy.');
+    process.exit(1);
   }
 }

@@ -20,6 +20,9 @@
   --gold:       #f89900;   /* brand orange accent (exact Printopack logo orange) */
   --gold-bright:#f89900;   /* orange hover / on-dark (same exact logo orange) */
   --gold-soft:  rgba(248,153,0,.14);
+  /* Orange text on the blue bands: full strength measures 3.98:1, which the client reported
+     as unreadable. Mixed toward white it reads 5.33:1 and still looks like the brand yellow. */
+  --gold-on-dark: color-mix(in srgb, #f89900 62%, #fff);
 
   --muted:      #6d685c;   /* secondary text */
   --faint:      #9a9385;
@@ -37,9 +40,12 @@
   --link-on-dark-hover:var(--white);  /* hover, on dark surfaces */
 
   /* --- type --- */
+  /* The client's choice, 2026-08-19: Almarai for Arabic, Jost for Latin. Both SIL Open Font
+     License, free commercially and permanently, self-hostable. Jost now carries body copy as
+     well as display, since he picked it as the Latin face rather than as a headline face. */
   --display: "Jost", "Futura", "Helvetica Neue", sans-serif;
-  --body:    "Inter", system-ui, -apple-system, sans-serif;
-  --arabic:  "IBM Plex Sans Arabic", "Inter", sans-serif;
+  --body:    "Jost", "Helvetica Neue", system-ui, sans-serif;
+  --arabic:  "Almarai", "Jost", sans-serif;
 
   --w-light:300; --w-reg:400; --w-med:500; --w-semi:600;
 
@@ -47,6 +53,10 @@
   --wrap: 1320px;
   --gutter: clamp(20px, 5vw, 56px);
   --section-y: clamp(72px, 10vw, 132px);
+  /* The home page's own rhythm. Every band carries half of it, so every boundary between
+     two bands comes to the same height. Tighter than --section-y because the client finds
+     the page over-airy. */
+  --band-y: clamp(30px, 3.8vw, 54px);
   --ease: cubic-bezier(.22,1,.36,1);
   --radius: 2px;
 }

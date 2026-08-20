@@ -43,10 +43,6 @@ const content = {
   wall: {
     eyebrow: { en: "Our partners", ar: "شركاؤنا" },
     title: { en: "Brands that trust our print.", ar: "علاماتٌ تثق بطباعتنا." },
-    note: {
-      en: "Partner names and countries shown here are placeholders; Printopack fills in each partner through the site's admin.",
-      ar: "أسماء الشركاء ودولهم المعروضة هنا عناصر مبدئية؛ وتُدخل برنتوباك بيانات كل شريك عبر لوحة تحكم الموقع.",
-    },
     // Shown once the map filters the wall.
     filterIn: { en: "in", ar: "في" },
     showAll: { en: "Show all partners", ar: "عرض جميع الشركاء" },
@@ -139,8 +135,12 @@ const c = content;
               <button class="reach-chip" data-cc={cc} role="listitem"><Bi en={c.reach.offices[cc].name.en} ar={c.reach.offices[cc].name.ar} /></button>
             ))}
             <!-- International sits after the mapped countries: it is a real office in the
-                 selector, but it has no territory to highlight. -->
-            <button class="reach-chip" data-cc="int" role="listitem"><Bi en={c.reach.offices.int.name.en} ar={c.reach.offices.int.name.ar} /></button>
+                 selector, but it has no territory to highlight. Rendered only when that
+                 office exists: the client can delete it from the admin like any other, and
+                 an unguarded lookup here used to fail the whole build. -->
+            {c.reach.offices.int && (
+              <button class="reach-chip" data-cc="int" role="listitem"><Bi en={c.reach.offices.int.name.en} ar={c.reach.offices.int.name.ar} /></button>
+            )}
           </div>
         </div>
       </div>
@@ -149,7 +149,7 @@ const c = content;
   </section>
 
   <!-- PARTNERS WALL: logo + (name) + country. Filtered by the map above. -->
-  <section class="partners-wall">
+  <section class="partners-wall on-deep">
     <div class="wrap-wide">
       <div class="section-head center">
         <span class="eyebrow plain" style="color:var(--gold)"><Bi en={c.wall.eyebrow.en} ar={c.wall.eyebrow.ar} /></span>
@@ -185,31 +185,53 @@ const c = content;
       </ul>
       <p class="wall-empty" hidden><Bi en={c.wall.empty.en} ar={c.wall.empty.ar} /></p>
       <!-- build-only helper: remove before production (see PRODUCTION_TODO.md) -->
-      <p class="pnote"><Bi en={c.wall.note.en} ar={c.wall.note.ar} /></p>
     </div>
   </section>
 
   <!-- WHY BRANDS STAY -->
-  <section class="on-navy editorial">
-    <div class="wrap editorial-inner">
-      <span class="eyebrow"><Bi en={c.why.eyebrow.en} ar={c.why.eyebrow.ar} /></span>
-      <p class="editorial-quote"><Bi en={c.why.quote.en} ar={c.why.quote.ar} /></p>
-      <a href="/contact" class="link-line on-dark"><Bi en={c.why.link.en} ar={c.why.link.ar} /></a>
-    </div>
-  </section>
-
-  <!-- CTA -->
-  <section class="cta">
-    <div class="wrap" style="text-align:center">
-      <span class="eyebrow plain" style="color:var(--gold)"><Bi en={c.cta.eyebrow.en} ar={c.cta.eyebrow.ar} /></span>
-      <h2 style="margin:16px 0 26px"><Bi en={c.cta.title.en} ar={c.cta.title.ar} /></h2>
-      <a href="/contact" class="btn btn-gold"><Bi en={c.cta.button.en} ar={c.cta.button.ar} /></a>
+  <!-- The two closing blocks side by side rather than stacked, matching the home page's
+       closing band. They were saying much the same thing one after the other. -->
+  <section class="close-pair">
+    <div class="wrap-wide close-pair-grid">
+      <div class="close-half">
+        <span class="eyebrow"><Bi en={c.why.eyebrow.en} ar={c.why.eyebrow.ar} /></span>
+        <p class="editorial-quote"><Bi en={c.why.quote.en} ar={c.why.quote.ar} /></p>
+        <a href="/contact" class="link-line on-dark"><Bi en={c.why.link.en} ar={c.why.link.ar} /></a>
+      </div>
+      <div class="close-half close-half-cta">
+        <span class="eyebrow"><Bi en={c.cta.eyebrow.en} ar={c.cta.eyebrow.ar} /></span>
+        <h2><Bi en={c.cta.title.en} ar={c.cta.title.ar} /></h2>
+        <a href="/contact" class="btn btn-gold"><Bi en={c.cta.button.en} ar={c.cta.button.ar} /></a>
+      </div>
     </div>
   </section>
 </Base>
 
 <style>
-  .page-head{padding-block:clamp(56px,8vw,104px) clamp(30px,4vw,52px);background:var(--cream);border-bottom:1px solid var(--line)}
+  .page-head{padding-block:clamp(40px,5.2vw,68px) clamp(22px,2.6vw,34px);background:var(--cream);border-bottom:1px solid var(--line)}
+  /* One rhythm down the page, the same value the home page uses. */
+  .reach,.partners-wall,.close-pair{padding-block:var(--band-y)}
+  /* The wall sits on the blue; the logo cards stay light so the marks, which are printed
+     for white, still read. */
+  .partners-wall .pgrid{background:transparent}
+  .partners-wall .pcard{background:var(--white);color:var(--ink)}
+  .partners-wall .section-head h2,.partners-wall .section-head .lede{color:#fff}
+  .partners-wall .eyebrow{color:var(--gold-on-dark);display:flex;line-height:1}
+  /* flex defaults to flex-start, which put the mark at the left edge of a full-width box
+     inside a centred head. */
+  .partners-wall .section-head.center .eyebrow{justify-content:center}
+  .partners-wall .eyebrow::before{background:var(--gold-on-dark)}
+  .close-pair{background:var(--navy-deep);color:var(--paper)}
+  .close-pair-grid{display:grid;grid-template-columns:1fr 1fr;gap:clamp(30px,4.5vw,64px);align-items:start}
+  .close-half-cta{border-inline-start:1px solid var(--line-dark);padding-inline-start:clamp(30px,4.5vw,64px)}
+  .close-half .eyebrow{color:var(--gold-on-dark);display:flex;line-height:1}
+  .close-half .eyebrow::before{background:var(--gold-on-dark)}
+  .close-half h2{margin:14px 0 22px;max-width:18ch}
+  .close-half .editorial-quote{margin:14px 0 20px}
+  @media(max-width:820px){
+    .close-pair-grid{grid-template-columns:1fr;gap:34px}
+    .close-half-cta{border-inline-start:0;padding-inline-start:0;border-top:1px solid var(--line-dark);padding-top:32px}
+  }
   .page-head-inner{max-width:820px}
   .page-head h1{margin:20px 0 22px;font-size:clamp(40px,6vw,78px)}
   .page-head .lede{max-width:60ch}
@@ -246,7 +268,6 @@ const c = content;
   .pcard-country{display:inline-flex;align-items:center;gap:7px;font-size:12.5px;letter-spacing:.02em;color:var(--muted)}
   .pcard-country svg{width:14px;height:14px;color:var(--gold);flex:none}
 
-  .pnote{margin-top:22px;font-size:13px;font-style:italic;color:var(--faint);max-width:62ch}
 
   /* where we deliver: interactive map */
   .reach{background:var(--cream);border-top:1px solid var(--line);border-bottom:1px solid var(--line)}
@@ -256,10 +277,25 @@ const c = content;
   .reach-map{display:block;width:100%;height:auto}
   .reach-map path{stroke-linejoin:round;stroke-linecap:round}
   .rc-ctx{fill:var(--sand);stroke:var(--cream);stroke-width:.14;pointer-events:none}
-  .rc{fill:var(--blue);stroke:var(--paper);stroke-width:.18;cursor:pointer;outline:none}
+  /* A small country is hard both to see and to hit. `paint-order:stroke` lays the stroke
+     under the fill, so widening it grows the clickable area and thickens the silhouette
+     without eating into the country's own shape. Lebanon (14px across) and Palestine (12px)
+     needed this; the larger countries are unaffected because the stroke is a fraction of a
+     map unit. Kuwait stays an outline rather than a dot, as the client asked. */
+  .rc{fill:var(--blue);stroke:var(--paper);stroke-width:.18;cursor:pointer;outline:none;paint-order:stroke fill}
+  /* The small countries, widened under the fill so they can be seen and hit while keeping
+     their real outline. Bahrain draws 2px across and Qatar 8px, so they take the heaviest
+     stroke; Lebanon, Palestine and Kuwait need less. */
+  .rc[data-cc="bh"]{stroke:var(--blue);stroke-width:.4}
+  .rc[data-cc="qa"]{stroke:var(--blue);stroke-width:.6}
+  .rc[data-cc="lb"],.rc[data-cc="ps"],.rc[data-cc="kw"]{stroke:var(--blue);stroke-width:.5}
+  .rc[data-cc="bh"]:hover,.rc[data-cc="qa"]:hover,
+  .rc[data-cc="lb"]:hover,.rc[data-cc="ps"]:hover,.rc[data-cc="kw"]:hover{stroke:var(--gold-bright)}
   .rc:hover{fill:var(--gold-bright)}
   .rc:focus-visible{stroke:var(--gold);stroke-width:.45}
   .rc.active{fill:var(--gold)}
+  .rc[data-cc="bh"].active,.rc[data-cc="qa"].active,
+  .rc[data-cc="lb"].active,.rc[data-cc="ps"].active,.rc[data-cc="kw"].active{stroke:var(--gold)}
   /* Dot markers for the countries that are only a few pixels across at this scale. They
      inherit .rc's fill, hover and active colours, so a small country highlights exactly
      like a large one. */

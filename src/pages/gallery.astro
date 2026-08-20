@@ -65,14 +65,6 @@ const content = {
   photos: galPhotos,
   videos: galVideos,
   ads: galAds,
-  videoNote: {
-    en: "Videos are played from YouTube or Vimeo links added in the admin; no video files are stored on this website.",
-    ar: "تُشغّل الفيديوهات من روابط يوتيوب أو فيميو التي تُضاف في لوحة التحكم؛ ولا تُخزَّن ملفات فيديو على هذا الموقع.",
-  },
-  sampleNote: {
-    en: "Advertisement items are sample placeholders. Printopack adds real campaign material through the site's admin.",
-    ar: "عناصر الإعلانات نموذجية مبدئية. تُضيف برنتوباك المواد الإعلانية الحقيقية عبر لوحة تحكم الموقع.",
-  },
   openVideo: { en: "Open video", ar: "فتح الفيديو" },
   addLink: { en: "Video link pending", ar: "رابط الفيديو غير مضاف" },
   close: { en: "Close", ar: "إغلاق" },
@@ -137,7 +129,6 @@ const c = content;
             </button>
           ))}
         </div>
-        <p class="sample-note"><Bi en={c.videoNote.en} ar={c.videoNote.ar} /></p>
       </div>
 
       <!-- ADVERTISEMENTS -->
@@ -151,7 +142,6 @@ const c = content;
             </button>
           ))}
         </div>
-        <p class="sample-note"><Bi en={c.sampleNote.en} ar={c.sampleNote.ar} /></p>
       </div>
     </div>
   </section>
@@ -198,7 +188,6 @@ const c = content;
   .video-tile.locked .tile-play svg{color:rgba(250,246,238,.55);background:rgba(9,24,41,.42)}
   .video-tile.locked .tile-status{background:rgba(250,246,238,.86);color:var(--navy)}
 
-  .sample-note{margin-top:22px;font-size:13px;font-style:italic;color:var(--faint);max-width:64ch}
 
   /* lightbox */
   .lightbox{position:fixed;inset:0;z-index:200;background:rgba(9,24,41,.9);display:flex;align-items:center;justify-content:center;padding:clamp(20px,5vw,64px)}
