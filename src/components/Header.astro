@@ -240,7 +240,10 @@ const nav = [
   .site-header{position:sticky;top:0;z-index:60;background:color-mix(in srgb, var(--paper) 92%, transparent);backdrop-filter:blur(12px);border-bottom:1px solid var(--line)}
   /* The client fixed English left and Arabic right. That is a physical arrangement, not a
      reading-order one, so direction is pinned to ltr and the band does not mirror in RTL. */
-  .hdr-top{display:grid;grid-template-columns:1fr auto 1fr;align-items:center;gap:clamp(16px,3vw,48px);min-height:132px;direction:ltr}
+  /* Height comes from padding rather than a min-height, so the space under the marks can
+     be trimmed on its own: the band was set at 132px when labels sat beneath each mark,
+     and without them the room below was the more obvious of the two. */
+  .hdr-top{display:grid;grid-template-columns:1fr auto 1fr;align-items:center;gap:clamp(16px,3vw,48px);padding-block:20px 10px;direction:ltr}
   /* Each mark stands alone in the bar now that the labels under them are gone, so it
      centres on the band's own axis. */
   .brand{display:flex;align-items:center}

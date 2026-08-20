@@ -218,11 +218,15 @@ const pad = (n: number) => String(n).padStart(2, "0");
   .cover{--studio:#ececec;position:relative;background:var(--studio);display:flex;flex-direction:column;color:var(--ink);overflow:hidden;padding-block:0}
   /* contain, never cover: the products sit in a row across the full width, so cropping the
      sides drops them. Letterboxing is invisible because the surround is the same colour. */
-  .cover-bg{position:relative;height:clamp(280px,38vw,520px)}
+  /* hero.jpg is 1800x782, so at any viewport the photograph fills the full width exactly
+     when the frame is 43.4vw tall (782/1800). That is as large as it can be drawn: past
+     it `contain` starts letterboxing at the sides instead of growing. Capped at the
+     image's own 782px so a very wide screen never upscales it into softness. */
+  .cover-bg{position:relative;height:clamp(300px,43.4vw,782px)}
   .cover-bg img{width:100%;height:100%;object-fit:contain;object-position:center bottom;display:block}
   /* order:-1 puts the copy above the photograph without reordering the markup, so the
      image still preloads first. */
-  .cover-inner{order:-1;position:relative;z-index:2;padding-block:clamp(34px,4.4vw,64px) clamp(16px,2vw,30px)}
+  .cover-inner{order:-1;position:relative;z-index:2;padding-block:clamp(34px,4.4vw,64px) clamp(8px,1vw,14px)}
   .cover-inner .eyebrow{color:var(--blue)}
   .cover-inner .eyebrow::before{background:var(--gold)}
   /* Sized for a full sentence rather than the old two-word headline: a smaller clamp and a
