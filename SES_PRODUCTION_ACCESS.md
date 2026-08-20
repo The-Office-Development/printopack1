@@ -24,15 +24,42 @@ The rejection was about the sender, not the technology. Printopack is the opposi
 
 Not a guarantee, but it removes every specific weakness the reviewer named.
 
-## The account must be in Printopack's name
+## Two accounts, both in Printopack's name
 
-Register it with Printopack's company details, a `printopack.com.sa` address and their billing.
-Two reasons, both important:
+Not one. The client bears every cost of this tool, and the website was promised it can never
+be billed, so the two must not share a billing surface.
 
-1. A Saudi manufacturer asking to mail its own customers reads as legitimate. A Jordanian
-   individual asking to mail a Saudi manufacturer's customers reads as a list broker.
-2. It keeps the running cost on the client's own card, which is where every subscription for
-   this project belongs.
+| Account | Holds | Why his |
+|---|---|---|
+| **AWS** | SES identity, DKIM, MAIL FROM, configuration set, SNS topic | Sending is the cost he agreed to carry |
+| **Cloudflare** | `printopack_mail` D1 and the Worker | D1 quotas are **per account**; the website's must stay untouched |
+
+Both are free to open and cost nothing until mail is sent. This is Option B, which he chose
+on 2026-08-19.
+
+Registering in his name also helps the application itself: a Saudi manufacturer asking to
+mail its own customers reads as legitimate, where a Jordanian company asking to mail a Saudi
+manufacturer's list reads as a list broker. That distinction is what sank the UniDash request.
+
+## Choosing the region, which cannot be changed later
+
+Identity, DKIM, MAIL FROM, the configuration set and the event destination are all
+region-scoped. Changing region afterwards means redoing every DNS record, so decide once.
+
+Verified against Amazon's endpoint table, 2026-08-20:
+
+- **me-south-1 (Bahrain)** is the recommendation. Closest to Jeddah, in the GCC, and it uses
+  the default `dkim.amazonses.com` domain so the DKIM records look like every guide.
+- **me-central-1 (UAE)** also works, but issues DKIM under `dkim.me-central-1.amazonses.com`,
+  a small extra thing to get right.
+- **eu-west-1 (Ireland)** is the most trodden path if a Gulf region ever misbehaves.
+
+One caveat that does **not** apply to us: Amazon publishes no SMTP endpoint in either Gulf
+region. This tool signs the SES API directly rather than using SMTP, so that gap is
+irrelevant here. It would matter to anything speaking SMTP.
+
+The region is a setting in the tool (`settings.region`, default `eu-west-1`), not a constant,
+so whichever is chosen is entered once in Settings and the host follows.
 
 ---
 
@@ -46,22 +73,27 @@ twice, and a second rejection is much harder to reverse than a first.
 3. **Set a custom MAIL FROM** on `bounce.printopack.com.sa`. See the DNS safety note below.
 4. **Add DMARC.** They have none today, which blocks compliant bulk sending regardless of
    which sender we end up using.
-5. **Build the unsubscribe and suppression endpoint.** DONE, 2026-08-20. It is not an
-   endpoint, it turned out to be the whole tool: `/Users/bader/printopack-mailer`, a Worker
-   sharing the website's D1 database. What now exists, and what the request text below can
-   therefore honestly claim:
-   - a `contacts` table the website's forms write into directly, each row carrying the basis
-     for writing to that person and the date it was recorded
+5. **The unsubscribe and suppression machinery.** DONE 2026-08-20, and it turned out to be
+   the whole tool rather than an endpoint: `/Users/bader/printopack-mailer`.
+
+   It keeps its **own** D1 in the client's own Cloudflare account. It briefly shared the
+   website's, which was wrong for the reason in the table above. New contacts and the
+   website's pending enquiry notifications now cross a watermarked `/api/sync` endpoint, so
+   the website's usage stays flat however large the mailing list grows.
+
+   What exists, and what the request text below can therefore honestly claim:
+   - a `contacts` table carrying, for each person, the basis for writing to them and the date
+     it was recorded
    - a permanent `suppression` table that survives re-imports
    - one-click unsubscribe with RFC 8058 `List-Unsubscribe-Post`, signed so it cannot be
      forged, acting immediately with no confirmation page
    - an SNS webhook that suppresses hard bounces and complaints automatically, and counts
      soft bounces until an address retires itself
-   - bounce and complaint rates measured per campaign, with the send pausing itself below
-     Amazon's thresholds
+   - bounce and complaint rates measured per campaign, pausing the send below Amazon's
+     thresholds
    - transactional notifications already flowing: every website enquiry is emailed to the
      office that should answer it
-   See that repo's README for the setup order, which must be followed before this request.
+
 6. **Submit the request** using the text below.
 7. **Gate the quote on the answer.** Approved, quote SES at roughly $2 to $4 a month. Declined,
    quote a paid ESP at roughly $20 to $50 a month. Do not quote before this resolves.
@@ -72,16 +104,23 @@ unsubscribe handling as things that exist. They should exist.
 **Still to do before submitting, as of 2026-08-20.** The code is built; these are the
 account-side facts the request text asserts and that a reviewer can check:
 
-- [ ] Create the AWS account in Printopack's name, and RECORD THE REGION. Identity, DKIM,
-      MAIL FROM, the configuration set and the event destination are all region-scoped, and
-      changing region later means redoing every DNS record.
-- [ ] Verify the domain, enable DKIM, set the custom MAIL FROM, add DMARC.
-- [ ] Deploy the mailer, set its secrets, subscribe the SNS topic to its webhook.
-- [ ] Run the sandbox checklist in the mailer's README, including Amazon's simulator
-      addresses, so every claim below is one that has actually been exercised.
-- [ ] Publish the website's privacy page. DONE 2026-08-20 (`src/pages/privacy.astro`), but it
-      has to be LIVE on the domain named in the request before the request is sent, because
-      the request says the website explains how addresses are used.
+- [ ] **AWS account** in Printopack's name. Record the region chosen (see above).
+- [ ] Verify `printopack.com.sa`, enable DKIM, set custom MAIL FROM on `bounce.`, add DMARC.
+- [ ] Create the SNS topic and the SES configuration set with an event destination pointing at it.
+- [ ] **Cloudflare account** in Printopack's name.
+      `wrangler d1 create printopack_mail`, then paste the id into the tool's `wrangler.toml`
+      (it currently reads `REPLACE_WITH_ID_FROM_THE_CLIENT_ACCOUNT`).
+- [ ] Apply the mailer schema to that database, deploy the Worker, subscribe the SNS topic to
+      its webhook.
+- [ ] Set the secrets. **`SYNC_TOKEN` must be identical on both sides**: a Pages secret on the
+      website, and a Worker secret on the tool, alongside `SITE_URL`, `MAIL_SESSION_SECRET`,
+      `MAIL_PASS_HASH`, `UNSUB_SECRET`, `SNS_HOOK_SECRET` and the SES keys.
+- [ ] Run the sandbox checklist in the mailer README, including Amazon's simulator addresses,
+      so every claim below has actually been exercised.
+- [ ] Confirm the real contact count and cadence with the client before submitting, since both
+      appear in the request.
+- [ ] Publish the privacy page on the domain named in the request. Written 2026-08-20 and live
+      on `printopack1.pages.dev`; it must be live on the domain the request names.
 
 Two claims in the text below are now true and were not before: the website records an
 enquiry with a timestamp (the forms used to post to a Netlify handler that does not exist on
