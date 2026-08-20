@@ -184,8 +184,8 @@ const nav = [
   </nav>
 </header>
 
-<!-- mobile nav panel (burger, <=720px). Lives outside <header> because its
-     backdrop-filter creates a containing block that would trap position:fixed. -->
+<!-- mobile nav panel (burger, <=720px). Lives outside <header> so that a
+     containing block on the header can never trap its position:fixed. -->
 <nav class="mobile-nav" id="mobile-nav" aria-label="Mobile" hidden>
   {/* Sections with sub-pages start collapsed, so the menu is seven rows rather than a
       fifteen-row scroll. The label stays a plain link, and the chevron beside it is a
@@ -237,7 +237,7 @@ const nav = [
   @media(max-width:640px){.util-follow{display:none}.util-inner{gap:12px}.util-contact{gap:16px}.util-item span{font-size:12px}}
   @media(max-width:440px){.util-social{display:none}.util-contact{gap:14px;justify-content:center;width:100%}}
 
-  .site-header{position:sticky;top:0;z-index:60;background:color-mix(in srgb, var(--paper) 92%, transparent);backdrop-filter:blur(12px);border-bottom:1px solid var(--line)}
+  .site-header{position:sticky;top:0;z-index:60;background:var(--paper);border-bottom:1px solid var(--line)}
   /* The client fixed English left and Arabic right. That is a physical arrangement, not a
      reading-order one, so direction is pinned to ltr and the band does not mirror in RTL. */
   /* Height comes from padding rather than a min-height, so the space under the marks can
