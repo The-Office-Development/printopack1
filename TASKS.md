@@ -75,9 +75,42 @@ Branch `feat/enquiries-and-mailer`, not yet merged or deployed.
 - [ ] The dev login bypass still ships (tracked below).
 - [ ] Placeholder content and the test records are still live.
 - [ ] `HANDOVER-CLIENT.md` still describes the Cloudflare Access email login that was never
-      built, and there is no Arabic edition. `db/README.md` still calls its destructive seed
+      built. `db/README.md` still calls its destructive seed
       load safe. Both mislead anyone who follows them.
 - [ ] Uploaded pictures are still never deleted from D1.
+
+---
+
+## DONE 2026-08-20: the admin dashboard speaks Arabic
+
+The dashboard's own interface was English only. Every label, button, help note and message
+around the content was in English, while only the content being edited had an Arabic twin.
+For a marketing team in Jeddah that is the wrong way round, and it was the last thing keeping
+the dashboard from being genuinely self-service.
+
+- **`public/admin/admin.i18n.js` (new).** 360 entries, keyed by the exact English string the
+  interface uses. A screen that has never been translated falls back to English rather than
+  to blanks, so this file can grow without ever being able to break the dashboard.
+- **A language switch** in the sidebar footer and on the sign-in card, remembered in
+  `localStorage`. It always shows the language you would be switching *to*, in that language,
+  so it reads as an offer rather than a label of the current state.
+- **`dir="rtl"` on `<html>`**, so the grid, the flex rows and the text all mirror on their
+  own. Only what CSS pins to a physical side is restated by hand: the drawer now slides in
+  from the left, the switch knob travels the other way, the search icon crosses the field,
+  and the off-canvas sidebar comes in from the right on a phone.
+- **Arabic number agreement.** Arabic has a dual and two plural bands where English has one
+  plural, so "1 change / 3 changes / 11 changes" cannot be built by adding an s. Every counted
+  phrase a person reads is written out in all four forms: `تعديل واحد` · `تعديلان` ·
+  `3 تعديلات` · `11 تعديلاً`.
+- **Direction of the CONTENT is independent of the interface.** Every Arabic field in the
+  schema is marked `rtl:true`, so everything else is pinned to `ltr`: an English title typed
+  while the dashboard is in Arabic used to inherit RTL and throw its punctuation to the wrong
+  end. Data cells (names, emails, phone numbers) carry `dir="auto"` and resolve per row, while
+  staying aligned with the Arabic layout around them.
+
+Verified on `wrangler pages dev`: every view, the editing drawer, the publish panel and the
+sign-in screen render in Arabic with no English left in the chrome, and English mode is
+byte-for-byte unchanged.
 
 ---
 

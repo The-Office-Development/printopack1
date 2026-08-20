@@ -136,6 +136,7 @@ h1,h2,h3,h4{font-family:var(--disp);font-weight:400;letter-spacing:-.01em;line-h
 .field input:focus,.field textarea:focus,.field select:focus{outline:none;border-color:var(--gold)}
 .field textarea{min-height:110px;resize:vertical;line-height:1.6}
 .field [dir="rtl"]{text-align:right;font-family:var(--ar)}
+.field [dir="ltr"]{text-align:left;font-family:var(--body)}
 .field .hint{font-size:12px;color:var(--muted);margin-top:6px}
 
 /* drawer */
@@ -357,3 +358,57 @@ h1,h2,h3,h4{font-family:var(--disp);font-weight:400;letter-spacing:-.01em;line-h
 .enq-file em{font-style:normal;font-size:12px;color:var(--faint)}
 .drawer-foot .btn-ok{display:inline-flex;align-items:center;gap:8px;text-decoration:none}
 .drawer-foot .btn-ok svg{width:16px;height:16px;fill:none;stroke:currentColor;stroke-width:1.7}
+
+/* ================= Arabic interface =================
+   The dashboard mirrors when the interface language is Arabic. dir="rtl" on <html> already
+   flips the grid, flex and text direction on its own; what is listed here is only what CSS
+   pins to a physical side and therefore cannot flip by itself.
+   Content fields keep their own direction regardless: an Arabic field is RTL while the
+   interface is in English, and an English field stays LTR while the interface is Arabic. */
+html.ar body{font-family:var(--ar)}
+html.ar h1,html.ar h2,html.ar h3,html.ar h4{font-family:var(--ar);letter-spacing:0}
+/* The display face is Latin-only, so anything set in it needs the Arabic face instead, and
+   the wide letter-spacing that suits Jost pulls Arabic letters apart from their joins. */
+html.ar .btn,html.ar .topbar .crumb,html.ar .tbl th,html.ar .pill,html.ar .field label,
+html.ar .seg button,html.ar .sb-group,html.ar .cal-dow,html.ar .li-import label,
+html.ar .sb-item span,html.ar .badge,html.ar .stat-card .l{font-family:var(--ar);letter-spacing:0}
+html.ar .topbar .crumb,html.ar .tbl th,html.ar .field label,html.ar .sb-group,
+html.ar .cal-dow,html.ar .li-import label{text-transform:none}
+
+/* physical sides that have to be restated */
+html.ar .login-brand,html.ar .sb-brand b{padding-left:0;padding-right:.2em}
+html.ar .sb-item .badge{margin-left:0;margin-right:auto}
+html.ar .sb-logout{text-align:right}
+html.ar .tbl th{text-align:right}
+html.ar .field label .ar,html.ar .field label .req{margin-left:0;margin-right:6px}
+html.ar .search svg{left:auto;right:12px}
+html.ar .pubm-next ol{padding-left:0;padding-right:18px}
+html.ar .pubm-steps{text-align:right}
+/* dir="auto" on a data element resolves to ltr for an email or a Latin name, which would
+   otherwise drag the text to the left edge of a right-aligned card. Direction and alignment
+   are separate decisions here: the characters order themselves, while the block still sits
+   where the Arabic layout puts it. */
+html.ar .cty-detail,html.ar .t-title,html.ar .t-sub,html.ar .tbl td [dir="auto"]{text-align:right}
+html.ar .cal-cell{border-right:none;border-left:1px solid var(--line-soft)}
+html.ar .cal-cell:nth-child(7n){border-left:none}
+
+/* The drawer slides in from the side the language reads from. */
+html.ar .drawer{right:auto;left:0;box-shadow:20px 0 60px rgba(0,0,0,.25);transform:translateX(-100%)}
+html.ar .drawer.show{transform:translateX(0)}
+/* The toggle knob is a positioned dot inside the switch, so it travels the other way. */
+html.ar .sw .sw-k{left:auto;right:3px}
+html.ar .sw.on .sw-k{right:23px}
+@media(max-width:900px){
+ html.ar .sidebar{left:auto;right:0;transform:translateX(100%)}
+ html.ar .app.nav-open .sidebar{transform:translateX(0)}
+}
+
+/* ---- the language switch itself ----
+   Always shows the language you would be switching TO, in that language, so it reads as an
+   offer rather than a label of the current state. */
+.lang-sw{margin-top:8px;width:100%;padding:8px 12px;border-radius:8px;background:none;
+ border:1px solid rgba(255,255,255,.14);color:#93a0b7;font-size:12.5px;font-family:var(--disp);
+ letter-spacing:.06em;cursor:pointer;transition:.2s}
+.lang-sw:hover{background:rgba(255,255,255,.06);color:#fff;border-color:rgba(255,255,255,.3)}
+.login-lang{margin-top:14px;border-color:var(--line);color:var(--muted);letter-spacing:.06em}
+.login-lang:hover{background:var(--gold-soft);color:var(--navy);border-color:var(--gold)}

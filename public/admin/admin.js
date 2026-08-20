@@ -13,7 +13,54 @@ function esc(s){var d=document.createElement('div');d.textContent=s==null?'':Str
  return d.innerHTML.replace(/"/g,'&quot;').replace(/'/g,'&#39;');}
 function uid(){return 'x'+Date.now().toString(36)+Math.random().toString(36).slice(2,6);}
 function today(){return new Date().toISOString().slice(0,10);}
-function fmtDate(d){if(!d)return '';var p=new Date(d);if(isNaN(p))return d;return p.toLocaleDateString('en-GB',{day:'numeric',month:'short',year:'numeric'});}
+function fmtDate(d){if(!d)return '';var p=new Date(d);if(isNaN(p))return d;return p.toLocaleDateString(LANG==='ar'?'ar':'en-GB',{day:'numeric',month:'short',year:'numeric'});}
+/* ---------------- language ----------------
+   The dashboard itself speaks English or Arabic. The CONTENT it edits always has both, in
+   its own paired fields, and nothing here touches it: switching the interface to Arabic does
+   not change a single word of the website.
+   T() looks the English string up in the dictionary and falls back to the English itself, so
+   a screen that has never been translated degrades to English rather than to blanks. The
+   {x} placeholders are filled here rather than by concatenation, because Arabic assembles
+   the pieces in a different order to English. */
+var LKEY='ppk_admin_lang';
+var LANG=(function(){try{return localStorage.getItem(LKEY)==='ar'?'ar':'en';}catch(e){return 'en';}})();
+function T(s,v){
+ var d=(LANG==='ar'&&window.PPK_AR)?window.PPK_AR:null;
+ var out=(d&&Object.prototype.hasOwnProperty.call(d,s))?d[s]:s;
+ /* An entry is a function when the phrase has to agree with a number: Arabic has a dual and
+    two plural bands where English has one plural, so those are written out rather than
+    interpolated. It builds the finished string itself and needs no placeholder pass. */
+ if(typeof out==='function')return out(v||{});
+ if(v)for(var k in v)out=String(out).split('{'+k+'}').join(v[k]);
+ return out;
+}
+/* A section's singular as a button reads it. English lowercases it mid-sentence ("New post");
+   Arabic has no case, so lowercasing there would only mangle the word. */
+function sing(mdl){return LANG==='ar'?T(mdl.singular):String(mdl.singular).toLowerCase();}
+/* Set on <html> rather than on the app element, so the mirroring reaches the scrollbar and
+   the drawers and dialogs, which are appended to <body> outside the app. */
+function applyLang(){
+ var h=document.documentElement;
+ h.lang=LANG; h.dir=(LANG==='ar')?'rtl':'ltr';
+ h.classList.toggle('ar',LANG==='ar');
+}
+function setLang(l){
+ LANG=(l==='ar')?'ar':'en';
+ try{localStorage.setItem(LKEY,LANG);}catch(e){}
+ applyLang();
+ render();
+}
+function langToggleHTML(cls){
+ return '<button class="'+(cls||'lang-sw')+'" data-lang="'+(LANG==='ar'?'en':'ar')+'" type="button">'+
+  (LANG==='ar'?'English':'العربية')+'</button>';
+}
+function bindLang(scope){
+ (scope||document).querySelectorAll('[data-lang]').forEach(function(el){
+  el.addEventListener('click',function(){setLang(el.getAttribute('data-lang'));});
+ });
+}
+applyLang();
+
 function toast(m,t){var e=$('#toast');$('#toastText').textContent=m;e.className='toast show '+(t||'');clearTimeout(toast._t);toast._t=setTimeout(function(){e.className='toast';},2600);}
 
 var ICON={
@@ -656,17 +703,19 @@ function devSignInHTML(){return isLocalHost()?'<button class="btn btn-ghost" id=
 function renderLogin(msg){
  root.innerHTML='<div class="login"><form class="login-card" id="lf">'+
   '<img class="login-logo" src="/images/printopack-logo.png" alt="Printopack">'+
-  '<p class="login-sub">Site administration · Marketing</p>'+
-  '<h1>Admin sign in</h1>'+
-  '<div class="field"><label>Password</label><input type="password" id="lpw" autocomplete="current-password" required autofocus></div>'+
+  '<p class="login-sub">'+esc(T('Site administration · Marketing'))+'</p>'+
+  '<h1>'+esc(T('Admin sign in'))+'</h1>'+
+  '<div class="field"><label>'+esc(T('Password'))+'</label><input type="password" id="lpw" autocomplete="current-password" required autofocus></div>'+
   '<div id="lts" style="margin:0 0 12px"></div>'+
   '<p class="login-err" id="lerr" hidden style="color:#b00020;font-size:13px;margin:-4px 0 12px"></p>'+
-  '<button class="btn btn-primary" id="lbtn" style="width:100%;justify-content:center;padding:13px" type="submit">Sign in</button>'+
+  '<button class="btn btn-primary" id="lbtn" style="width:100%;justify-content:center;padding:13px" type="submit">'+esc(T('Sign in'))+'</button>'+
   devSignInHTML()+
-  '<p class="login-note">Restricted area for Printopack marketing. Customer accounts are managed in the customer portal.</p>'+
-  '<a class="login-portal" href="https://printopack.azurewebsites.net/">Are you a customer? Go to the customer portal &rarr;</a>'+
-  '<a class="login-back" href="/">&larr; Back to the website</a>'+
+  '<p class="login-note">'+esc(T('Restricted area for Printopack marketing. Customer accounts are managed in the customer portal.'))+'</p>'+
+  '<a class="login-portal" href="https://printopack.azurewebsites.net/">'+esc(T('Are you a customer? Go to the customer portal \u2192'))+'</a>'+
+  '<a class="login-back" href="/">'+esc(T('\u2190 Back to the website'))+'</a>'+
+  langToggleHTML('lang-sw login-lang')+
  '</form></div>';
+ bindLang(root);
  var err=$('#lerr'),btn=$('#lbtn');
  if(msg){err.textContent=msg;err.hidden=false;}
  /* Turnstile: the bot wall is optional and server-driven. Ask /api/config whether a site key is
@@ -676,18 +725,18 @@ function renderLogin(msg){
  $('#lf').addEventListener('submit',function(e){
   e.preventDefault();
   var pw=$('#lpw').value;err.hidden=true;
-  function fail(msg){btn.disabled=false;btn.textContent='Sign in';err.textContent=msg;err.hidden=false;}
-  if(ts.on&&!ts.token){fail('Please complete the verification.');return;}
-  btn.disabled=true;btn.textContent='Signing in...';
+  function fail(msg){btn.disabled=false;btn.textContent=T('Sign in');err.textContent=msg;err.hidden=false;}
+  if(ts.on&&!ts.token){fail(T('Please complete the verification.'));return;}
+  btn.disabled=true;btn.textContent=T('Signing in...');
   fetch(API+'/login',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({password:pw,turnstileToken:ts.token})}).then(function(r){
    if(r.ok){localStorage.setItem(SKEY,'1');boot();return;}          /* cookie set: reload content */
-   if(r.status===404){resetTs();return fail('The backend is not reachable, so sign in is unavailable here. Use the live site.');}
+   if(r.status===404){resetTs();return fail(T('The backend is not reachable, so sign in is unavailable here. Use the live site.'));}
    return r.json().catch(function(){return {};}).then(function(o){  /* backend present but rejected */
     resetTs();                                                      /* one token is one attempt: get a fresh one */
-    if(r.status===401)return fail('Wrong password. Please try again.');
-    fail((o&&o.error)||'Sign in failed. Please try again.');        /* 429 lockout / 403 bot / 500 misconfig carry a message */
+    if(r.status===401)return fail(T('Wrong password. Please try again.'));
+    fail((o&&o.error)||T('Sign in failed. Please try again.'));        /* 429 lockout / 403 bot / 500 misconfig carry a message */
    });
-  }).catch(function(){resetTs();fail('Network error. Please check your connection and try again.');});
+  }).catch(function(){resetTs();fail(T('Network error. Please check your connection and try again.'));});
  });
  /* LOCAL TESTING ONLY -- REMOVE BEFORE LAUNCH (see devSignInHTML). */
  var dev=$('#ldev');
@@ -706,19 +755,19 @@ var view='dashboard';
 var NAV=[{k:'dashboard',label:'Dashboard',icon:'dash'},{k:'enquiries',label:'Enquiries',icon:'inbox'},{grp:'Content'},{k:'news'},{k:'products'},{k:'team'},{k:'careers'},{k:'partners'},{k:'formats'},{k:'standard'},{grp:'Company'},{k:'factory'},{k:'quality'},{k:'responsibility'},{k:'values'},{k:'gallery'},{grp:'Site'},{k:'about',label:'About & Home',icon:'about'},{k:'offices'},{k:'countries',label:'Countries on the map',icon:'offices'},{k:'settings',label:'Settings',icon:'settings'},{k:'security',label:'Password',icon:'logout'}];
 function sidebar(){
  var items=NAV.map(function(n){
-  if(n.grp)return '<div class="sb-group">'+n.grp+'</div>';
+  if(n.grp)return '<div class="sb-group">'+esc(T(n.grp))+'</div>';
   if(n.k==='security'&&MODE!=='api')return ''; /* password change needs the live backend */
   var m=MODELS[n.k]; var label=n.label||(m&&m.label)||n.k; var icon=n.icon||(m&&m.icon)||'dash';
   var badge=m?'<span class="badge">'+coll(n.k).length+'</span>':'';
   if(n.k==='enquiries')badge=ENQ.counts.unread?'<span class="badge alert">'+ENQ.counts.unread+'</span>':'';
-  return '<div class="sb-item'+(view===n.k?' on':'')+'" data-nav="'+n.k+'">'+svg(icon)+'<span>'+label+'</span>'+badge+'</div>';
+  return '<div class="sb-item'+(view===n.k?' on':'')+'" data-nav="'+n.k+'">'+svg(icon)+'<span>'+esc(T(label))+'</span>'+badge+'</div>';
  }).join('');
- return '<aside class="sidebar"><div class="sb-brand"><img class="sb-logo" src="/images/printopack-logo-white.png" alt="Printopack"><small>System · Admin</small></div>'+
+ return '<aside class="sidebar"><div class="sb-brand"><img class="sb-logo" src="/images/printopack-logo-white.png" alt="Printopack"><small>'+esc(T('System · Admin'))+'</small></div>'+
   '<nav class="sb-nav">'+items+'</nav>'+
   '<div class="sb-pub" id="pub"></div>'+
-  '<div class="sb-foot"><div class="sb-user"><div class="av">MK</div><div><div class="nm">Marketing</div><div class="rl">Site administrator</div></div></div>'+
-  '<a class="sb-site" href="/" target="_blank" rel="noopener">'+svg('external')+'View website</a>'+
-  '<button class="sb-logout" data-logout>'+svg('logout')+'Sign out</button></div></aside>';
+  '<div class="sb-foot"><div class="sb-user"><div class="av">MK</div><div><div class="nm">'+esc(T('Marketing'))+'</div><div class="rl">'+esc(T('Site administrator'))+'</div></div></div>'+
+  '<a class="sb-site" href="/" target="_blank" rel="noopener">'+svg('external')+esc(T('View website'))+'</a>'+
+  '<button class="sb-logout" data-logout>'+svg('logout')+esc(T('Sign out'))+'</button>'+langToggleHTML()+'</div></aside>';
 }
 
 /* ---------------- publishing ----------------
@@ -728,13 +777,16 @@ function sidebar(){
    reachable from every screen. */
 var PUB={pending:false,publishedAt:null,canDeploy:true,busy:false,changes:[],firstPublish:false};
 function agoText(ts){
- if(!ts)return 'never';
+ if(!ts)return T('never');
  var s=Math.floor((Date.now()-ts)/1000);
- if(s<90)return 'just now';
- if(s<5400)return Math.round(s/60)+' min ago';
+ if(s<90)return T('just now');
+ if(s<5400)return T('{n} min ago',{n:Math.round(s/60)});
  var d=new Date(ts),now=new Date();
  var sameDay=d.toDateString()===now.toDateString();
- return (sameDay?'today':d.toLocaleDateString('en-GB',{day:'numeric',month:'short'}))+' at '+d.toLocaleTimeString('en-GB',{hour:'2-digit',minute:'2-digit'});
+ var loc=LANG==='ar'?'ar':'en-GB';
+ return T('{d} at {t}',{
+  d:sameDay?T('today'):d.toLocaleDateString(loc,{day:'numeric',month:'short'}),
+  t:d.toLocaleTimeString(loc,{hour:'2-digit',minute:'2-digit'})});
 }
 /* Kept to two lines: the sidebar nav already needs the height, and this panel is pinned above
    it on every screen. Status and last-published time share one line under the button. */
@@ -742,22 +794,22 @@ function pubRender(){
  var el=$('#pub');if(!el)return;
  if(PUB.busy){
   el.className='sb-pub busy';
-  el.innerHTML='<button class="pub-btn" disabled>'+svg('publish')+'Publishing…</button>'+
-   '<p class="pub-note">'+(PUB.canDeploy?'The site rebuilds in a minute or two.':'Saving your changes for publishing.')+'</p>';
+  el.innerHTML='<button class="pub-btn" disabled>'+svg('publish')+esc(T('Publishing…'))+'</button>'+
+   '<p class="pub-note">'+esc(T(PUB.canDeploy?'The site rebuilds in a minute or two.':'Saving your changes for publishing.'))+'</p>';
   return;
  }
  el.className='sb-pub'+(PUB.pending?' pending':'');
  var cnt=pendingCount(),label;
- if(!PUB.pending)label='Everything is live';
- else if(PUB.firstPublish)label='Ready for first publish';
- else if(cnt>0)label=cnt+' change'+(cnt===1?'':'s')+' not live yet';
- else label='Changes not live yet';
+ if(!PUB.pending)label=T('Everything is live');
+ else if(PUB.firstPublish)label=T('Ready for first publish');
+ else if(cnt>0)label=T('{n} changes not live yet',{n:cnt});
+ else label=T('Changes not live yet');
  /* Say this before they press the button, not after: without the deploy hook a publish saves
     the snapshot and the website does not change. */
- var warn=PUB.canDeploy?'':'<p class="pub-note warn">Automatic rebuild is not set up yet, so publishing will not update the website.</p>';
- el.innerHTML='<button class="pub-btn" id="pubgo"'+(PUB.pending?'':' disabled')+'>'+svg('publish')+'Publish to live site</button>'+
+ var warn=PUB.canDeploy?'':'<p class="pub-note warn">'+esc(T('Automatic rebuild is not set up yet, so publishing will not update the website.'))+'</p>';
+ el.innerHTML='<button class="pub-btn" id="pubgo"'+(PUB.pending?'':' disabled')+'>'+svg('publish')+esc(T('Publish to live site'))+'</button>'+
   warn+
-  '<p class="pub-note"><i></i>'+label+' · last published '+esc(agoText(PUB.publishedAt))+'.</p>';
+  '<p class="pub-note"><i></i>'+esc(label)+' · '+esc(T('last published {x}.',{x:agoText(PUB.publishedAt)}))+'</p>';
  var b=$('#pubgo');if(b)b.addEventListener('click',openPubModal);
 }
 /* Total individual edits waiting to go live, across every section. */
@@ -767,21 +819,21 @@ function pendingCount(){
 }
 /* A section's friendly name, reusing the same labels shown in the nav. */
 function secLabel(key){
- if(MODELS[key]&&MODELS[key].label)return MODELS[key].label;
- for(var i=0;i<NAV.length;i++)if(NAV[i].k===key&&NAV[i].label)return NAV[i].label;
+ if(MODELS[key]&&MODELS[key].label)return T(MODELS[key].label);
+ for(var i=0;i<NAV.length;i++)if(NAV[i].k===key&&NAV[i].label)return T(NAV[i].label);
  return key;
 }
 /* The human-readable list of what a publish would put live. */
 function changeRows(){
- if(PUB.firstPublish)return '<p class="pubm-first">This is the first publish. Your entire website will be built and go live for the first time.</p>';
- if(!PUB.changes||!PUB.changes.length)return '<p class="pubm-first">Your saved changes are ready to go live.</p>';
+ if(PUB.firstPublish)return '<p class="pubm-first">'+esc(T('This is the first publish. Your entire website will be built and go live for the first time.'))+'</p>';
+ if(!PUB.changes||!PUB.changes.length)return '<p class="pubm-first">'+esc(T('Your saved changes are ready to go live.'))+'</p>';
  return '<ul class="pubm-list">'+PUB.changes.map(function(c){
   var parts=[];
-  if(c.kind==='singleton')parts.push('updated');
+  if(c.kind==='singleton')parts.push(T('updated'));
   else{
-   if(c.added)parts.push(c.added+' added');
-   if(c.edited)parts.push(c.edited+' edited');
-   if(c.removed)parts.push(c.removed+' removed');
+   if(c.added)parts.push(T('{n} added',{n:c.added}));
+   if(c.edited)parts.push(T('{n} edited',{n:c.edited}));
+   if(c.removed)parts.push(T('{n} removed',{n:c.removed}));
   }
   return '<li><span class="pubm-sec">'+esc(secLabel(c.key))+'</span><span class="pubm-det">'+parts.join(' · ')+'</span></li>';
  }).join('')+'</ul>';
@@ -802,9 +854,9 @@ function pubRefresh(){
    and, once done, spells out what happens next and when the site will actually update, so the
    client is never left guessing whether the website changed. */
 function openPubModal(){
- if(MODE!=='api'){toast('This is a preview copy. Publishing works on the live site.','err');return;}
+ if(MODE!=='api'){toast(T('This is a preview copy. Publishing works on the live site.'),'err');return;}
  if(FAILED.length){
-  toast('Some changes are not saved on the server yet. Save them before publishing.','err');
+  toast(T('Some changes are not saved on the server yet. Save them before publishing.'),'err');
   renderFailBar();return;
  }
  /* The change list was fetched once when the dashboard loaded, so after an afternoon of
@@ -815,23 +867,23 @@ function openPubModal(){
  }).catch(function(){}).then(function(){drawPubModal();});
 }
 function drawPubModal(){
- var warn=PUB.canDeploy?'':'<p class="pubm-warn">The automatic rebuild is not set up, so publishing will save your changes but will not update the public website yet.</p>';
+ var warn=PUB.canDeploy?'':'<p class="pubm-warn">'+esc(T('The automatic rebuild is not set up, so publishing will save your changes but will not update the public website yet.'))+'</p>';
  var host=document.createElement('div');host.id='pubmHost';
  host.innerHTML='<div class="overlay show" id="pubmOv"></div>'+
   '<div class="pubm" role="dialog" aria-modal="true">'+
-   '<div class="pubm-head"><h2>Publish to the live website</h2><button class="x" id="pubmX" aria-label="Close">✕</button></div>'+
+   '<div class="pubm-head"><h2>'+esc(T('Publish to the live website'))+'</h2><button class="x" id="pubmX" aria-label="'+esc(T('Close'))+'">✕</button></div>'+
    '<div class="pubm-body" id="pubmBody">'+
     warn+
-    '<p class="pubm-intro">These changes will go live on your public website:</p>'+
+    '<p class="pubm-intro">'+esc(T('These changes will go live on your public website:'))+'</p>'+
     changeRows()+
-    '<div class="pubm-next"><h3>What happens when you publish</h3><ol>'+
-     '<li>Your changes are saved to the site straight away.</li>'+
-     '<li>The website rebuilds itself automatically, with no developer needed.</li>'+
-     '<li>The new version appears online, usually within 1 to 2 minutes.</li>'+
-    '</ol><p class="pubm-hint">You can keep working while it rebuilds. Nothing else on the site is affected.</p></div>'+
+    '<div class="pubm-next"><h3>'+esc(T('What happens when you publish'))+'</h3><ol>'+
+     '<li>'+esc(T('Your changes are saved to the site straight away.'))+'</li>'+
+     '<li>'+esc(T('The website rebuilds itself automatically, with no developer needed.'))+'</li>'+
+     '<li>'+esc(T('The new version appears online, usually within 1 to 2 minutes.'))+'</li>'+
+    '</ol><p class="pubm-hint">'+esc(T('You can keep working while it rebuilds. Nothing else on the site is affected.'))+'</p></div>'+
    '</div>'+
-   '<div class="pubm-foot"><button class="btn btn-ghost" id="pubmCancel">Cancel</button>'+
-    '<button class="btn btn-ok" id="pubmGo">'+svg('publish')+'Publish now</button></div>'+
+   '<div class="pubm-foot"><button class="btn btn-ghost" id="pubmCancel">'+esc(T('Cancel'))+'</button>'+
+    '<button class="btn btn-ok" id="pubmGo">'+svg('publish')+esc(T('Publish now'))+'</button></div>'+
   '</div>';
  document.body.appendChild(host);
  function close(){host.remove();}
@@ -843,7 +895,7 @@ function drawPubModal(){
 function runPublish(host){
  var body=host.querySelector('#pubmBody'),foot=host.querySelector('.pubm-foot');
  var go=host.querySelector('#pubmGo'),cancel=host.querySelector('#pubmCancel');
- go.disabled=true;go.innerHTML=svg('publish')+'Publishing...';cancel.disabled=true;
+ go.disabled=true;go.innerHTML=svg('publish')+esc(T('Publishing...'));cancel.disabled=true;
  PUB.busy=true;pubRender();
  fetch(API+'/publish',{method:'POST'}).then(function(r){if(!r.ok)throw 0;return r.json();}).then(function(o){
   PUB.busy=false;PUB.pending=false;PUB.publishedAt=Date.now();PUB.changes=[];PUB.firstPublish=false;pubRender();
@@ -852,22 +904,22 @@ function runPublish(host){
   /* A snapshot with no rebuild behind it looks identical from in here, so say so plainly
      rather than let the client believe the website changed. */
   body.innerHTML='<div class="pubm-done"><div class="pubm-check'+(deployed?'':' warnc')+'">'+svg(deployed?'publish':'edit')+'</div>'+
-   '<h3>'+(deployed?'Published':'Saved, not yet building')+'</h3>'+
+   '<h3>'+esc(T(deployed?'Published':'Saved, not yet building'))+'</h3>'+
    (deployed
-    ? '<p>Your changes are saved and the website is rebuilding now.</p>'+
-      '<ul class="pubm-steps"><li><b>Now</b><span>changes saved</span></li>'+
-      '<li><b>~1 to 2 min</b><span>the new version goes live at your web address</span></li></ul>'+
-      '<p class="pubm-hint">You can close this and keep editing. Open your website in a minute or two, and refresh the page, to see the update.</p>'
-    : '<p>Your changes were saved, but the website was not asked to rebuild'+esc(why)+', so the public site will not change yet. Please let your developer know.</p>')+
+    ? '<p>'+esc(T('Your changes are saved and the website is rebuilding now.'))+'</p>'+
+      '<ul class="pubm-steps"><li><b>'+esc(T('Now'))+'</b><span>'+esc(T('changes saved'))+'</span></li>'+
+      '<li><b>'+esc(T('~1 to 2 min'))+'</b><span>'+esc(T('the new version goes live at your web address'))+'</span></li></ul>'+
+      '<p class="pubm-hint">'+esc(T('You can close this and keep editing. Open your website in a minute or two, and refresh the page, to see the update.'))+'</p>'
+    : '<p>'+esc(T('Your changes were saved, but the website was not asked to rebuild{why}, so the public site will not change yet. Please let your developer know.',{why:why}))+'</p>')+
    '</div>';
-  foot.innerHTML='<button class="btn btn-ok" id="pubmDone">Done</button>';
+  foot.innerHTML='<button class="btn btn-ok" id="pubmDone">'+esc(T('Done'))+'</button>';
   host.querySelector('#pubmDone').addEventListener('click',function(){host.remove();});
-  toast(deployed?'Published. The site rebuilds in a minute or two.':'Saved, but the rebuild was not triggered.',deployed?'ok':'err');
+  toast(T(deployed?'Published. The site rebuilds in a minute or two.':'Saved, but the rebuild was not triggered.'),deployed?'ok':'err');
  }).catch(function(){
   PUB.busy=false;pubRender();
-  go.disabled=false;go.innerHTML=svg('publish')+'Publish now';cancel.disabled=false;
-  if(!body.querySelector('.pubm-err')){var e=document.createElement('p');e.className='pubm-err';e.textContent='Publish failed. Nothing was changed on the live site. Please check your connection and try again.';body.appendChild(e);}
-  toast('Publish failed. Nothing was changed on the live site.','err');
+  go.disabled=false;go.innerHTML=svg('publish')+esc(T('Publish now'));cancel.disabled=false;
+  if(!body.querySelector('.pubm-err')){var e=document.createElement('p');e.className='pubm-err';e.textContent=T('Publish failed. Nothing was changed on the live site. Please check your connection and try again.');body.appendChild(e);}
+  toast(T('Publish failed. Nothing was changed on the live site.'),'err');
  });
 }
 /* The menu button is rendered on every screen and hidden by CSS above 900px. Below that the
@@ -875,10 +927,10 @@ function runPublish(host){
    button the dashboard was a dead end on a phone: you could sign in and go nowhere. */
 function topbar(title,crumb,actions){
  return '<div class="topbar">'+
-  '<button class="navtog" id="navtog" aria-label="Menu" aria-expanded="false">'+
+  '<button class="navtog" id="navtog" aria-label="'+esc(T('Menu'))+'" aria-expanded="false">'+
    '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-linecap="round"><path d="M4 7h16M4 12h16M4 17h16"/></svg>'+
   '</button>'+
-  '<div class="topbar-head"><div class="crumb">'+esc(crumb||'Printopack System')+'</div><h1>'+esc(title)+'</h1></div>'+
+  '<div class="topbar-head"><div class="crumb">'+esc(T(crumb||'Printopack System'))+'</div><h1>'+esc(T(title))+'</h1></div>'+
   '<div class="topbar-actions">'+(actions||'')+'</div></div>';
 }
 /* Opens and closes the off-canvas sidebar. navigate() already closes it after a section is
@@ -909,6 +961,7 @@ function render(){
  if(!loggedIn()){renderLogin();return;}
  root.innerHTML='<div class="app">'+sidebar()+'<main class="main" id="main"></main></div>';
  root.querySelectorAll('.sidebar [data-nav]').forEach(function(el){el.addEventListener('click',function(){navigate(el.getAttribute('data-nav'));});});
+ bindLang(root);
  var lo=root.querySelector('[data-logout]');if(lo)lo.addEventListener('click',function(){localStorage.removeItem(SKEY);if(MODE==='api'){fetch(API+'/logout',{method:'POST'}).catch(function(){}).finally(function(){renderLogin();});}else render();});
  renderView();
  pubRender();
@@ -957,26 +1010,26 @@ function paintView(m){if(view==='dashboard')return dashView(m);if(view==='enquir
    frozen the way a hardcoded credential would be. */
 function securityView(m){
  m.innerHTML=topbar('Password','Site','')+'<div class="view">'+
-  '<div class="panel"><div class="panel-head"><div><h2>Change admin password</h2><p>This is the single sign-in for the marketing team. Change it here whenever you need to (for example when a staff member leaves). The new password works right away and is stored securely, never in plain text.</p></div></div>'+
+  '<div class="panel"><div class="panel-head"><div><h2>'+esc(T('Change admin password'))+'</h2><p>'+esc(T('This is the single sign-in for the marketing team. Change it here whenever you need to (for example when a staff member leaves). The new password works right away and is stored securely, never in plain text.'))+'</p></div></div>'+
   '<div class="panel-body"><div class="form-grid">'+
-   '<div class="field"><label>Current password</label><input type="password" id="pc" autocomplete="current-password"></div>'+
+   '<div class="field"><label>'+esc(T('Current password'))+'</label><input type="password" id="pc" autocomplete="current-password"></div>'+
    '<div class="field"></div>'+
-   '<div class="field"><label>New password</label><input type="password" id="pn" autocomplete="new-password"></div>'+
-   '<div class="field"><label>Confirm new password</label><input type="password" id="pn2" autocomplete="new-password"></div>'+
+   '<div class="field"><label>'+esc(T('New password'))+'</label><input type="password" id="pn" autocomplete="new-password"></div>'+
+   '<div class="field"><label>'+esc(T('Confirm new password'))+'</label><input type="password" id="pn2" autocomplete="new-password"></div>'+
    '<p id="perr" hidden style="color:#b00020;font-size:13px;grid-column:1/-1;margin:0"></p>'+
-   '<div style="grid-column:1/-1"><button class="btn btn-ok" id="pbtn">Update password</button></div>'+
+   '<div style="grid-column:1/-1"><button class="btn btn-ok" id="pbtn">'+esc(T('Update password'))+'</button></div>'+
   '</div></div></div></div>';
  var err=$('#perr'),btn=$('#pbtn');
  btn.addEventListener('click',function(){
   var c=$('#pc').value,n=$('#pn').value,n2=$('#pn2').value;err.hidden=true;
-  if(n.length<10){err.textContent='New password must be at least 10 characters.';err.hidden=false;return;}
-  if(n!==n2){err.textContent='The two new passwords do not match.';err.hidden=false;return;}
-  btn.disabled=true;btn.textContent='Updating...';
+  if(n.length<10){err.textContent=T('New password must be at least 10 characters.');err.hidden=false;return;}
+  if(n!==n2){err.textContent=T('The two new passwords do not match.');err.hidden=false;return;}
+  btn.disabled=true;btn.textContent=T('Updating...');
   fetch(API+'/password',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({current:c,next:n})}).then(function(r){return r.json().catch(function(){return {};}).then(function(o){return {ok:r.ok,o:o};});}).then(function(x){
-   btn.disabled=false;btn.textContent='Update password';
-   if(x.ok){$('#pc').value='';$('#pn').value='';$('#pn2').value='';toast('Password updated','ok');}
-   else{err.textContent=(x.o&&x.o.error)||'Could not update the password.';err.hidden=false;}
-  }).catch(function(){btn.disabled=false;btn.textContent='Update password';err.textContent='Network error. Please try again.';err.hidden=false;});
+   btn.disabled=false;btn.textContent=T('Update password');
+   if(x.ok){$('#pc').value='';$('#pn').value='';$('#pn2').value='';toast(T('Password updated'),'ok');}
+   else{err.textContent=(x.o&&x.o.error)||T('Could not update the password.');err.hidden=false;}
+  }).catch(function(){btn.disabled=false;btn.textContent=T('Update password');err.textContent=T('Network error. Please try again.');err.hidden=false;});
  });
 }
 
@@ -990,7 +1043,8 @@ function storageMeter(){
   var pct=Math.min(100,s.bytes/s.limit*100);
   panel.hidden=false;
   $('#mfill').style.width=Math.max(pct,0.5)+'%';
-  $('#mtext').textContent=s.count+' picture'+(s.count===1?'':'s')+', '+mb(s.bytes)+' of '+mb(s.limit)+' used ('+(pct<0.1?'under 0.1':pct.toFixed(1))+'%).';
+  $('#mtext').textContent=T('{n} pictures, {used} of {limit} used ({pct}%).',{
+   n:s.count,used:mb(s.bytes),limit:mb(s.limit),pct:(pct<0.1?T('under 0.1'):pct.toFixed(1))});
  }).catch(function(){});
 }
 
@@ -1011,22 +1065,22 @@ function enqLoad(cb){
   if(!r.ok)throw 0;return r.json();
  }).then(function(d){
   ENQ.items=(d&&d.items)||[];ENQ.counts=(d&&d.counts)||{};ENQ.loading=false;cb&&cb();
- }).catch(function(){ENQ.loading=false;cb&&cb('Could not load the enquiries. Please check your connection.');});
+ }).catch(function(){ENQ.loading=false;cb&&cb(T('Could not load the enquiries. Please check your connection.'));});
 }
-function enqKindLabel(k){return k==='application'?'Job application':(k==='newsletter'?'Newsletter':'Enquiry');}
+function enqKindLabel(k){return T(k==='application'?'Job application':(k==='newsletter'?'Newsletter':'Enquiry'));}
 function enquiriesView(m){
  if(MODE!=='api'){
   m.innerHTML=topbar('Enquiries','Inbox','')+'<div class="view"><div class="panel"><div class="empty">'+svg('inbox')+
-   '<h3>Available on the live site</h3><p>Enquiries are sent to the website itself, so they appear here once this dashboard is running on the live address.</p></div></div></div>';
+   '<h3>'+esc(T('Available on the live site'))+'</h3><p>'+esc(T('Enquiries are sent to the website itself, so they appear here once this dashboard is running on the live address.'))+'</p></div></div></div>';
   bindNavToggle();return;
  }
  var seg='<div class="seg" id="enqseg">'+
    ['open','archived','all'].map(function(f){
-    return '<button'+(ENQ.filter===f?' class="on"':'')+' data-f="'+f+'">'+(f==='open'?'Open':(f==='archived'?'Archived':'Everything'))+'</button>';
+    return '<button'+(ENQ.filter===f?' class="on"':'')+' data-f="'+f+'">'+esc(T(f==='open'?'Open':(f==='archived'?'Archived':'Everything')))+'</button>';
    }).join('')+'</div>';
- m.innerHTML=topbar('Enquiries','Inbox','<button class="btn btn-ghost" id="enqRefresh">Refresh</button>')+
-  '<div class="view"><div class="toolbar"><div class="search">'+svg('search')+'<input id="eq" placeholder="Search by name, company or address…"></div>'+seg+'</div>'+
-  '<div id="enqhost"><div class="panel"><div class="empty"><h3>Loading…</h3></div></div></div></div>';
+ m.innerHTML=topbar('Enquiries','Inbox','<button class="btn btn-ghost" id="enqRefresh">'+esc(T('Refresh'))+'</button>')+
+  '<div class="view"><div class="toolbar"><div class="search">'+svg('search')+'<input id="eq" placeholder="'+esc(T('Search by name, company or address…'))+'"></div>'+seg+'</div>'+
+  '<div id="enqhost"><div class="panel"><div class="empty"><h3>'+esc(T('Loading…'))+'</h3></div></div></div></div>';
  bindNavToggle();
  var host=$('#enqhost');
  function paint(f){
@@ -1035,20 +1089,20 @@ function enquiriesView(m){
    return JSON.stringify([r.name,r.email,r.company,r.subject,r.position,r.message]).toLowerCase().indexOf(f.toLowerCase())>-1;
   });
   if(!list.length){
-   host.innerHTML='<div class="panel"><div class="empty">'+svg('inbox')+'<h3>'+(f?'Nothing matches that search':'No enquiries here yet')+'</h3>'+
-    '<p>'+(f?'Try a different name or address.':'Messages sent from the contact page, job applications and newsletter sign-ups all arrive here.')+'</p></div></div>';
+   host.innerHTML='<div class="panel"><div class="empty">'+svg('inbox')+'<h3>'+esc(T(f?'Nothing matches that search':'No enquiries here yet'))+'</h3>'+
+    '<p>'+esc(T(f?'Try a different name or address.':'Messages sent from the contact page, job applications and newsletter sign-ups all arrive here.'))+'</p></div></div>';
    return;
   }
-  host.innerHTML='<div class="panel"><table class="tbl"><thead><tr><th>From</th><th>About</th><th>Sent</th><th></th></tr></thead><tbody>'+
+  host.innerHTML='<div class="panel"><table class="tbl"><thead><tr><th>'+esc(T('From'))+'</th><th>'+esc(T('About'))+'</th><th>'+esc(T('Sent'))+'</th><th></th></tr></thead><tbody>'+
    list.map(function(r){
     var unread=r.status==='new';
-    var att=r.files?'<span class="pill tag" title="'+r.files+' attachment'+(r.files===1?'':'s')+'">'+r.files+' file'+(r.files===1?'':'s')+'</span>':'';
-    var notify=r.notified?'':'<span class="pill draft" title="'+esc(r.notify_error||'The office has not been emailed yet')+'">not emailed yet</span>';
+    var att=r.files?'<span class="pill tag">'+esc(T('{n} files',{n:r.files}))+'</span>':'';
+    var notify=r.notified?'':'<span class="pill draft" title="'+esc(r.notify_error||T('The office has not been emailed yet'))+'">'+esc(T('not emailed yet'))+'</span>';
     return '<tr class="row'+(unread?' unread':'')+'" data-enq="'+esc(r.id)+'">'+
-     '<td><div class="t-title">'+esc(r.name||r.email)+'</div><div class="t-sub" dir="ltr">'+esc(r.email)+(r.company?' · '+esc(r.company):'')+'</div></td>'+
-     '<td><div class="t-title">'+esc(r.subject||r.position||enqKindLabel(r.kind))+'</div><div class="t-sub">'+esc(enqKindLabel(r.kind))+(r.reason?' · '+esc(r.reason):'')+' '+att+' '+notify+'</div></td>'+
+     '<td><div class="t-title" dir="auto">'+esc(r.name||r.email)+'</div><div class="t-sub" dir="ltr">'+esc(r.email)+(r.company?' · '+esc(r.company):'')+'</div></td>'+
+     '<td><div class="t-title" dir="auto">'+esc(r.subject||r.position||enqKindLabel(r.kind))+'</div><div class="t-sub">'+esc(enqKindLabel(r.kind))+(r.reason?' · '+esc(r.reason):'')+' '+att+' '+notify+'</div></td>'+
      '<td>'+esc(fmtDate(new Date(r.created_at).toISOString().slice(0,10)))+'</td>'+
-     '<td><div class="cell-actions"><button class="icon-btn" data-enq-open="'+esc(r.id)+'" title="Open">'+svg('edit')+'</button></div></td>'+
+     '<td><div class="cell-actions"><button class="icon-btn" data-enq-open="'+esc(r.id)+'" title="'+esc(T('Open'))+'">'+svg('edit')+'</button></div></td>'+
     '</tr>';
    }).join('')+'</tbody></table></div>';
   host.querySelectorAll('[data-enq]').forEach(function(el){
@@ -1078,16 +1132,16 @@ function openEnquiry(id){
  var host=document.createElement('div');
  var when=new Date(r.created_at);
  var rows=[
-  ['From',esc(r.name||'')+' &lt;<span dir="ltr">'+esc(r.email)+'</span>&gt;'],
-  ['Company',esc(r.company||'')],
-  ['Telephone',r.phone?'<span dir="ltr">'+esc(r.phone)+'</span>':''],
-  ['About',esc(r.subject||r.position||enqKindLabel(r.kind))],
-  ['Type',esc(enqKindLabel(r.kind))+(r.reason?' · '+esc(r.reason):'')],
-  ['Routed to',r.route_email?'<span dir="ltr">'+esc(r.route_email)+'</span>':'<span class="muted">not routed</span>'],
-  ['Received',esc(when.toLocaleString('en-GB'))],
-  ['Language',r.lang==='ar'?'Arabic':'English']
+  [T('From'),esc(r.name||'')+' &lt;<span dir="ltr">'+esc(r.email)+'</span>&gt;'],
+  [T('Company'),esc(r.company||'')],
+  [T('Telephone'),r.phone?'<span dir="ltr">'+esc(r.phone)+'</span>':''],
+  [T('About'),esc(r.subject||r.position||enqKindLabel(r.kind))],
+  [T('Type'),esc(enqKindLabel(r.kind))+(r.reason?' · '+esc(r.reason):'')],
+  [T('Routed to'),r.route_email?'<span dir="ltr">'+esc(r.route_email)+'</span>':'<span class="muted">'+esc(T('not routed'))+'</span>'],
+  [T('Received'),esc(when.toLocaleString(LANG==='ar'?'ar':'en-GB'))],
+  [T('Language'),T(r.lang==='ar'?'Arabic':'English')]
  ].filter(function(x){return x[1];}).map(function(x){
-  return '<div class="enq-row"><span class="enq-k">'+x[0]+'</span><span class="enq-v">'+x[1]+'</span></div>';
+  return '<div class="enq-row"><span class="enq-k">'+esc(x[0])+'</span><span class="enq-v">'+x[1]+'</span></div>';
  }).join('');
  var subject=encodeURIComponent('Re: '+(r.subject||r.position||'Your enquiry to Printopack'));
  host.innerHTML='<div class="overlay" id="ov"></div><div class="drawer" id="dw">'+
@@ -1096,12 +1150,12 @@ function openEnquiry(id){
    '<div class="enq-meta">'+rows+'</div>'+
    (r.message?'<div class="enq-msg"'+(r.lang==='ar'?' dir="rtl"':'')+'>'+esc(r.message).replace(/\n/g,'<br>')+'</div>':'')+
    '<div id="enqfiles"></div>'+
-   (r.notified?'':'<p class="enq-note">'+esc(r.notify_error||'The office has not been emailed about this yet. The mailing tool sends these; the enquiry itself is safely stored here either way.')+'</p>')+
+   (r.notified?'':'<p class="enq-note">'+esc(r.notify_error||T('The office has not been emailed about this yet. The mailing tool sends these; the enquiry itself is safely stored here either way.'))+'</p>')+
   '</div>'+
   '<div class="drawer-foot">'+
-   '<button class="btn btn-ghost" id="enqDel">Delete</button>'+
-   '<button class="btn btn-ghost" id="enqArch">'+(r.status==='archived'?'Move back to open':'Archive')+'</button>'+
-   '<a class="btn btn-ok" href="mailto:'+esc(r.email)+'?subject='+subject+'">'+svg('mail')+'Reply by email</a>'+
+   '<button class="btn btn-ghost" id="enqDel">'+esc(T('Delete'))+'</button>'+
+   '<button class="btn btn-ghost" id="enqArch">'+esc(T(r.status==='archived'?'Move back to open':'Archive'))+'</button>'+
+   '<a class="btn btn-ok" href="mailto:'+esc(r.email)+'?subject='+subject+'">'+svg('mail')+esc(T('Reply by email'))+'</a>'+
   '</div></div>';
  document.body.appendChild(host);
  requestAnimationFrame(function(){$('#ov',host).classList.add('show');$('#dw',host).classList.add('show');});
@@ -1111,7 +1165,7 @@ function openEnquiry(id){
  if(r.files){
   fetch(API+'/enquiry-file?e='+encodeURIComponent(r.id)).then(function(x){return x.json();}).then(function(fs){
    if(!fs||!fs.length)return;
-   $('#enqfiles',host).innerHTML='<div class="enq-files"><h3>Attachments</h3>'+fs.map(function(f){
+   $('#enqfiles',host).innerHTML='<div class="enq-files"><h3>'+esc(T('Attachments'))+'</h3>'+fs.map(function(f){
     return '<a class="enq-file" href="'+API+'/enquiry-file?f='+encodeURIComponent(f.id)+'&dl=1">'+svg('attach')+
      '<span>'+esc(f.filename)+'</span><em>'+Math.max(1,Math.round(f.size/1024))+' KB</em></a>';
    }).join('')+'</div>';
@@ -1125,88 +1179,88 @@ function openEnquiry(id){
  $('#enqArch',host).addEventListener('click',function(){
   var next=r.status==='archived'?'read':'archived';
   fetch(API+'/enquiries/'+encodeURIComponent(r.id),{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({status:next})})
-   .then(function(){toast(next==='archived'?'Archived':'Moved back to open','ok');close();enqLoad(function(){renderView();});})
-   .catch(function(){toast('Could not update that enquiry','err');});
+   .then(function(){toast(T(next==='archived'?'Archived':'Moved back to open'),'ok');close();enqLoad(function(){renderView();});})
+   .catch(function(){toast(T('Could not update that enquiry'),'err');});
  });
  $('#enqDel',host).addEventListener('click',function(){
-  if(!confirm('Delete this enquiry and anything attached to it? This cannot be undone.'))return;
+  if(!confirm(T('Delete this enquiry and anything attached to it? This cannot be undone.')))return;
   fetch(API+'/enquiries/'+encodeURIComponent(r.id),{method:'DELETE'})
-   .then(function(){toast('Enquiry deleted','ok');close();enqLoad(function(){renderView();});})
-   .catch(function(){toast('Could not delete that enquiry','err');});
+   .then(function(){toast(T('Enquiry deleted'),'ok');close();enqLoad(function(){renderView();});})
+   .catch(function(){toast(T('Could not delete that enquiry'),'err');});
  });
 }
 
 /* ---------------- dashboard ---------------- */
 function dashView(m){
  var cards=[{k:'news',l:'News posts',icon:'news'},{k:'products',l:'Products',icon:'products'},{k:'team',l:'Team members',icon:'team'},{k:'partners',l:'Partners',icon:'partners'}].map(function(c){
-  return '<div class="stat-card" data-nav="'+c.k+'"><div class="ic">'+svg(c.icon)+'</div><div class="n">'+coll(c.k).length+'</div><div class="l">'+c.l+'</div></div>';
+  return '<div class="stat-card" data-nav="'+c.k+'"><div class="ic">'+svg(c.icon)+'</div><div class="n">'+coll(c.k).length+'</div><div class="l">'+esc(T(c.l))+'</div></div>';
  }).join('');
  /* The inbox card leads, and turns gold when something is waiting: it is the only number on
     this screen that somebody outside the company is waiting on. */
  if(MODE==='api'){
   var un=ENQ.counts.unread||0;
   cards='<div class="stat-card'+(un?' alert':'')+'" data-nav="enquiries"><div class="ic">'+svg('inbox')+'</div><div class="n">'+un+'</div><div class="l">'+
-   (un?'Unanswered enquiries':'Enquiries, all read')+'</div></div>'+cards;
+   esc(T(un?'Unanswered enquiries':'Enquiries, all read'))+'</div></div>'+cards;
  }
- var recent=coll('news').slice(0,4).map(function(p){return '<tr class="row" data-open="news:'+p.id+'"><td><span class="t-title">'+esc(p.title)+'</span></td><td><span class="pill tag">'+esc(p.category)+'</span></td><td>'+statusPill(p.status)+'</td><td>'+fmtDate(p.date)+'</td></tr>';}).join('');
- var quick=['news','careers','team','factory'].map(function(k){return '<button class="btn btn-ghost" data-open="'+k+':new">'+svg('plus')+'New '+MODELS[k].singular.toLowerCase()+'</button>';}).join('');
- m.innerHTML=topbar('Welcome back','Dashboard','<button class="btn btn-gold" data-open="news:new">'+svg('plus')+'New post</button>')+
+ var recent=coll('news').slice(0,4).map(function(p){return '<tr class="row" data-open="news:'+p.id+'"><td><span class="t-title" dir="auto">'+esc(p.title)+'</span></td><td><span class="pill tag" dir="auto">'+esc(p.category)+'</span></td><td>'+statusPill(p.status)+'</td><td>'+fmtDate(p.date)+'</td></tr>';}).join('');
+ var quick=['news','careers','team','factory'].map(function(k){return '<button class="btn btn-ghost" data-open="'+k+':new">'+svg('plus')+esc(T('New {x}',{x:sing(MODELS[k])}))+'</button>';}).join('');
+ m.innerHTML=topbar('Welcome back','Dashboard','<button class="btn btn-gold" data-open="news:new">'+svg('plus')+esc(T('New post'))+'</button>')+
   '<div class="view"><div class="stat-grid">'+cards+'</div>'+
-  '<div class="panel"><div class="panel-head"><h2>Recent news</h2><button class="btn btn-ghost btn-sm" data-nav="news">View all</button></div><table class="tbl"><thead><tr><th>Title</th><th>Category</th><th>Status</th><th>Date</th></tr></thead><tbody>'+(recent||'')+'</tbody></table></div>'+
-  '<div class="panel"><div class="panel-head"><div><h2>Quick actions</h2><p>Jump into what you update most.</p></div></div><div class="panel-body" style="display:flex;gap:10px;flex-wrap:wrap">'+quick+'<button class="btn btn-ghost" data-nav="about">'+svg('edit')+'Edit home & about</button></div></div>'+
-  '<div class="panel" id="storage" hidden><div class="panel-head"><div><h2>Picture storage</h2><p>Every picture on the site, and how much of the free allowance is left.</p></div></div><div class="panel-body"><div class="meter"><span id="mfill"></span></div><p id="mtext" class="meter-text"></p></div></div></div>';
+  '<div class="panel"><div class="panel-head"><h2>'+esc(T('Recent news'))+'</h2><button class="btn btn-ghost btn-sm" data-nav="news">'+esc(T('View all'))+'</button></div><table class="tbl"><thead><tr><th>'+esc(T('Title'))+'</th><th>'+esc(T('Category'))+'</th><th>'+esc(T('Status'))+'</th><th>'+esc(T('Date'))+'</th></tr></thead><tbody>'+(recent||'')+'</tbody></table></div>'+
+  '<div class="panel"><div class="panel-head"><div><h2>'+esc(T('Quick actions'))+'</h2><p>'+esc(T('Jump into what you update most.'))+'</p></div></div><div class="panel-body" style="display:flex;gap:10px;flex-wrap:wrap">'+quick+'<button class="btn btn-ghost" data-nav="about">'+svg('edit')+esc(T('Edit home & about'))+'</button></div></div>'+
+  '<div class="panel" id="storage" hidden><div class="panel-head"><div><h2>'+esc(T('Picture storage'))+'</h2><p>'+esc(T('Every picture on the site, and how much of the free allowance is left.'))+'</p></div></div><div class="panel-body"><div class="meter"><span id="mfill"></span></div><p id="mtext" class="meter-text"></p></div></div></div>';
  bind(m);
  storageMeter();
 }
 
 /* ---------------- list ---------------- */
-function statusPill(s){return s==='published'?'<span class="pill pub">Published</span>':'<span class="pill draft">Draft</span>';}
+function statusPill(s){return s==='published'?'<span class="pill pub">'+esc(T('Published'))+'</span>':'<span class="pill draft">'+esc(T('Draft'))+'</span>';}
 function cellFor(col,row){
  var v=row[col.field];
  if(col.type==='thumb'){var cls='thumb'+(col.round?' round':'')+(col.contain?' contain':'');return v?'<img class="'+cls+'" src="'+esc(imgSrc(v))+'">':'<div class="'+cls+'" style="display:grid;place-items:center;color:var(--faint);font-family:var(--disp);font-size:15px">'+esc(initials(row))+'</div>';}
- if(col.type==='title'){var t=v||row[col.fallback]||'Untitled';var sub=col.sub&&row[col.sub]?'<div class="t-sub">'+esc(row[col.sub])+'</div>':'';return '<div class="t-title">'+esc(t)+'</div>'+sub;}
+ if(col.type==='title'){var t=v||row[col.fallback]||T('Untitled');var sub=col.sub&&row[col.sub]?'<div class="t-sub" dir="auto">'+esc(row[col.sub])+'</div>':'';return '<div class="t-title" dir="auto">'+esc(t)+'</div>'+sub;}
  if(col.type==='pill')return statusPill(v);
- if(col.type==='active')return v?'<span class="pill pub">Visible</span>':'<span class="pill off">Hidden</span>';
- if(col.type==='tag')return v?'<span class="pill tag">'+esc(v)+'</span>':'';
+ if(col.type==='active')return v?'<span class="pill pub">'+esc(T('Visible'))+'</span>':'<span class="pill off">'+esc(T('Hidden'))+'</span>';
+ if(col.type==='tag')return v?'<span class="pill tag" dir="auto">'+esc(v)+'</span>':'';
  if(col.type==='date')return fmtDate(v);
- if(col.type==='text')return v==null||v===''?'<span class="muted">—</span>':esc((col.prefix||'')+v+(col.suffix||''));
+ if(col.type==='text')return v==null||v===''?'<span class="muted">—</span>':'<span dir="auto">'+esc((col.prefix||'')+v+(col.suffix||''))+'</span>';
  return esc(v);
 }
 function initials(r){var s=(r.name||r.title||r.city||'?').trim().split(/\s+/);return ((s[0]||'')[0]||'')+((s[1]||'')[0]||'');}
 function listView(m,key){
  var mdl=MODELS[key],rows=coll(key);
- var heads=mdl.columns.map(function(c){return '<th>'+(c.type==='thumb'?'':esc(c.field.charAt(0).toUpperCase()+c.field.slice(1)))+'</th>';}).join('')+'<th></th>';
- var actions='<button class="btn btn-gold" data-open="'+key+':new">'+svg('plus')+'New '+mdl.singular.toLowerCase()+'</button>';
- var toggle=mdl.hasCalendar?'<div class="seg" id="tg"><button class="on" data-mode="list">List</button><button data-mode="cal">Calendar</button></div>':'';
+ var heads=mdl.columns.map(function(c){return '<th>'+(c.type==='thumb'?'':esc(T(c.field.charAt(0).toUpperCase()+c.field.slice(1))))+'</th>';}).join('')+'<th></th>';
+ var actions='<button class="btn btn-gold" data-open="'+key+':new">'+svg('plus')+esc(T('New {x}',{x:sing(mdl)}))+'</button>';
+ var toggle=mdl.hasCalendar?'<div class="seg" id="tg"><button class="on" data-mode="list">'+esc(T('List'))+'</button><button data-mode="cal">'+esc(T('Calendar'))+'</button></div>':'';
  /* Partners: say how many of the home page's main slots are filled, so the client is never
     guessing why a logo did or did not appear there. */
  var tally='';
  var left=capLeft(key);
  if(left!=null&&left<=Math.max(5,Math.round(capOf(key)*0.1))){
-  tally+='<div class="tally'+(left===0?'':'')+'">'+(left===0
-   ? mdl.label+' is full at '+capOf(key)+' '+mdl.singular.toLowerCase()+'s. Delete one before adding another.'
-   : 'Room for '+left+' more '+mdl.singular.toLowerCase()+(left===1?'':'s')+' before this section is full.')+'</div>';
+  tally+='<div class="tally'+(left===0?'':'')+'">'+esc(left===0
+   ? T('{label} is full at {cap} {x}. Delete one before adding another.',{label:T(mdl.label),cap:capOf(key),x:sing(mdl)})
+   : T('Room for {n} more before this section is full.',{n:LANG==='ar'?left:left+' '+sing(mdl)+(left===1?'':'s')}))+'</div>';
  }
  if(key==='partners'){
   var main=rows.filter(function(x){return String(x.featured)==='true';}).length;
-  tally+='<div class="tally'+(main===MAIN_PARTNERS?' ok':'')+'">'+main+' of '+MAIN_PARTNERS+' main partners selected'+(main===MAIN_PARTNERS?'':', the home page needs exactly '+MAIN_PARTNERS)+'</div>';
+  tally+='<div class="tally'+(main===MAIN_PARTNERS?' ok':'')+'">'+esc(T('{n} of {cap} main partners selected',{n:main,cap:MAIN_PARTNERS})+(main===MAIN_PARTNERS?'':T(', the home page needs exactly {cap}',{cap:MAIN_PARTNERS})))+'</div>';
  }
- m.innerHTML=topbar(mdl.label,'Content · '+mdl.label,actions)+'<div class="view">'+tally+'<div class="toolbar"><div class="search">'+svg('search')+'<input id="q" placeholder="Search '+mdl.label.toLowerCase()+'…"></div>'+toggle+'</div><div id="host"></div></div>';
+ m.innerHTML=topbar(mdl.label,T(mdl.group||'Content')+' · '+T(mdl.label),actions)+'<div class="view">'+tally+'<div class="toolbar"><div class="search">'+svg('search')+'<input id="q" placeholder="'+esc(T('Search {x}…',{x:LANG==='ar'?T(mdl.label):mdl.label.toLowerCase()}))+'"></div>'+toggle+'</div><div id="host"></div></div>';
  bind(m); // wire the topbar "New" button (rows are bound separately in paint(); #host is empty here so no double-binding)
  function paint(f){
   var list=rows.filter(function(r){return !f||JSON.stringify(r).toLowerCase().indexOf(f.toLowerCase())>-1;});
-  if(!list.length){$('#host').innerHTML='<div class="panel"><div class="empty">'+svg(mdl.icon)+'<h3>Nothing here yet</h3><p>Create your first '+mdl.singular.toLowerCase()+' with the button above.</p></div></div>';return;}
+  if(!list.length){$('#host').innerHTML='<div class="panel"><div class="empty">'+svg(mdl.icon)+'<h3>'+esc(T('Nothing here yet'))+'</h3><p>'+esc(T('Create your first {x} with the button above.',{x:sing(mdl)}))+'</p></div></div>';return;}
   /* Reordering is hidden while a search is active: the arrows move a record past its
      neighbour in the real list, which is not what someone looking at a filtered subset
      would expect to happen. */
   var canOrder=!f&&list.length>1;
   var body=list.map(function(r,i){
    var tds=mdl.columns.map(function(c){return '<td>'+cellFor(c,r)+'</td>';}).join('');
-   var mv=canOrder?'<button class="icon-btn mv" data-mv="'+key+':'+r.id+':-1"'+(i===0?' disabled':'')+' title="Move up" aria-label="Move up">'+svg('up')+'</button>'+
-                   '<button class="icon-btn mv" data-mv="'+key+':'+r.id+':1"'+(i===list.length-1?' disabled':'')+' title="Move down" aria-label="Move down">'+svg('down')+'</button>':'';
+   var mv=canOrder?'<button class="icon-btn mv" data-mv="'+key+':'+r.id+':-1"'+(i===0?' disabled':'')+' title="'+esc(T('Move up'))+'" aria-label="'+esc(T('Move up'))+'">'+svg('up')+'</button>'+
+                   '<button class="icon-btn mv" data-mv="'+key+':'+r.id+':1"'+(i===list.length-1?' disabled':'')+' title="'+esc(T('Move down'))+'" aria-label="'+esc(T('Move down'))+'">'+svg('down')+'</button>':'';
    return '<tr class="row" data-open="'+key+':'+r.id+'">'+tds+'<td><div class="cell-actions">'+mv+'<button class="icon-btn" data-open="'+key+':'+r.id+'">'+svg('edit')+'</button><button class="icon-btn del" data-del="'+key+':'+r.id+'">'+svg('trash')+'</button></div></td></tr>';
   }).join('');
-  var hint=canOrder?'<p class="order-hint">The order here is the order on the website.</p>':'';
+  var hint=canOrder?'<p class="order-hint">'+esc(T('The order here is the order on the website.'))+'</p>':'';
   $('#host').innerHTML='<div class="panel"><table class="tbl"><thead><tr>'+heads+'</tr></thead><tbody>'+body+'</tbody></table></div>'+hint;bind($('#host'));
   $('#host').querySelectorAll('[data-mv]').forEach(function(el){el.addEventListener('click',function(e){
    e.stopPropagation();
@@ -1223,11 +1277,16 @@ var draft={};
 // A required field's name for the "please fill…" message: the label without the language/optional tag.
 function reqName(f){return String(f.label).replace(/\s*\((English|optional)\)/gi,'').trim();}
 function fieldHTML(f,val){
- var req=f.req?'<span class="req" title="Required">*</span>':'';
- var lab='<label>'+esc(f.label)+req+(f.ar?' <span class="ar">· '+esc(f.ar)+'</span>':'')+'</label>';
- var rtl=f.rtl?' dir="rtl"':'';
- var hint=f.rec?'<div class="hint">'+esc(f.rec)+'</div>':'';
- if(f.type==='image'){var has=val?' has':'';var cn=f.contain?' contain':'';var rec=f.rec?'<span class="imgrec">'+svg('image')+'Recommended: <b>'+esc(f.rec)+'</b> for a flawless fit</span>':'';return '<div class="field full"><label>'+esc(f.label)+req+'</label>'+rec+'<div class="imgpick'+has+cn+'" data-imgpick="'+f.name+'" data-box="'+recBox(f.rec)+'"><img src="'+esc(imgSrc(val))+'"><div class="ph">'+svg('image')+'Click to upload</div></div><input type="file" accept="image/*" data-imgfile="'+f.name+'" hidden></div>';}
+ var req=f.req?'<span class="req" title="'+esc(T('Required'))+'">*</span>':'';
+ var lab='<label>'+esc(T(f.label))+req+(f.ar?' <span class="ar">· '+esc(T(f.ar))+'</span>':'')+'</label>';
+ /* A field's direction follows the language of its CONTENT, never the language of the
+    interface. Every Arabic field in the schema is marked rtl:true, so everything else is an
+    English, numeric or address value and is pinned to ltr: without this, an English title
+    typed while the dashboard is in Arabic would render right-aligned with its punctuation
+    thrown to the wrong end. */
+ var rtl=f.rtl?' dir="rtl"':' dir="ltr"';
+ var hint=f.rec?'<div class="hint">'+esc(T(f.rec))+'</div>':'';
+ if(f.type==='image'){var has=val?' has':'';var cn=f.contain?' contain':'';var rec=f.rec?'<span class="imgrec">'+svg('image')+T('Recommended: {x} for a flawless fit',{x:'<b>'+esc(T(f.rec))+'</b>'})+'</span>':'';return '<div class="field full"><label>'+esc(T(f.label))+req+'</label>'+rec+'<div class="imgpick'+has+cn+'" data-imgpick="'+f.name+'" data-box="'+recBox(f.rec)+'"><img src="'+esc(imgSrc(val))+'"><div class="ph">'+svg('image')+esc(T('Click to upload'))+'</div></div><input type="file" accept="image/*" data-imgfile="'+f.name+'" hidden></div>';}
  if(f.type==='textarea')return '<div class="field full">'+lab+'<textarea data-f="'+f.name+'"'+rtl+'>'+esc(val||'')+'</textarea>'+hint+'</div>';
  if(f.type==='select'){
   var src=f.optionsFrom?coll(f.optionsFrom).map(function(g){return g.name;}).filter(Boolean):f.options;
@@ -1246,10 +1305,10 @@ function openForm(key,id){
  var mdl=MODELS[key];var rec=id==='new'?{}:coll(key).find(function(x){return x.id===id;})||{};
  draft=JSON.parse(JSON.stringify(rec));
  if(id==='new'){mdl.fields.forEach(function(f){if(f.name==='date'&&!draft.date)draft.date=today();if(f.name==='status'&&!draft.status)draft.status='draft';});}
- var imp=mdl.hasImport?'<div class="li-import"><label>'+svg('link')+' Import from a LinkedIn post</label><div class="li-row"><input id="liu" placeholder="Paste a LinkedIn post link…"><button class="btn btn-primary" id="lib" type="button">Import</button></div><div class="li-status" id="lis"><span class="spin"></span><span id="lit"></span></div></div>':'';
+ var imp=mdl.hasImport?'<div class="li-import"><label>'+svg('link')+' '+esc(T('Import from a LinkedIn post'))+'</label><div class="li-row"><input id="liu" placeholder="'+esc(T('Paste a LinkedIn post link…'))+'"><button class="btn btn-primary" id="lib" type="button">'+esc(T('Import'))+'</button></div><div class="li-status" id="lis"><span class="spin"></span><span id="lit"></span></div></div>':'';
  var body='<div class="form-grid">'+mdl.fields.map(function(f){return fieldHTML(f,draft[f.name]);}).join('')+'</div>';
  var host=document.createElement('div');
- host.innerHTML='<div class="overlay" id="ov"></div><div class="drawer" id="dw"><div class="drawer-head"><h2>'+(id==='new'?'New ':'Edit ')+esc(mdl.singular)+'</h2><button class="x" id="xc">✕</button></div><div class="drawer-body">'+imp+body+'</div><div class="drawer-foot"><button class="btn btn-ghost" id="cx">Cancel</button><button class="btn btn-ok" id="sv">Save '+esc(mdl.singular.toLowerCase())+'</button></div></div>';
+ host.innerHTML='<div class="overlay" id="ov"></div><div class="drawer" id="dw"><div class="drawer-head"><h2>'+esc(T(id==='new'?'New {x}':'Edit {x}',{x:T(mdl.singular)}))+'</h2><button class="x" id="xc">✕</button></div><div class="drawer-body">'+imp+body+'</div><div class="drawer-foot"><button class="btn btn-ghost" id="cx">'+esc(T('Cancel'))+'</button><button class="btn btn-ok" id="sv">'+esc(T('Save {x}',{x:sing(mdl)}))+'</button></div></div>';
  document.body.appendChild(host);
  requestAnimationFrame(function(){$('#ov',host).classList.add('show');$('#dw',host).classList.add('show');});
  var dirty=false,saving=false;
@@ -1258,13 +1317,13 @@ function openForm(key,id){
     and without asking. An accidental click while writing a long Arabic description cost the
     whole description. */
  function closeGuarded(){
-  if(dirty&&!confirm('Close without saving? Everything you have typed here will be lost.'))return;
+  if(dirty&&!confirm(T('Close without saving? Everything you have typed here will be lost.')))return;
   close();
  }
  $('#xc',host).addEventListener('click',closeGuarded);$('#cx',host).addEventListener('click',closeGuarded);$('#ov',host).addEventListener('click',closeGuarded);
  host.querySelectorAll('[data-f]').forEach(function(el){el.addEventListener('input',function(){dirty=true;draft[el.getAttribute('data-f')]=el.value;var fl=el.closest('.field');if(fl&&String(el.value).trim()!=='')fl.classList.remove('missing');});});
  host.querySelectorAll('select[data-f]').forEach(function(el){el.addEventListener('change',function(){dirty=true;});});
- host.querySelectorAll('[data-imgpick]').forEach(function(p){var name=p.getAttribute('data-imgpick');var file=host.querySelector('[data-imgfile="'+name+'"]');p.addEventListener('click',function(){file.click();});file.addEventListener('change',function(e){var f=e.target.files[0];if(!f)return;prepImage(f,+p.getAttribute('data-box')||IMG_BOX,function(out,kb){dirty=true;draft[name]=out;p.classList.add('has');$('img',p).src=out;var fl=p.closest('.field');if(fl)fl.classList.remove('missing');toast('Picture ready, '+kb+' KB','ok');});file.value='';});});
+ host.querySelectorAll('[data-imgpick]').forEach(function(p){var name=p.getAttribute('data-imgpick');var file=host.querySelector('[data-imgfile="'+name+'"]');p.addEventListener('click',function(){file.click();});file.addEventListener('change',function(e){var f=e.target.files[0];if(!f)return;prepImage(f,+p.getAttribute('data-box')||IMG_BOX,function(out,kb){dirty=true;draft[name]=out;p.classList.add('has');$('img',p).src=out;var fl=p.closest('.field');if(fl)fl.classList.remove('missing');toast(T('Picture ready, {kb} KB',{kb:kb}),'ok');});file.value='';});});
  if(mdl.hasImport){$('#lib',host).addEventListener('click',function(){importLI(host);});$('#liu',host).addEventListener('keydown',function(e){if(e.key==='Enter')importLI(host);});}
  $('#sv',host).addEventListener('click',function(){
   /* One press is one record. The drawer stays on screen for 350ms while it slides away, and
@@ -1282,7 +1341,7 @@ function openForm(key,id){
    host.querySelectorAll('.field.missing').forEach(function(el){el.classList.remove('missing');});
    miss.forEach(function(f){var el=host.querySelector('[data-f="'+f.name+'"]')||host.querySelector('[data-imgpick="'+f.name+'"]');var fl=el&&el.closest('.field');if(fl)fl.classList.add('missing');});
    var first=host.querySelector('.field.missing');if(first)first.scrollIntoView({block:'center'});
-   toast('Please fill the required fields: '+miss.map(reqName).join(', '),'err');
+   toast(T('Please fill the required fields: {x}',{x:miss.map(reqName).join('، ')}),'err');
    return;
   }
   // A Video gallery item plays from its external link (the image is only the poster), so the
@@ -1291,11 +1350,11 @@ function openForm(key,id){
    host.querySelectorAll('.field.missing').forEach(function(el){el.classList.remove('missing');});
    var uf=host.querySelector('[data-f="url"]'),ufl=uf&&uf.closest('.field');
    if(ufl){ufl.classList.add('missing');ufl.scrollIntoView({block:'center'});}
-   toast('A video needs its external link (YouTube or Vimeo).','err');
+   toast(T('A video needs its external link (YouTube or Vimeo).'),'err');
    return;
   }
   if(key==='team')draft.experience=parseInt(draft.experience,10)||0;
-  if(id==='new'&&capLeft(key)===0){toast(MODELS[key].label+' is full at '+capOf(key)+'. Delete one before adding another.','err');return;}
+  if(id==='new'&&capLeft(key)===0){toast(T('{label} is full at {cap} {x}. Delete one before adding another.',{label:T(MODELS[key].label),cap:capOf(key),x:sing(MODELS[key])}),'err');return;}
   /* The home page shows exactly MAIN_PARTNERS main partners. Normalise the flag first: a
      new partner that was never touched must land as "false", not inherit a rendered default,
      or adding a partner would silently make it the 21st main one. Then refuse a 21st, rather
@@ -1304,7 +1363,7 @@ function openForm(key,id){
    draft.featured=String(draft.featured)==='true'?'true':'false';
    if(draft.featured==='true'){
     var others=coll('partners').filter(function(x){return x.id!==draft.id&&String(x.featured)==='true';}).length;
-    if(others>=MAIN_PARTNERS){toast('Already '+MAIN_PARTNERS+' main partners. Turn one off first.','err');return;}
+    if(others>=MAIN_PARTNERS){toast(T('Already {cap} main partners. Turn one off first.',{cap:MAIN_PARTNERS}),'err');return;}
    }
   }
   /* Products are joined to their group by the group's English name, so renaming a group used
@@ -1316,44 +1375,44 @@ function openForm(key,id){
    var oldName=before&&before.name,newName=draft.name;
    if(oldName&&newName&&oldName!==newName){
     var moved=coll('products').filter(function(pr){return pr.category===oldName;});
-    if(moved.length&&!confirm('Rename this group to \u201c'+newName+'\u201d? '+moved.length+' product'+(moved.length===1?'':'s')+' inside it will move with it.'))return;
+    if(moved.length&&!confirm(T('Rename this group to \u201c{name}\u201d? {n} products inside it will move with it.',{name:newName,n:moved.length})))return;
     moved.forEach(function(pr){pr.category=newName;saveRecord('products',pr);});
    }
   }
   saving=true;
-  var sv=$('#sv',host);if(sv){sv.disabled=true;sv.textContent='Saving...';}
+  var sv=$('#sv',host);if(sv){sv.disabled=true;sv.textContent=T('Saving...');}
   if(id==='new')draft.id=uid();
   saveRecord(key,draft);
-  toast(mdl.singular+(id==='new'?' created':' updated'),'ok');
+  toast(T(id==='new'?'{x} created':'{x} updated',{x:T(mdl.singular)}),'ok');
   dirty=false;close();refresh();
  });
 }
 function importLI(host){
- var url=$('#liu',host).value.trim();if(!url){toast('Paste a link first','err');return;}if(!/^https?:\/\//.test(url))url='https://'+url;
- var st=$('#lis',host),tx=$('#lit',host);st.className='li-status show';tx.textContent='Fetching the post…';$('#lib',host).disabled=true;
+ var url=$('#liu',host).value.trim();if(!url){toast(T('Paste a link first'),'err');return;}if(!/^https?:\/\//.test(url))url='https://'+url;
+ var st=$('#lis',host),tx=$('#lit',host);st.className='li-status show';tx.textContent=T('Fetching the post…');$('#lib',host).disabled=true;
  var ctrl=new AbortController();var to=setTimeout(function(){ctrl.abort();},28000);
  fetch('https://r.jina.ai/'+url,{headers:{'Accept':'application/json'},signal:ctrl.signal}).then(function(r){return r.json();}).then(function(res){
   var d=(res&&res.data)||{},meta=d.metadata||{};var title=meta['og:title']||d.title||'';var desc=meta['og:description']||d.description||'';if(!desc&&d.content)desc=String(d.content).replace(/\s+/g,' ').slice(0,320).trim()+'…';var img=meta['og:image']||meta['twitter:image']||'';
   if(!title&&!desc)throw 0;
   setV(host,'title',title.trim());setV(host,'body',desc.trim());if(img){draft.image=img;var p=host.querySelector('[data-imgpick="image"]');if(p){p.classList.add('has');$('img',p).src=img;}}
-  st.className='li-status show done';tx.textContent='Imported. Review the text and Arabic, then save.';
- }).catch(function(){st.className='li-status show err';tx.textContent='Could not read that link (login wall or blocked). Type the details below.';}).finally(function(){$('#lib',host).disabled=false;clearTimeout(to);});
+  st.className='li-status show done';tx.textContent=T('Imported. Review the text and Arabic, then save.');
+ }).catch(function(){st.className='li-status show err';tx.textContent=T('Could not read that link (login wall or blocked). Type the details below.');}).finally(function(){$('#lib',host).disabled=false;clearTimeout(to);});
 }
 function setV(host,n,v){draft[n]=v;var el=host.querySelector('[data-f="'+n+'"]');if(el)el.value=v;}
 
 /* ---------------- calendar ---------------- */
 function renderCal(hostEl){
  var now=new Date(),y=now.getFullYear(),mth=now.getMonth();var start=new Date(y,mth,1).getDay(),days=new Date(y,mth+1,0).getDate();var evs=coll('news');
- var dow=['Sun','Mon','Tue','Wed','Thu','Fri','Sat'].map(function(d){return '<div class="cal-dow">'+d+'</div>';}).join('');var cells='';
+ var dow=['Sun','Mon','Tue','Wed','Thu','Fri','Sat'].map(function(d){return '<div class="cal-dow">'+esc(T(d))+'</div>';}).join('');var cells='';
  for(var i=0;i<start;i++)cells+='<div class="cal-cell out"></div>';
  for(var d=1;d<=days;d++){var ds=y+'-'+String(mth+1).padStart(2,'0')+'-'+String(d).padStart(2,'0');var t=(d===now.getDate())?' today':'';var de=evs.filter(function(e){return e.date===ds;}).map(function(e){return '<div class="cal-ev" data-open="news:'+e.id+'">'+esc(e.title)+'</div>';}).join('');cells+='<div class="cal-cell'+t+'"><div class="dn">'+d+'</div>'+de+'</div>';}
- hostEl.innerHTML='<div class="cal"><div class="cal-head"><h2>'+new Date(y,mth,1).toLocaleDateString('en-GB',{month:'long',year:'numeric'})+'</h2><span class="muted" style="font-size:13px">'+evs.length+' entries</span></div><div class="cal-grid">'+dow+cells+'</div></div>';
+ hostEl.innerHTML='<div class="cal"><div class="cal-head"><h2>'+new Date(y,mth,1).toLocaleDateString(LANG==='ar'?'ar':'en-GB',{month:'long',year:'numeric'})+'</h2><span class="muted" style="font-size:13px">'+evs.length+' '+esc(T('entries'))+'</span></div><div class="cal-grid">'+dow+cells+'</div></div>';
  bind(hostEl);
 }
 
 /* ---------------- about & settings (single form) ---------------- */
 function formPanel(title,desc,fields,data){
- return '<div class="panel"><div class="panel-head"><div><h2>'+esc(title)+'</h2>'+(desc?'<p>'+esc(desc)+'</p>':'')+'</div></div><div class="panel-body"><div class="form-grid">'+fields.map(function(f){return fieldHTML(f,data[f.name]);}).join('')+'</div></div></div>';
+ return '<div class="panel"><div class="panel-head"><div><h2>'+esc(T(title))+'</h2>'+(desc?'<p>'+esc(T(desc))+'</p>':'')+'</div></div><div class="panel-body"><div class="form-grid">'+fields.map(function(f){return fieldHTML(f,data[f.name]);}).join('')+'</div></div></div>';
 }
 /* Countries on the map. Nasser's brief: every Arab country listed with a switch, so that if
    Printopack opens in Qatar the admin flips Qatar ON, a Qatar office section appears for the
@@ -1366,17 +1425,17 @@ function countriesView(m){
  var live=COUNTRIES.filter(function(c){return on(c.cc);}).length;
  var cards=COUNTRIES.map(function(c){
   var o=on(c.cc);
-  var detail=o?[o.email,o.phone].filter(Boolean).join(' · '):'Not in the network';
+  var detail=o?[o.email,o.phone].filter(Boolean).join(' · '):T('Not in the network');
   return '<div class="cty'+(o?' on':'')+'">'+
    '<div class="cty-main"><div class="cty-name">'+esc(c.en)+'</div>'+
    '<div class="cty-ar" dir="rtl">'+esc(c.ar)+'</div>'+
-   '<div class="cty-detail">'+esc(detail||'No contact details yet')+'</div></div>'+
+   '<div class="cty-detail" dir="auto">'+esc(detail||T('No contact details yet'))+'</div></div>'+
    '<button class="sw'+(o?' on':'')+'" data-cty="'+c.cc+'" role="switch" aria-checked="'+(!!o)+'" aria-label="'+esc(c.en)+'"><span class="sw-k"></span></button>'+
    '</div>';
  }).join('');
  m.innerHTML=topbar('Countries on the map','Site · Countries','')+
-  '<div class="view"><p class="hint-lead">Switch a country on and it joins the network: a new office appears under Offices &amp; Contact for its email, phone and manager, and the country lights up on both maps. Switch it off and that office is removed.</p>'+
-  '<div class="tally'+(live?' ok':'')+'">'+live+' of '+COUNTRIES.length+' countries switched on</div>'+
+  '<div class="view"><p class="hint-lead">'+esc(T('Switch a country on and it joins the network: a new office appears under Offices & Contact for its email, phone and manager, and the country lights up on both maps. Switch it off and that office is removed.'))+'</p>'+
+  '<div class="tally'+(live?' ok':'')+'">'+esc(T('{n} of {total} countries switched on',{n:live,total:COUNTRIES.length}))+'</div>'+
   '<div class="cty-grid">'+cards+'</div></div>';
  m.querySelectorAll('[data-cty]').forEach(function(btn){
   btn.addEventListener('click',function(){
@@ -1384,15 +1443,15 @@ function countriesView(m){
    var c=COUNTRIES.filter(function(x){return x.cc===cc;})[0];
    var existing=on(cc);
    if(existing){
-    if(!confirm('Switch '+c.en+' off? Its office, including the email and phone, is deleted and the country is removed from the map.'))return;
+    if(!confirm(T('Switch {x} off? Its office, including the email and phone, is deleted and the country is removed from the map.',{x:LANG==='ar'?c.ar:c.en})))return;
     deleteRecord('offices',existing.id);
-    toast(c.en+' switched off','ok');
+    toast(T('{x} switched off',{x:LANG==='ar'?c.ar:c.en}),'ok');
    }else{
     var nid=uid();
     saveRecord('offices',{id:nid,group:'Regional & Export',cc:cc,city:c.en,cityAr:c.ar,
      country:c.en,countryAr:c.ar,staffName:'',staffNameAr:'',staffRole:'',staffRoleAr:'',
      phone:'',email:''});
-    toast(c.en+' switched on. Fill in its details to finish.','ok');
+    toast(T('{x} switched on. Fill in its details to finish.',{x:LANG==='ar'?c.ar:c.en}),'ok');
     refresh();
     openForm('offices',nid); // every field is required, so the editor opens straight away
     return;
@@ -1403,20 +1462,20 @@ function countriesView(m){
 }
 function aboutView(m){
  var p=obj('about');
- m.innerHTML=topbar('About & Home','Site','<button class="btn btn-ok" id="save">Save changes</button>')+'<div class="view">'+
+ m.innerHTML=topbar('About & Home','Site','<button class="btn btn-ok" id="save">'+esc(T('Save changes'))+'</button>')+'<div class="view">'+
   formPanel('Home hero','The headline visitors see first.',[{name:'heroTitle',type:'text',label:'Hero headline'},{name:'heroTitleAr',type:'text',label:'Hero headline',ar:'Arabic',rtl:true},{name:'heroSub',type:'textarea',label:'Hero subtext'},{name:'heroSubAr',type:'textarea',label:'Hero subtext',ar:'Arabic',rtl:true}],p)+
   formPanel('The company story','Shown on the Company page. Leave a blank line between paragraphs and each one is laid out separately. The values themselves are edited under Our Values.',[{name:'historyTitle',type:'text',label:'History headline (English)'},{name:'historyTitleAr',type:'text',label:'History headline',ar:'Arabic',rtl:true},{name:'history',type:'textarea',label:'History (English)'},{name:'historyAr',type:'textarea',label:'History',ar:'Arabic',rtl:true},{name:'ownership',type:'text',label:'Ownership'},{name:'ownershipAr',type:'text',label:'Ownership',ar:'Arabic',rtl:true},{name:'vision',type:'text',label:'Vision headline (English)'},{name:'visionAr',type:'text',label:'Vision headline',ar:'Arabic',rtl:true},{name:'visionBody',type:'textarea',label:'Vision (English)'},{name:'visionBodyAr',type:'textarea',label:'Vision',ar:'Arabic',rtl:true},{name:'mission',type:'text',label:'Mission headline (English)'},{name:'missionAr',type:'text',label:'Mission headline',ar:'Arabic',rtl:true},{name:'missionBody',type:'textarea',label:'Mission (English)'},{name:'missionBodyAr',type:'textarea',label:'Mission',ar:'Arabic',rtl:true}],p)+
   formPanel('Counters','The stat numbers. They all appear together on the home page. Change a number here and the home page follows.',[{name:'statOffices',type:'text',label:'Offices',half:true},{name:'statCountries',type:'text',label:'Countries',half:true},{name:'statFounded',type:'text',label:'Year founded',half:true,rec:'Years in the market are counted from this year automatically.'},{name:'statEmployees',type:'text',label:'Employees',half:true},{name:'statAvgExp',type:'text',label:'Avg. experience (yrs)',half:true,rec:'A decimal is fine here, for example 14.5. Combined experience is worked out from this and the employee count.'},{name:'statCustomers',type:'text',label:'Customers',half:true}],p)+
   '</div>';
  var d={};m.querySelectorAll('[data-f]').forEach(function(el){el.addEventListener('input',function(){d[el.getAttribute('data-f')]=el.value;});});
- $('#save').addEventListener('click',function(){var cur=obj('about');Object.keys(d).forEach(function(k){cur[k]=d[k];});setObj('about',cur);toast('Saved','ok');});
+ $('#save').addEventListener('click',function(){var cur=obj('about');Object.keys(d).forEach(function(k){cur[k]=d[k];});setObj('about',cur);toast(T('Saved'),'ok');});
 }
 function settingsView(m){
  var s=obj('settings');
- m.innerHTML=topbar('Settings','Site','<button class="btn btn-ok" id="save">Save changes</button>')+'<div class="view">'+
+ m.innerHTML=topbar('Settings','Site','<button class="btn btn-ok" id="save">'+esc(T('Save changes'))+'</button>')+'<div class="view">'+
   formPanel('Company details','Shown in the footer of every page and on the contact page.',[{name:'company',type:'text',label:'Company name (English)'},{name:'companyAr',type:'text',label:'Company name',ar:'Arabic',rtl:true},{name:'phone',type:'text',label:'Phone',half:true},{name:'phone2',type:'text',label:'Second phone',half:true,rec:'Optional. Shown in the footer under the main number. Leave blank to hide it.'},{name:'fax',type:'text',label:'Fax',half:true},{name:'email',type:'text',label:'Email',half:true},{name:'hours',type:'text',label:'Office hours',half:true},{name:'address',type:'textarea',label:'Address (English)'},{name:'addressAr',type:'textarea',label:'Address',ar:'Arabic',rtl:true},{name:'addressShort',type:'text',label:'Short address (English)',rec:'The compact version shown in the bar at the very top of every page.'},{name:'addressShortAr',type:'text',label:'Short address',ar:'Arabic',rtl:true}],s)+formPanel('Pictures','How large an uploaded picture may be. Every picture is shrunk and re-encoded in your browser before it is sent, so most land far under this on their own. Lower it if the storage meter on the dashboard climbs; anything that will not fit is refused rather than quietly accepted.',[{name:'maxImageKb',type:'number',label:'Largest picture (KB)',half:true,rec:'Between 40 and 600. The default is 400 KB. A phone photo normally lands around 65 KB.'}],s)+'</div>';
  var d={};m.querySelectorAll('[data-f]').forEach(function(el){el.addEventListener('input',function(){d[el.getAttribute('data-f')]=el.value;});});
- $('#save').addEventListener('click',function(){var cur=obj('settings');Object.keys(d).forEach(function(k){cur[k]=d[k];});setObj('settings',cur);toast('Saved','ok');});
+ $('#save').addEventListener('click',function(){var cur=obj('settings');Object.keys(d).forEach(function(k){cur[k]=d[k];});setObj('settings',cur);toast(T('Saved'),'ok');});
 }
 
 /* ---------------- shared bindings ---------------- */
@@ -1431,12 +1490,12 @@ function bind(scope){
    var g=coll('productGroups').filter(function(x){return x.id===p[1];})[0];
    var inside=g?coll('products').filter(function(pr){return pr.category===g.name;}):[];
    if(inside.length){
-    toast('This group still holds '+inside.length+' product'+(inside.length===1?'':'s')+'. Move them to another group first, or delete them.','err');
+    toast(T('This group still holds {n} products. Move them to another group first, or delete them.',{n:inside.length}),'err');
     return;
    }
   }
-  if(!confirm('Delete this '+MODELS[p[0]].singular.toLowerCase()+'? This cannot be undone.'))return;
-  deleteRecord(p[0],p[1]);toast(MODELS[p[0]].singular+' deleted');refresh();
+  if(!confirm(T('Delete this {x}? This cannot be undone.',{x:sing(MODELS[p[0]])})))return;
+  deleteRecord(p[0],p[1]);toast(T('{x} deleted',{x:T(MODELS[p[0]].singular)}));refresh();
  });});
  scope.querySelectorAll('[data-nav]').forEach(function(el){el.addEventListener('click',function(){navigate(el.getAttribute('data-nav'));});});
 }
