@@ -100,21 +100,23 @@ const nav = [
 
 <header class="site-header">
   <div class="wrap-wide hdr-top">
-    <!-- Brand band (Nasser, 2026-08-14): English mark on the left, Arabic mark on the
-         right, the full registered name in both languages between them. Both supplied
-         lockups carry the company name under the wordmark; they are cropped to the mark
-         alone here so the name is not repeated three times across one bar. -->
+    <!-- Brand band (Nasser, 2026-08-14, revised 2026-08-20): English mark on the left,
+         Arabic mark on the right, the full registered name in both languages between them.
+         Both supplied lockups carry the company name under the wordmark; they are cropped
+         to the mark alone here so the name is not repeated three times across one bar.
+         The centre name is the client's own artwork rather than typeset text, per his note
+         "الكتابة في النص مش مأخوذة من الشعار": set in the logo's typeface, it never has to
+         be matched by a webfont. The labels that sat under each mark are gone at his
+         request, so each mark now stands alone and centred in the bar. -->
     <a href="/" class="brand brand-en" aria-label="Printopack home">
       <img src="/images/printopack-mark-en.png" alt="Printopack" width="1007" height="280" />
-      <span class="brand-label" dir="ltr">Printopack</span>
     </a>
     <div class="brand-names">
-      <span class="brand-name-ar" lang="ar" dir="rtl">مصنع شركة التغليف السعودية الحديثة المحدودة</span>
-      <span class="brand-name-en" dir="ltr">Saudi Modern Packaging Factory Co. Ltd.</span>
+      <img src="/images/printopack-name-lockup.png" width="864" height="111"
+           alt="مصنع شركة التغليف السعودية الحديثة المحدودة - Saudi Modern Packaging Factory Co. Ltd." />
     </div>
     <a href="/" class="brand brand-ar" aria-label="برنتوباك">
       <img src="/images/printopack-mark-ar.png" alt="برنتوباك" width="1170" height="280" />
-      <span class="brand-label" lang="ar" dir="rtl">برنتوباك</span>
     </a>
     <!-- The nav row carries the controls, but it is hidden on phones, so the language
          toggle needs its own copy up here or it becomes unreachable on mobile. -->
@@ -239,16 +241,18 @@ const nav = [
   /* The client fixed English left and Arabic right. That is a physical arrangement, not a
      reading-order one, so direction is pinned to ltr and the band does not mirror in RTL. */
   .hdr-top{display:grid;grid-template-columns:1fr auto 1fr;align-items:center;gap:clamp(16px,3vw,48px);min-height:132px;direction:ltr}
-  .brand{display:flex;flex-direction:column;align-items:center;gap:9px}
+  /* Each mark stands alone in the bar now that the labels under them are gone, so it
+     centres on the band's own axis. */
+  .brand{display:flex;align-items:center}
   .brand-en{justify-self:start}
   .brand-ar{justify-self:end}
   /* 93px is the previous 62px mark plus the 50% the client asked for. */
   .brand img{height:93px;width:auto;display:block;flex:none;max-width:none}
-  .brand-label{font-family:var(--display);font-size:clamp(13px,1.05vw,16px);font-weight:500;letter-spacing:.16em;text-transform:uppercase;color:var(--muted)}
-  .brand-ar .brand-label{font-family:var(--arabic);font-size:clamp(15px,1.3vw,19px);letter-spacing:normal;text-transform:none}
-  .brand-names{display:flex;flex-direction:column;align-items:center;gap:7px;text-align:center}
-  .brand-name-ar{font-family:var(--arabic);font-size:clamp(16px,1.8vw,24px);color:var(--ink);line-height:1.45}
-  .brand-name-en{font-family:var(--display);font-size:clamp(12px,1.25vw,16.5px);font-weight:500;letter-spacing:.09em;text-transform:uppercase;color:var(--muted);line-height:1.45}
+  /* The registered name is the client's supplied artwork. It scales on height so the
+     two lines inside it stay in proportion, and it is capped so it can never crowd the
+     two marks on a narrow desktop window. */
+  .brand-names{display:flex;align-items:center;justify-content:center}
+  .brand-names img{height:clamp(38px,4.6vw,66px);width:auto;max-width:100%;display:block}
   .lang-m{display:none}
   .hdr-icon{display:inline-flex;align-items:center;gap:9px;font-size:12px;letter-spacing:.14em;text-transform:uppercase;color:var(--muted);font-family:var(--display);font-weight:500}
   .hdr-icon:hover{color:var(--gold-bright)}
@@ -311,6 +315,17 @@ const nav = [
   @media(max-width:1300px){
     .nav-tools .hdr-icon span,.qr-btn span{display:none}
   }
+  /* The name is artwork now, so it cannot wrap the way the old two-line text did: it
+     either fits on one line or it is crushed. Between the phone breakpoint and the
+     desktop the two marks alone want 7.78x their height in width, so both they and
+     the name step down here rather than the name collapsing to nothing. */
+  @media(max-width:1180px){
+    .brand img{height:64px}
+    .brand-names img{height:clamp(30px,3.4vw,44px)}
+  }
+  @media(max-width:900px){
+    .brand img{height:52px}
+  }
   @media(max-width:1200px){
     .nav-bar > ul{gap:20px;overflow-x:auto;min-width:0;scrollbar-width:none}
     .nav-bar > ul::-webkit-scrollbar{display:none}
@@ -322,7 +337,6 @@ const nav = [
     .hdr-top{grid-template-columns:auto 1fr auto auto;gap:10px;min-height:76px}
     .brand-names{display:none}
     .brand img{height:36px}
-    .brand-label{display:none}
     .lang-m{display:inline-flex}
     .hdr-right{gap:18px}
     .hdr-icon span{display:none}
