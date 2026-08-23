@@ -35,9 +35,9 @@ const videoEmbed = (url = '') => {
   }
   return '';
 };
-const galPhotos = _gal.filter((g) => g.kind === 'Photo').map((g) => ({ img: g.image, cap: { en: g.title, ar: g.titleAr }, span: _span(g.span) }));
-const galVideos = _gal.filter((g) => g.kind === 'Video').map((g) => ({ poster: g.image, cap: { en: g.title, ar: g.titleAr }, url: safeVideoUrl(g.url || ''), embed: videoEmbed(g.url || '') }));
-const galAds = _gal.filter((g) => g.kind === 'Advertisement').map((g) => ({ img: g.image, cap: { en: g.title, ar: g.titleAr }, span: _span(g.span) }));
+const galPhotos = _gal.filter((g) => g.kind === 'Photo').map((g) => ({ img: g.image, fit: g.imageFit, focus: g.imageFocus, cap: { en: g.title, ar: g.titleAr }, span: _span(g.span) }));
+const galVideos = _gal.filter((g) => g.kind === 'Video').map((g) => ({ poster: g.image, fit: g.imageFit, focus: g.imageFocus, cap: { en: g.title, ar: g.titleAr }, url: safeVideoUrl(g.url || ''), embed: videoEmbed(g.url || '') }));
+const galAds = _gal.filter((g) => g.kind === 'Advertisement').map((g) => ({ img: g.image, fit: g.imageFit, focus: g.imageFocus, cap: { en: g.title, ar: g.titleAr }, span: _span(g.span) }));
 
 // Gallery (Nasser's Page 6, sub-page 2): photos, videos, advertisements. Every item is
 // clickable and opens in an expanded lightbox (click outside to close). Photos use real
@@ -99,7 +99,7 @@ const c = content;
         <div class="media-grid">
           {c.photos.map((p) => (
             <button class={"gtile" + (p.span ? " " + p.span : "")} data-type="image" data-full={p.img} data-cap-en={p.cap.en} data-cap-ar={p.cap.ar}>
-              <img src={p.img} alt={p.cap.en} loading="lazy" decoding="async" />
+              <img src={p.img} alt={p.cap.en} data-fit={p.fit || undefined} style={p.focus ? `object-position:${p.focus}` : undefined} loading="lazy" decoding="async" />
               <span class="tile-scrim"></span>
               <span class="tile-cap"><Bi en={p.cap.en} ar={p.cap.ar} /></span>
             </button>
@@ -121,7 +121,7 @@ const c = content;
               data-cap-ar={v.cap.ar}
               aria-label={v.url ? `${c.openVideo.en}: ${v.cap.en}` : `${c.addLink.en}: ${v.cap.en}`}
             >
-              <img src={v.poster} alt={v.cap.en} loading="lazy" decoding="async" />
+              <img src={v.poster} alt={v.cap.en} data-fit={v.fit || undefined} style={v.focus ? `object-position:${v.focus}` : undefined} loading="lazy" decoding="async" />
               <span class="tile-scrim"></span>
               <span class="tile-play" aria-hidden="true"><svg viewBox="0 0 24 24" fill="currentColor"><path d="M8 5v14l11-7z"/></svg></span>
               <span class="tile-cap"><Bi en={v.cap.en} ar={v.cap.ar} /></span>
@@ -136,7 +136,7 @@ const c = content;
         <div class="media-grid">
           {c.ads.map((a) => (
             <button class={"gtile" + (a.span ? " " + a.span : "")} data-type="image" data-full={a.img} data-cap-en={a.cap.en} data-cap-ar={a.cap.ar}>
-              <img src={a.img} alt={a.cap.en} loading="lazy" decoding="async" />
+              <img src={a.img} alt={a.cap.en} data-fit={a.fit || undefined} style={a.focus ? `object-position:${a.focus}` : undefined} loading="lazy" decoding="async" />
               <span class="tile-scrim"></span>
               <span class="tile-cap"><Bi en={a.cap.en} ar={a.cap.ar} /></span>
             </button>

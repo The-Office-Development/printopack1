@@ -162,6 +162,19 @@ h1,h2,h3,h4{font-family:var(--disp);font-weight:400;letter-spacing:-.01em;line-h
 .imgpick .ph{color:var(--muted);font-size:13px;text-align:center;z-index:2;padding:16px}
 .imgpick .ph svg{width:26px;height:26px;margin:0 auto 8px;display:block;stroke-width:1.5}
 .imgpick.has .ph{display:none}
+.imgpick.contain{background:var(--cream)}
+.fitrow{display:flex;gap:8px;margin-top:9px}
+.fitbtn{flex:1;display:flex;align-items:center;justify-content:center;gap:7px;padding:9px 10px;border:1px solid var(--line);border-radius:8px;background:var(--white);color:var(--muted);font-size:12.5px;font-weight:500;cursor:pointer;transition:.18s}
+.fitbtn svg{width:16px;height:16px;flex:none;stroke-width:1.6}
+.fitbtn:hover{border-color:var(--gold)}
+.fitbtn.on{border-color:var(--gold);background:var(--gold-soft);color:var(--gold)}
+.focusrow{margin-top:11px}
+.focusrow[hidden]{display:none}
+.focuslabel{display:block;font-size:12px;color:var(--muted);margin-bottom:7px}
+.focusgrid{display:grid;grid-template-columns:repeat(3,1fr);gap:4px;width:104px;aspect-ratio:1}
+.focusdot{border:1px solid var(--line);border-radius:5px;background:var(--white);cursor:pointer;padding:0;transition:.15s}
+.focusdot:hover{border-color:var(--gold)}
+.focusdot.on{border-color:var(--gold);background:var(--gold)}
 
 /* empty */
 .empty{text-align:center;padding:56px 20px;color:var(--muted)}

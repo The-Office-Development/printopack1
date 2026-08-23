@@ -78,7 +78,7 @@ const content = {
     // uses. This was a hardcoded run of client-1..20.png, so a partner added or removed in
     // the admin never reached the home page. Which partners count as "main" is the client's
     // choice, made in the admin; the home page always shows exactly that set.
-    logos: mainPartners.map((p) => ({ img: p.logo, name: p.name, country: p.country })),
+    logos: mainPartners.map((p) => ({ img: p.logo, name: p.name, country: p.country, fit: p.fit, focus: p.focus })),
   },
   news: {
     eyebrow: { en: "News & events", ar: "الأخبار والأحداث" },
@@ -170,7 +170,7 @@ const pad = (n: number) => String(n).padStart(2, "0");
       <ul class="logo-grid">
         {c.partners.logos.map((l) => (
           <li class="pcard">
-            <span class="pcard-logo"><img src={l.img} alt={l.name.en || "Client brand"} loading="lazy" decoding="async" /></span>
+            <span class="pcard-logo"><img src={l.img} alt={l.name.en || "Client brand"} loading="lazy" decoding="async" data-fit={l.fit || undefined} style={l.focus ? `object-position:${l.focus}` : undefined} /></span>
             <span class="pcard-meta">
               {(l.name.en || l.name.ar) && (
                 <span class="pcard-name"><Bi en={l.name.en} ar={l.name.ar} /></span>
@@ -201,7 +201,7 @@ const pad = (n: number) => String(n).padStart(2, "0");
       <div class="news-grid">
         {c.news.items.map((n) => (
           <a href="/news" class="card news-card">
-            <span class="card-img news-img"><img src={n.img} alt="" loading="lazy" decoding="async" /></span>
+            <span class="card-img news-img"><img src={n.img} alt="" data-fit={n.fit || undefined} style={n.focus ? `object-position:${n.focus}` : undefined} loading="lazy" decoding="async" /></span>
             <span class="news-meta"><Bi en={n.cat.en} ar={n.cat.ar} /> · <span dir="ltr">{n.date}</span></span>
             <h3 class="news-title"><Bi en={n.title.en} ar={n.title.ar} /></h3>
             <span class="link-line on-dark news-read"><Bi en={c.news.read.en} ar={c.news.read.ar} /></span>
@@ -329,6 +329,7 @@ const pad = (n: number) => String(n).padStart(2, "0");
   .pcard{background:var(--paper);display:flex;flex-direction:column}
   .pcard-logo{position:relative;aspect-ratio:16/10;display:block}
   .pcard-logo img{position:absolute;inset:0;margin:auto;max-width:calc(100% - 24px);max-height:calc(100% - 26px);mix-blend-mode:multiply}
+  .pcard-logo img[data-fit]{margin:0;width:100%;height:100%;max-width:none;max-height:none;padding:13px 12px;box-sizing:border-box}
   .pcard:hover .pcard-logo img{filter:grayscale(1);opacity:.55}
   .pcard-meta:empty{display:none}
   .pcard-meta{display:flex;flex-direction:column;gap:5px;padding:0 18px 18px;margin-top:-4px}

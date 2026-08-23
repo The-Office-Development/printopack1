@@ -37,7 +37,7 @@ const content = {
     // Sourced from the content store (admin-managed). Blank name -> the card shows the role
     // as its heading (no invented name), exactly as before.
     members: collection('team').map((m) => ({
-      photo: m.photo, mono: m.mono,
+      photo: m.photo, mono: m.mono, fit: m.photoFit, focus: m.photoFocus,
       name: { en: m.name, ar: m.nameAr },
       role: { en: m.role, ar: m.roleAr },
       desc: { en: m.bio, ar: m.bioAr },
@@ -85,7 +85,7 @@ const c = content;
           <div class="member">
             <span class="avatar">
               {m.photo
-                ? <img src={m.photo} alt={m.name.en || m.role.en} />
+                ? <img src={m.photo} alt={m.name.en || m.role.en} data-fit={m.fit || undefined} style={m.focus ? `object-position:${m.focus}` : undefined} />
                 : <span class="avatar-mono" aria-hidden="true">{m.mono}</span>}
             </span>
             {m.name.en

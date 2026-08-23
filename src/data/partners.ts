@@ -3,7 +3,7 @@
 import { collection } from '../lib/content';
 
 export type Bi = { en: string; ar: string };
-export type Partner = { logo: string; name: Bi; country: Bi; link: string; featured: boolean };
+export type Partner = { logo: string; name: Bi; country: Bi; link: string; featured: boolean; fit?: string; focus?: string };
 
 /** How many partners the home page shows. The client's rule: there are always exactly 20
  *  main partners. The admin enforces the count on the way in; this is the backstop on the
@@ -12,6 +12,8 @@ export const MAIN_COUNT = 20;
 
 export const partners: Partner[] = collection('partners').map((p) => ({
   logo: p.image,
+  fit: p.imageFit,
+  focus: p.imageFocus,
   name: { en: p.name || '', ar: p.nameAr || p.name || '' },
   country: { en: p.country || '', ar: p.countryAr || p.country || '' },
   link: p.link || '',

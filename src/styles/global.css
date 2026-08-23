@@ -152,6 +152,13 @@ section{padding-block:var(--section-y)}
 .card-img{position:relative;overflow:hidden;background:var(--cream)}
 .card-img img{width:100%;height:100%;object-fit:cover}
 
+/* Per-image fit, chosen in the admin. The frame and its size never change; only how the
+   picture sits inside it does. "contain" shows the whole image (a poster, a logo with a QR
+   code) letterboxed on the frame's own colour, so nothing is cropped. Default stays cover.
+   !important is deliberate: it overrides the per-page object-fit:cover on the same <img>. */
+img[data-fit="contain"]{object-fit:contain !important}
+img[data-fit="cover"]{object-fit:cover !important}
+
 /* ---------- no-animation policy ----------
    The client asked for a fully still site. data-reveal attributes in the markup
    are inert (kept so a reveal could be reintroduced by deleting this block), and

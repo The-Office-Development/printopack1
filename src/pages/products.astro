@@ -103,7 +103,7 @@ const c = content;
           {categories.map((cat) => (
             <article class={"prod2" + (cat.isMeasurements ? " prod2-chart" : "")} data-group={cat.group}>
               <a href={`/products/${cat.slug}`} class="prod2-img" aria-label={cat.name.en}>
-                <img src={cat.img} alt={cat.name.en} loading="lazy" decoding="async" />
+                <img src={cat.img} alt={cat.name.en} data-fit={cat.fit || undefined} style={cat.focus ? `object-position:${cat.focus}` : undefined} loading="lazy" decoding="async" />
               </a>
               <div class="prod2-body">
                 <h3 class="prod2-name"><a href={`/products/${cat.slug}`}><Bi en={cat.name.en} ar={cat.name.ar} /></a></h3>

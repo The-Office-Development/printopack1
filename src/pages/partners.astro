@@ -168,7 +168,7 @@ const c = content;
       <ul class="pgrid">
         {partners.map((p) => (
           <li class="pcard" data-country={p.country.en}>
-            <span class="pcard-logo"><img src={p.logo} alt={p.name.en || "Client brand"} loading="lazy" decoding="async" /></span>
+            <span class="pcard-logo"><img src={p.logo} alt={p.name.en || "Client brand"} loading="lazy" decoding="async" data-fit={p.fit || undefined} style={p.focus ? `object-position:${p.focus}` : undefined} /></span>
             <span class="pcard-meta">
               {(p.name.en || p.name.ar) && (
                 <span class="pcard-name"><Bi en={p.name.en} ar={p.name.ar} /></span>
@@ -261,6 +261,9 @@ const c = content;
   .pcard[hidden]{display:none}
   .pcard-logo{position:relative;aspect-ratio:16/10;display:block}
   .pcard-logo img{position:absolute;inset:0;margin:auto;max-width:calc(100% - 24px);max-height:calc(100% - 26px);mix-blend-mode:multiply}
+  /* When a fit is chosen in the admin, the logo fills the card box so cover/contain + focus
+     can act. Default (no data-fit) keeps the intrinsic, padded, centred look untouched. */
+  .pcard-logo img[data-fit]{margin:0;width:100%;height:100%;max-width:none;max-height:none;padding:13px 12px;box-sizing:border-box}
   .pcard:hover .pcard-logo img{filter:grayscale(1);opacity:.55}
   .pcard-meta:empty{display:none}
   .pcard-meta{display:flex;flex-direction:column;gap:5px;padding:0 18px 18px;margin-top:-4px}

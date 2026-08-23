@@ -62,7 +62,7 @@ const c = content;
   <section class="feat-wrap">
     <div class="wrap-wide">
       <article class="feat">
-        <span class="feat-media"><img src={featured.img} alt={featured.title.en} fetchpriority="high" decoding="async" /></span>
+        <span class="feat-media"><img src={featured.img} alt={featured.title.en} data-fit={featured.fit || undefined} style={featured.focus ? `object-position:${featured.focus}` : undefined} fetchpriority="high" decoding="async" /></span>
         <div class="feat-body">
           <span class="post-meta">
             <span class="post-flag"><Bi en={c.featuredLabel.en} ar={c.featuredLabel.ar} /></span>
@@ -85,7 +85,7 @@ const c = content;
       <div class="news-grid">
         {rest.map((p) => (
           <article class="ncard">
-            <span class="card-img ncard-img"><img src={p.img} alt={p.title.en} loading="lazy" decoding="async" /></span>
+            <span class="card-img ncard-img"><img src={p.img} alt={p.title.en} data-fit={p.fit || undefined} style={p.focus ? `object-position:${p.focus}` : undefined} loading="lazy" decoding="async" /></span>
             <span class="post-meta"><Bi en={p.cat.en} ar={p.cat.ar} /> · <span dir="ltr">{p.date}</span></span>
             <h3 class="ncard-title"><Bi en={p.title.en} ar={p.title.ar} /></h3>
             <a class="link-line ncard-read" href={p.link ?? LINKEDIN} target="_blank" rel="noopener"><Bi en={c.readOn.en} ar={c.readOn.ar} /></a>

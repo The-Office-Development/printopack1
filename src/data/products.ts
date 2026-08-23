@@ -28,6 +28,8 @@ export const subItems = collection('products')
     name: { en: r.name || '', ar: r.nameAr || r.name || '' },
     desc: { en: r.description || '', ar: r.descriptionAr || r.description || '' },
     image: r.image || '',
+    fit: r.imageFit,
+    focus: r.imageFocus,
     // A size chart is read, not admired: it gets its own full-width presentation instead of
     // the alternating photo-and-description row.
     isMeasurements: String(r.kind || '') === 'Measurements',
@@ -50,6 +52,8 @@ export const categories = collection('productGroups').map((r) => ({
   slug: r.slug || slugify(r.name),
   group: r.filter,
   img: r.image,
+  fit: r.imageFit,
+  focus: r.imageFocus,
   name: { en: r.name, ar: r.nameAr },
   desc: { en: r.description, ar: r.descriptionAr },
   // A measurements group (Bags Measurements) is a chart rather than a product range: its

@@ -19,13 +19,13 @@ const saudiOffices = _offices.filter((o) => o.group === 'Saudi Arabia').map((o) 
   city: { en: o.city, ar: o.cityAr }, area: { en: o.country, ar: o.countryAr },
   staff: { en: o.staffName, ar: o.staffNameAr }, role: { en: o.staffRole, ar: o.staffRoleAr },
   email: o.email, phone: o.phone,
-  photo: o.photo || '', mono: monogram(o.staffName, o.city),
+  photo: o.photo || '', mono: monogram(o.staffName, o.city), fit: o.photoFit, focus: o.photoFocus,
 }));
 const regionalOffices = _offices.filter((o) => o.group === 'Regional & Export').map((o) => ({
   country: { en: o.city, ar: o.cityAr },
   staff: { en: o.staffName, ar: o.staffNameAr }, role: { en: o.staffRole, ar: o.staffRoleAr },
   email: o.email, phone: o.phone,
-  photo: o.photo || '', mono: monogram(o.staffName, o.city),
+  photo: o.photo || '', mono: monogram(o.staffName, o.city), fit: o.photoFit, focus: o.photoFocus,
 }));
 
 // Contact (Nasser's Page 7, التواصل والمراسلات) - the last page.
@@ -404,7 +404,7 @@ const markets = marketOrder.map((cc) => ({ cc, ...officesByCc[cc] }));
             {/* Same manager square as the regional offices below, so the two groups match. */}
             <span class="staff-photo" aria-hidden="true">
               {o.photo
-                ? <img src={o.photo} alt="" loading="lazy" decoding="async" />
+                ? <img src={o.photo} alt="" loading="lazy" decoding="async" data-fit={o.fit || undefined} style={o.focus ? `object-position:${o.focus}` : undefined} />
                 : <span class="staff-mono">{o.mono}</span>}
             </span>
           </div>
@@ -430,7 +430,7 @@ const markets = marketOrder.map((cc) => ({ cc, ...officesByCc[cc] }));
             </div>
             <span class="staff-photo" aria-hidden="true">
               {o.photo
-                ? <img src={o.photo} alt="" loading="lazy" decoding="async" />
+                ? <img src={o.photo} alt="" loading="lazy" decoding="async" data-fit={o.fit || undefined} style={o.focus ? `object-position:${o.focus}` : undefined} />
                 : <span class="staff-mono">{o.mono}</span>}
             </span>
           </div>

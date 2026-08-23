@@ -91,7 +91,9 @@ var ICON={
  inbox:'<path d="M3 13h5l2 3h4l2-3h5"/><path d="M4.5 6.5h15L21 13v5a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-5z"/>',
  archive:'<rect x="3" y="4" width="18" height="4" rx="1"/><path d="M5 8v10a2 2 0 0 0 2 2h10a2 2 0 0 0 2-2V8"/><path d="M10 12h4"/>',
  attach:'<path d="M21 12.5l-8.5 8.5a5 5 0 0 1-7-7l9-9a3.5 3.5 0 0 1 5 5l-9 9a2 2 0 0 1-3-3l8-8"/>',
- mail:'<rect x="3" y="5" width="18" height="14" rx="2"/><path d="M3 7l9 6 9-6"/>'
+ mail:'<rect x="3" y="5" width="18" height="14" rx="2"/><path d="M3 7l9 6 9-6"/>',
+ cover:'<rect x="3" y="3" width="18" height="18" rx="2"/><path d="M3 15l5-5 4 4 3-3 6 6"/>',
+ contain:'<rect x="3" y="3" width="18" height="18" rx="2"/><rect x="6" y="8" width="12" height="8" rx="1"/>'
 };
 function svg(n){return '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-linecap="round" stroke-linejoin="round">'+(ICON[n]||'')+'</svg>';}
 
@@ -618,34 +620,34 @@ var sel=function(a){return a;};
 var MODELS={
  news:{label:"News & Events",singular:"Post",icon:"news",group:"Content",hasImport:true,hasCalendar:true,
   columns:[{type:"thumb",field:"image"},{type:"title",field:"title",sub:"category"},{type:"pill",field:"status"},{type:"date",field:"date"}],
-  fields:[{name:"image",type:"image",label:"Cover image",rec:"1200 × 800px (landscape, JPG)"},{name:"category",type:"select",label:"Category",half:true,options:["General","Company News","Sustainability","Certifications","Events","Products"]},{name:"date",type:"date",label:"Date",half:true},{name:"status",type:"select",label:"Status",half:true,options:["draft","published"]},{name:"title",type:"text",label:"Title (English)"},{name:"body",type:"textarea",label:"Body (English)"},{name:"titleAr",type:"text",label:"Title",ar:"Arabic",rtl:true},{name:"bodyAr",type:"textarea",label:"Body",ar:"Arabic (review before publishing)",rtl:true}]},
+  fields:[{name:"image",type:"image",label:"Cover image",frame:"3/2",rec:"1200 × 800px (landscape, JPG)"},{name:"category",type:"select",label:"Category",half:true,options:["General","Company News","Sustainability","Certifications","Events","Products"]},{name:"date",type:"date",label:"Date",half:true},{name:"status",type:"select",label:"Status",half:true,options:["draft","published"]},{name:"title",type:"text",label:"Title (English)"},{name:"body",type:"textarea",label:"Body (English)"},{name:"titleAr",type:"text",label:"Title",ar:"Arabic",rtl:true},{name:"bodyAr",type:"textarea",label:"Body",ar:"Arabic (review before publishing)",rtl:true}]},
  productGroups:{label:"Product Groups",singular:"Group",icon:"products",group:"Content",
   columns:[{type:"thumb",field:"image",contain:true},{type:"title",field:"name",sub:"description"},{type:"text",field:"nameAr"}],
-  fields:[{name:"image",type:"image",label:"Group image",contain:true,rec:"1000 × 750px (transparent PNG)"},{name:"name",type:"text",label:"Name (English)",half:true},{name:"nameAr",type:"text",label:"Name",ar:"Arabic",rtl:true,half:true},{name:"kind",type:"select",label:"Type",half:true,options:["Group","Measurements"],rec:"A Measurements group is a size chart rather than a product range: its page shows the drawing at full page width."},{name:"filter",type:"select",label:"Browse family",half:true,options:["snacks","confectionery","bakery","staples","beverage","chilled","specialty"],rec:"Which heading this group sits under in the Browse list on the products page. Snacks · Confectionery · Bakery & Breads · Pantry Staples · Bottles & Liquids · Frozen & Chilled · Specialty."},{name:"description",type:"textarea",label:"Description (English)"},{name:"descriptionAr",type:"textarea",label:"Description",ar:"Arabic",rtl:true}]},
+  fields:[{name:"image",type:"image",label:"Group image",contain:true,frame:"4/3",rec:"1000 × 750px (transparent PNG)"},{name:"name",type:"text",label:"Name (English)",half:true},{name:"nameAr",type:"text",label:"Name",ar:"Arabic",rtl:true,half:true},{name:"kind",type:"select",label:"Type",half:true,options:["Group","Measurements"],rec:"A Measurements group is a size chart rather than a product range: its page shows the drawing at full page width."},{name:"filter",type:"select",label:"Browse family",half:true,options:["snacks","confectionery","bakery","staples","beverage","chilled","specialty"],rec:"Which heading this group sits under in the Browse list on the products page. Snacks · Confectionery · Bakery & Breads · Pantry Staples · Bottles & Liquids · Frozen & Chilled · Specialty."},{name:"description",type:"textarea",label:"Description (English)"},{name:"descriptionAr",type:"textarea",label:"Description",ar:"Arabic",rtl:true}]},
  products:{label:"Products",singular:"Product",icon:"products",group:"Content",
   columns:[{type:"thumb",field:"image",contain:true},{type:"title",field:"name",sub:"category"},{type:"active",field:"active"}],
-  fields:[{name:"image",type:"image",label:"Product image",contain:true,rec:"1000 × 750px (transparent PNG)"},{name:"name",type:"text",label:"Name (English)",half:true},{name:"category",type:"select",label:"Group",half:true,optionsFrom:"productGroups"},{name:"kind",type:"select",label:"Type",half:true,options:["Product","Measurements"],rec:"A Measurements section is shown differently: full width, the chart uncropped, and openable at full size, because the sizes printed on it have to be readable."},{name:"description",type:"textarea",label:"Description (English)"},{name:"nameAr",type:"text",label:"Name",ar:"Arabic",rtl:true,half:true},{name:"active",type:"select",label:"Visible on site",half:true,options:["true","false"]},{name:"descriptionAr",type:"textarea",label:"Description",ar:"Arabic",rtl:true}]},
+  fields:[{name:"image",type:"image",label:"Product image",frame:"4/3",rec:"1000 × 750px (landscape photo, JPG)"},{name:"name",type:"text",label:"Name (English)",half:true},{name:"category",type:"select",label:"Group",half:true,optionsFrom:"productGroups"},{name:"kind",type:"select",label:"Type",half:true,options:["Product","Measurements"],rec:"A Measurements section is shown differently: full width, the chart uncropped, and openable at full size, because the sizes printed on it have to be readable."},{name:"description",type:"textarea",label:"Description (English)"},{name:"nameAr",type:"text",label:"Name",ar:"Arabic",rtl:true,half:true},{name:"active",type:"select",label:"Visible on site",half:true,options:["true","false"]},{name:"descriptionAr",type:"textarea",label:"Description",ar:"Arabic",rtl:true}]},
  team:{label:"Our Team",singular:"Member",icon:"team",group:"Content",
   columns:[{type:"thumb",field:"photo",round:true},{type:"title",field:"name",sub:"role"},{type:"text",field:"experience",prefix:"",suffix:" yrs"},{type:"text",field:"email"}],
-  fields:[{name:"photo",type:"image",label:"Photo",rec:"600 × 760px (portrait, JPG)"},{name:"mono",type:"text",label:"Monogram (initials, shown until a photo is added)",half:true},{name:"name",type:"text",label:"Name (English)",half:true},{name:"role",type:"text",label:"Role (English)",half:true},{name:"nameAr",type:"text",label:"Name",ar:"Arabic",rtl:true,half:true},{name:"roleAr",type:"text",label:"Role",ar:"Arabic",rtl:true,half:true},{name:"email",type:"text",label:"Email",half:true},{name:"experience",type:"number",label:"Years of experience",half:true},{name:"bio",type:"textarea",label:"Short note (English)"},{name:"bioAr",type:"textarea",label:"Short note",ar:"Arabic",rtl:true}]},
+  fields:[{name:"photo",type:"image",label:"Photo",frame:"1/1",rec:"600 × 600px (square, JPG)"},{name:"mono",type:"text",label:"Monogram (initials, shown until a photo is added)",half:true},{name:"name",type:"text",label:"Name (English)",half:true},{name:"role",type:"text",label:"Role (English)",half:true},{name:"nameAr",type:"text",label:"Name",ar:"Arabic",rtl:true,half:true},{name:"roleAr",type:"text",label:"Role",ar:"Arabic",rtl:true,half:true},{name:"email",type:"text",label:"Email",half:true},{name:"experience",type:"number",label:"Years of experience",half:true},{name:"bio",type:"textarea",label:"Short note (English)"},{name:"bioAr",type:"textarea",label:"Short note",ar:"Arabic",rtl:true}]},
  careers:{label:"Careers",singular:"Job",icon:"careers",group:"Content",
   columns:[{type:"title",field:"title",sub:"dept"},{type:"text",field:"type"},{type:"text",field:"location"},{type:"pill",field:"status"}],
   fields:[{name:"title",type:"text",label:"Title (English)",half:true},{name:"titleAr",type:"text",label:"Title",ar:"Arabic",rtl:true,half:true},{name:"dept",type:"select",label:"Department",half:true,options:["Production","Quality","Sales","Engineering","Admin","Logistics","IT"]},{name:"deptAr",type:"text",label:"Department",ar:"Arabic",rtl:true,half:true},{name:"type",type:"select",label:"Type",half:true,options:["Full-time","Part-time","Contract","Internship"]},{name:"typeAr",type:"text",label:"Type",ar:"Arabic",rtl:true,half:true},{name:"location",type:"text",label:"Location",half:true},{name:"locationAr",type:"text",label:"Location",ar:"Arabic",rtl:true,half:true},{name:"status",type:"select",label:"Status",half:true,options:["draft","published"]},{name:"email",type:"text",label:"Application email",half:true,rec:"Applications for THIS role go here. Send a manager vacancy to that manager rather than to one shared inbox."},{name:"summary",type:"textarea",label:"Summary (English)",rec:"One or two lines, shown under the job title."},{name:"summaryAr",type:"textarea",label:"Summary",ar:"Arabic",rtl:true},{name:"requirements",type:"textarea",label:"Requirements (English)",rec:"One requirement per line. Each line becomes a bullet on the site."},{name:"requirementsAr",type:"textarea",label:"Requirements",ar:"Arabic",rtl:true}]},
  partners:{label:"Success Partners",singular:"Partner",icon:"partners",group:"Content",
   columns:[{type:"thumb",field:"image",contain:true},{type:"title",field:"name",sub:"country",fallback:"country"},{type:"text",field:"country"}],
-  fields:[{name:"image",type:"image",label:"Logo",contain:true,rec:"480 × 300px (transparent PNG)"},{name:"name",type:"text",label:"Client name (English)",half:true},{name:"nameAr",type:"text",label:"Client name",ar:"Arabic",rtl:true,half:true},{name:"country",type:"text",label:"Country (English)",half:true},{name:"countryAr",type:"text",label:"Country",ar:"Arabic",rtl:true,half:true},{name:"featured",type:"select",label:"Main partner",half:true,options:["false","true"],rec:"Main partners are the ones shown on the home page. There are always exactly "+MAIN_PARTNERS+" of them, so turn one off before turning another on."},{name:"link",type:"url",label:"Website (optional)"}]},
+  fields:[{name:"image",type:"image",label:"Logo",contain:true,frame:"8/5",rec:"480 × 300px (transparent PNG)"},{name:"name",type:"text",label:"Client name (English)",half:true},{name:"nameAr",type:"text",label:"Client name",ar:"Arabic",rtl:true,half:true},{name:"country",type:"text",label:"Country (English)",half:true},{name:"countryAr",type:"text",label:"Country",ar:"Arabic",rtl:true,half:true},{name:"featured",type:"select",label:"Main partner",half:true,options:["false","true"],rec:"Main partners are the ones shown on the home page. There are always exactly "+MAIN_PARTNERS+" of them, so turn one off before turning another on."},{name:"link",type:"url",label:"Website (optional)"}]},
  factory:{label:"Factory Departments",singular:"Department",icon:"factory",group:"Company",
   columns:[{type:"thumb",field:"image"},{type:"title",field:"name",sub:"kind"},{type:"tag",field:"kind"}],
-  fields:[{name:"image",type:"image",label:"Photo",rec:"1200 × 800px (landscape, JPG)"},{name:"name",type:"text",label:"Name (English)",half:true},{name:"kind",type:"select",label:"Type",half:true,options:["Department","Warehouse"]},{name:"nameAr",type:"text",label:"Name",ar:"Arabic",rtl:true},{name:"description",type:"textarea",label:"Description (English)"},{name:"descriptionAr",type:"textarea",label:"Description",ar:"Arabic",rtl:true}]},
+  fields:[{name:"image",type:"image",label:"Photo",frame:"4/3",rec:"1200 × 900px (landscape, JPG)"},{name:"name",type:"text",label:"Name (English)",half:true},{name:"kind",type:"select",label:"Type",half:true,options:["Department","Warehouse"]},{name:"nameAr",type:"text",label:"Name",ar:"Arabic",rtl:true},{name:"description",type:"textarea",label:"Description (English)"},{name:"descriptionAr",type:"textarea",label:"Description",ar:"Arabic",rtl:true}]},
  quality:{label:"Quality System",singular:"Item",icon:"quality",group:"Company",
   columns:[{type:"thumb",field:"image"},{type:"title",field:"title",sub:"kind"},{type:"tag",field:"kind"}],
-  fields:[{name:"image",type:"image",label:"Certificate / image",rec:"1000 × 1400px (portrait, JPG or PNG)"},{name:"title",type:"text",label:"Title (English)",half:true},{name:"kind",type:"select",label:"Type",half:true,options:["Certificate","Assurance","Lab"]},{name:"titleAr",type:"text",label:"Title",ar:"Arabic",rtl:true},{name:"description",type:"textarea",label:"Description (English)"},{name:"descriptionAr",type:"textarea",label:"Description",ar:"Arabic",rtl:true}]},
+  fields:[{name:"image",type:"image",label:"Certificate / image",contain:true,frame:"3/4",rec:"1050 × 1400px (portrait, JPG or PNG)"},{name:"title",type:"text",label:"Title (English)",half:true},{name:"kind",type:"select",label:"Type",half:true,options:["Certificate","Assurance","Lab"]},{name:"titleAr",type:"text",label:"Title",ar:"Arabic",rtl:true},{name:"description",type:"textarea",label:"Description (English)"},{name:"descriptionAr",type:"textarea",label:"Description",ar:"Arabic",rtl:true}]},
  responsibility:{label:"Social Responsibility",singular:"Item",icon:"responsibility",group:"Company",
   columns:[{type:"thumb",field:"image"},{type:"title",field:"title",sub:"category"},{type:"tag",field:"category"}],
-  fields:[{name:"image",type:"image",label:"Certificate / image",rec:"1000 × 1400px (portrait, JPG or PNG)"},{name:"title",type:"text",label:"Title (English)",half:true},{name:"category",type:"select",label:"Area",half:true,options:["Environment","Local Community","International"]},{name:"titleAr",type:"text",label:"Title",ar:"Arabic",rtl:true},{name:"description",type:"textarea",label:"Description (English)"},{name:"descriptionAr",type:"textarea",label:"Description",ar:"Arabic",rtl:true}]},
+  fields:[{name:"image",type:"image",label:"Certificate / image",contain:true,frame:"3/4",rec:"1050 × 1400px (portrait, JPG or PNG)"},{name:"title",type:"text",label:"Title (English)",half:true},{name:"category",type:"select",label:"Area",half:true,options:["Environment","Local Community","International"]},{name:"titleAr",type:"text",label:"Title",ar:"Arabic",rtl:true},{name:"description",type:"textarea",label:"Description (English)"},{name:"descriptionAr",type:"textarea",label:"Description",ar:"Arabic",rtl:true}]},
  gallery:{label:"Gallery",singular:"Item",icon:"gallery",group:"Company",
   columns:[{type:"thumb",field:"image"},{type:"title",field:"title",sub:"kind"},{type:"tag",field:"kind"}],
-  fields:[{name:"kind",type:"select",label:"Type",half:true,options:["Photo","Video","Advertisement"]},{name:"span",type:"select",label:"Size (photos & ads)",half:true,options:["normal","wide","tall"]},{name:"title",type:"text",label:"Title (English)",half:true},{name:"image",type:"image",label:"Image / thumbnail",rec:"1600 × 1000px JPG/WebP. For videos, upload only a poster image."},{name:"titleAr",type:"text",label:"Title",ar:"Arabic",rtl:true},{name:"url",type:"url",label:"External video / campaign link",rec:"Paste a YouTube or Vimeo link. Do not upload video files."}]},
+  fields:[{name:"kind",type:"select",label:"Type",half:true,options:["Photo","Video","Advertisement"]},{name:"span",type:"select",label:"Size (photos & ads)",half:true,options:["normal","wide","tall"]},{name:"title",type:"text",label:"Title (English)",half:true},{name:"image",type:"image",label:"Image / thumbnail",frame:"8/5",rec:"1600 × 1000px JPG/WebP. Wide and tall tiles crop more; use Focus point. For videos, upload only a poster image."},{name:"titleAr",type:"text",label:"Title",ar:"Arabic",rtl:true},{name:"url",type:"url",label:"External video / campaign link",rec:"Paste a YouTube or Vimeo link. Do not upload video files."}]},
  values:{label:"Our Values",singular:"Value",icon:"about",group:"Company",
   columns:[{type:"title",field:"title",sub:"text"},{type:"text",field:"titleAr"}],
   fields:[{name:"title",type:"text",label:"Value (English)",half:true},{name:"titleAr",type:"text",label:"Value",ar:"Arabic",rtl:true,half:true},{name:"text",type:"textarea",label:"Description (English)"},{name:"textAr",type:"textarea",label:"Description",ar:"Arabic",rtl:true}]},
@@ -658,7 +660,7 @@ var MODELS={
   note:"Shown on every product group page under \"What every order includes\"."},
  offices:{label:"Offices & Contact",singular:"Office",icon:"offices",group:"Site",
   columns:[{type:"title",field:"city",sub:"staffName"},{type:"text",field:"phone"},{type:"text",field:"email"}],
-  fields:[{name:"photo",type:"image",label:"Office manager's photo",rec:"420 × 420px, square. Shown beside the office on the contact page; initials stand in until one is added."},{name:"city",type:"text",label:"Office (English)",half:true},{name:"cityAr",type:"text",label:"Office",ar:"Arabic",rtl:true,half:true},{name:"group",type:"select",label:"Group",half:true,options:["Saudi Arabia","Regional & Export"]},{name:"cc",type:"select",label:"Country on the map",half:true,options:CC_OPTIONS,rec:"Which country this office lights up on the map, and whose details the map shows. Leave blank for a branch inside a country that already has an office (Riyadh, Dammam). 'int' is International Sales, which appears in the selector but has no country to colour."},{name:"country",type:"text",label:"Country / area (English)",half:true},{name:"countryAr",type:"text",label:"Country / area",ar:"Arabic",rtl:true,half:true},{name:"staffName",type:"text",label:"Manager name (English)",half:true},{name:"staffNameAr",type:"text",label:"Manager name",ar:"Arabic",rtl:true,half:true},{name:"staffRole",type:"text",label:"Manager title (English)",half:true},{name:"staffRoleAr",type:"text",label:"Manager title",ar:"Arabic",rtl:true,half:true},{name:"phone",type:"text",label:"Phone",half:true},{name:"email",type:"text",label:"Email",half:true}]}
+  fields:[{name:"photo",type:"image",label:"Office manager's photo",frame:"1/1",rec:"420 × 420px, square. Shown beside the office on the contact page; initials stand in until one is added."},{name:"city",type:"text",label:"Office (English)",half:true},{name:"cityAr",type:"text",label:"Office",ar:"Arabic",rtl:true,half:true},{name:"group",type:"select",label:"Group",half:true,options:["Saudi Arabia","Regional & Export"]},{name:"cc",type:"select",label:"Country on the map",half:true,options:CC_OPTIONS,rec:"Which country this office lights up on the map, and whose details the map shows. Leave blank for a branch inside a country that already has an office (Riyadh, Dammam). 'int' is International Sales, which appears in the selector but has no country to colour."},{name:"country",type:"text",label:"Country / area (English)",half:true},{name:"countryAr",type:"text",label:"Country / area",ar:"Arabic",rtl:true,half:true},{name:"staffName",type:"text",label:"Manager name (English)",half:true},{name:"staffNameAr",type:"text",label:"Manager name",ar:"Arabic",rtl:true,half:true},{name:"staffRole",type:"text",label:"Manager title (English)",half:true},{name:"staffRoleAr",type:"text",label:"Manager title",ar:"Arabic",rtl:true,half:true},{name:"phone",type:"text",label:"Phone",half:true},{name:"email",type:"text",label:"Email",half:true}]}
 };
 /* The fields that MUST be filled before a record can be saved, per model. These are the
    identifying names/titles, the visual-anchor images, and the categorisation each record needs
@@ -1286,7 +1288,39 @@ function fieldHTML(f,val){
     thrown to the wrong end. */
  var rtl=f.rtl?' dir="rtl"':' dir="ltr"';
  var hint=f.rec?'<div class="hint">'+esc(T(f.rec))+'</div>':'';
- if(f.type==='image'){var has=val?' has':'';var cn=f.contain?' contain':'';var rec=f.rec?'<span class="imgrec">'+svg('image')+T('Recommended: {x} for a flawless fit',{x:'<b>'+esc(T(f.rec))+'</b>'})+'</span>':'';return '<div class="field full"><label>'+esc(T(f.label))+req+'</label>'+rec+'<div class="imgpick'+has+cn+'" data-imgpick="'+f.name+'" data-box="'+recBox(f.rec)+'"><img src="'+esc(imgSrc(val))+'"><div class="ph">'+svg('image')+esc(T('Click to upload'))+'</div></div><input type="file" accept="image/*" data-imgfile="'+f.name+'" hidden></div>';}
+ if(f.type==='image'){
+  var has=val?' has':'';
+  // The chosen fit for THIS image: an explicit per-image choice wins, otherwise the field's
+  // default (logos/product cut-outs default to "show whole", photographs to "fill").
+  var fit=draft[f.name+'Fit']||(f.contain?'contain':'cover');
+  var cn=(fit==='contain')?' contain':'';
+  var rec=f.rec?'<span class="imgrec">'+svg('image')+T('Recommended: {x} for a flawless fit',{x:'<b>'+esc(T(f.rec))+'</b>'})+'</span>':'';
+  // The preview box mirrors the real frame on the site (its aspect ratio), so what she sees
+  // here is exactly what visitors get. Fields without a defined frame keep the neutral box.
+  var frameStyle=f.frame?' style="aspect-ratio:'+f.frame+'"':'';
+  // Two-button chooser, shown only for framed fields. "Fill" crops to fill the frame; "Show
+  // whole" letterboxes on the frame's own colour so nothing (a logo, a QR code) is cut.
+  var toggle=f.frame?'<div class="fitrow" data-fitrow="'+f.name+'">'
+    +'<button type="button" class="fitbtn'+(fit==='cover'?' on':'')+'" data-fit="cover">'+svg('cover')+esc(T('Fill frame'))+'</button>'
+    +'<button type="button" class="fitbtn'+(fit==='contain'?' on':'')+'" data-fit="contain">'+svg('contain')+esc(T('Show whole image'))+'</button>'
+    +'</div>':'';
+  // Focus point: when "Fill frame" crops the picture, this picks which part is kept, so a logo
+  // or headline at an edge is not the bit that gets sliced off. Only meaningful while filling,
+  // so it is hidden the moment she switches to "Show whole image". Absent = centre (the default).
+  var focus=draft[f.name+'Focus']||'';
+  var POS=[['left top','Top left'],['center top','Top'],['right top','Top right'],['left center','Left'],['center','Centre'],['right center','Right'],['left bottom','Bottom left'],['center bottom','Bottom'],['right bottom','Bottom right']];
+  var fsel=focus||'center';
+  var focusEl=f.frame?'<div class="focusrow" data-focusrow="'+f.name+'"'+(fit==='cover'?'':' hidden')+'>'
+    +'<span class="focuslabel">'+esc(T('Keep this part in view'))+'</span>'
+    +'<div class="focusgrid">'+POS.map(function(p){return '<button type="button" class="focusdot'+(fsel===p[0]?' on':'')+'" data-focus="'+p[0]+'" title="'+esc(T(p[1]))+'" aria-label="'+esc(T(p[1]))+'"></button>';}).join('')+'</div>'
+    +'</div>':'';
+  var posStyle=focus?' style="object-position:'+focus+'"':'';
+  return '<div class="field full"><label>'+esc(T(f.label))+req+'</label>'+rec
+    +'<div class="imgpick'+has+cn+'" data-imgpick="'+f.name+'"'+frameStyle+' data-box="'+recBox(f.rec)+'"><img src="'+esc(imgSrc(val))+'"'+posStyle+'><div class="ph">'+svg('image')+esc(T('Click to upload'))+'</div></div>'
+    +toggle
+    +focusEl
+    +'<input type="file" accept="image/*" data-imgfile="'+f.name+'" hidden></div>';
+ }
  if(f.type==='textarea')return '<div class="field full">'+lab+'<textarea data-f="'+f.name+'"'+rtl+'>'+esc(val||'')+'</textarea>'+hint+'</div>';
  if(f.type==='select'){
   var src=f.optionsFrom?coll(f.optionsFrom).map(function(g){return g.name;}).filter(Boolean):f.options;
@@ -1324,6 +1358,38 @@ function openForm(key,id){
  host.querySelectorAll('[data-f]').forEach(function(el){el.addEventListener('input',function(){dirty=true;draft[el.getAttribute('data-f')]=el.value;var fl=el.closest('.field');if(fl&&String(el.value).trim()!=='')fl.classList.remove('missing');});});
  host.querySelectorAll('select[data-f]').forEach(function(el){el.addEventListener('change',function(){dirty=true;});});
  host.querySelectorAll('[data-imgpick]').forEach(function(p){var name=p.getAttribute('data-imgpick');var file=host.querySelector('[data-imgfile="'+name+'"]');p.addEventListener('click',function(){file.click();});file.addEventListener('change',function(e){var f=e.target.files[0];if(!f)return;prepImage(f,+p.getAttribute('data-box')||IMG_BOX,function(out,kb){dirty=true;draft[name]=out;p.classList.add('has');$('img',p).src=out;var fl=p.closest('.field');if(fl)fl.classList.remove('missing');toast(T('Picture ready, {kb} KB',{kb:kb}),'ok');});file.value='';});});
+ // Fit chooser: records the per-image choice on the draft and shows it live in the preview,
+ // so the box mirrors exactly how the site will place the picture inside its fixed frame.
+ host.querySelectorAll('[data-fitrow]').forEach(function(row){
+  var name=row.getAttribute('data-fitrow');
+  var pick=host.querySelector('[data-imgpick="'+name+'"]');
+  row.querySelectorAll('.fitbtn').forEach(function(b){
+   b.addEventListener('click',function(){
+    var fit=b.getAttribute('data-fit');
+    draft[name+'Fit']=fit;dirty=true;
+    row.querySelectorAll('.fitbtn').forEach(function(x){x.classList.toggle('on',x===b);});
+    if(pick)pick.classList.toggle('contain',fit==='contain');
+    // The focus grid only makes sense while filling; hide it when showing the whole image.
+    var frow=host.querySelector('[data-focusrow="'+name+'"]');
+    if(frow)frow.hidden=(fit!=='cover');
+   });
+  });
+ });
+ // Focus point: records which part of the picture to keep when it fills, and nudges the live
+ // preview to the same spot so she can aim the crop before saving.
+ host.querySelectorAll('[data-focusrow]').forEach(function(row){
+  var name=row.getAttribute('data-focusrow');
+  var pick=host.querySelector('[data-imgpick="'+name+'"]');
+  var pim=pick?pick.querySelector('img'):null;
+  row.querySelectorAll('.focusdot').forEach(function(b){
+   b.addEventListener('click',function(){
+    var pos=b.getAttribute('data-focus');
+    draft[name+'Focus']=pos;dirty=true;
+    row.querySelectorAll('.focusdot').forEach(function(x){x.classList.toggle('on',x===b);});
+    if(pim)pim.style.objectPosition=pos;
+   });
+  });
+ });
  if(mdl.hasImport){$('#lib',host).addEventListener('click',function(){importLI(host);});$('#liu',host).addEventListener('keydown',function(e){if(e.key==='Enter')importLI(host);});}
  $('#sv',host).addEventListener('click',function(){
   /* One press is one record. The drawer stays on screen for 350ms while it slides away, and
