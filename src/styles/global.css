@@ -167,6 +167,14 @@ section{padding-block:var(--section-y)}
 [dir="rtl"] .i18n-ar{display:inline}
 .i18n-ar{font-family:var(--arabic)}
 
+/* ---------- accessibility: colorless mode ----------
+   The controls live in Accessibility.astro (a fixed toolbar on every page). The text-size button
+   applies a uniform zoom on the root element (in Base.astro), which enlarges the whole page without
+   breaking any layout. Colorless is a grayscale filter on the ROOT element specifically: the document
+   root is the one element where a filter does NOT create a containing block for position:fixed, so the
+   sticky header, the QR overlay and the toolbar keep working while it is on. */
+html.a11y-grayscale{filter:grayscale(1)}
+
 /* ---------- RTL layout ---------- */
 [dir="rtl"]{--display:var(--arabic);--body:var(--arabic)}
 [dir="rtl"] body{text-align:right}

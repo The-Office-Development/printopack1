@@ -1,5 +1,13 @@
 # Handoff, 2026-08-05
 
+> **Update 2026-08-23 — accessibility controls added.** Every page now carries a fixed
+> accessibility toolbar (`src/components/Accessibility.astro`, rendered from `Base.astro`) with two
+> controls: an "increase text size" button (uniform root `zoom` at 100/115/130%, so it enlarges the
+> whole site without breaking layout) and a "colorless" grayscale toggle (`filter:grayscale(1)` on the
+> root element, which is the one place a filter does not trap `position:fixed`). Choices persist in
+> `localStorage` (`a11yFont`, `a11yGray`) and are applied pre-paint by the inline script in Base's
+> `<head>`, next to the existing lang/dir script. Bilingual labels via `Bi`, RTL-aware placement.
+
 You are picking up a live client project mid-flight. Read this, then `CLIENT_NOTES.md`. Those
 two are enough to start; `STATUS.md`, `BACKEND_MIGRATION_PLAN.md` and `db/README.md` cover the
 Cloudflare backend, which has not moved in this stretch of work.
