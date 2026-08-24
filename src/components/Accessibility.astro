@@ -1,33 +1,42 @@
 ---
 import Bi from './Bi.astro';
 
-// Site-wide accessibility controls, required for Saudi websites: an "increase text size" button
-// and a "colorless" (grayscale) button, for visitors with visual difficulty. Rendered once per
-// page from Base.astro, so the same fixed toolbar sits on every page.
+// Site-wide accessibility controls, required for Saudi websites. A round launcher button carrying
+// the universal accessibility symbol (the figure the client asked for, the one recognised for this
+// purpose) sits fixed on every page; pressing it opens a small panel with two controls: an
+// "increase text size" button and a "colorless" (grayscale) button, for visitors with visual
+// difficulty. Rendered once per page from Base.astro, so the same control sits on every page.
 //
 // Text size is a UNIFORM zoom on the document root (see the script), not a per-element font tweak:
 // the site is px-based across dozens of components, and a uniform zoom enlarges the whole page the
 // way the browser's own zoom does, so nothing overflows or overlaps at any level. Colorless is a
 // grayscale filter on the ROOT element specifically (global.css), the one element where a filter
-// does not trap position:fixed, so the sticky header, the QR overlay and this toolbar keep working.
+// does not trap position:fixed, so the sticky header, the QR overlay and this control keep working.
 //
 // Both choices persist in localStorage and are re-applied before paint by the inline script in
 // Base.astro's <head>, so there is no flash on navigation. No motion, in keeping with the site.
 ---
-<div class="a11y" role="group" aria-label="Accessibility options">
-  <button class="a11y-btn" id="a11y-font" type="button" aria-label="Increase text size">
-    <span class="a11y-ico a11y-ico-txt" aria-hidden="true"><span class="sm">A</span><span class="lg">A</span></span>
-    <span class="a11y-lbl"><Bi en="Text size" ar="حجم الخط" /></span>
-    <span class="a11y-pips" aria-hidden="true"><i></i><i></i></span>
-  </button>
-  <button class="a11y-btn" id="a11y-gray" type="button" aria-pressed="false" aria-label="Toggle colorless mode">
-    <span class="a11y-ico" aria-hidden="true">
-      <svg viewBox="0 0 24 24" aria-hidden="true">
-        <circle cx="12" cy="12" r="9" fill="none" stroke="currentColor" stroke-width="1.6" />
-        <path d="M12 3a9 9 0 0 0 0 18Z" fill="currentColor" />
-      </svg>
-    </span>
-    <span class="a11y-lbl"><Bi en="Colorless" ar="بلا ألوان" /></span>
+<div class="a11y" data-open="false">
+  <div class="a11y-panel" id="a11y-panel" role="group" aria-label="Accessibility options">
+    <button class="a11y-btn" id="a11y-font" type="button" aria-label="Increase text size">
+      <span class="a11y-ico a11y-ico-txt" aria-hidden="true"><span class="sm">A</span><span class="lg">A</span></span>
+      <span class="a11y-lbl"><Bi en="Text size" ar="حجم الخط" /></span>
+      <span class="a11y-pips" aria-hidden="true"><i></i><i></i></span>
+    </button>
+    <button class="a11y-btn" id="a11y-gray" type="button" aria-pressed="false" aria-label="Toggle colorless mode">
+      <span class="a11y-ico" aria-hidden="true">
+        <svg viewBox="0 0 24 24" aria-hidden="true">
+          <circle cx="12" cy="12" r="9" fill="none" stroke="currentColor" stroke-width="1.6" />
+          <path d="M12 3a9 9 0 0 0 0 18Z" fill="currentColor" />
+        </svg>
+      </span>
+      <span class="a11y-lbl"><Bi en="Colorless" ar="بلا ألوان" /></span>
+    </button>
+  </div>
+  <button class="a11y-toggle" id="a11y-toggle" type="button" aria-expanded="false" aria-controls="a11y-panel" aria-label="Accessibility options">
+    <svg viewBox="0 0 24 24" aria-hidden="true">
+      <path fill="currentColor" d="M12 2c1.1 0 2 .9 2 2s-.9 2-2 2-2-.9-2-2 .9-2 2-2zm9 7h-6v13h-2v-6h-2v6H9V9H3V7h18v2z" />
+    </svg>
   </button>
   <span id="a11y-live" class="a11y-sr" aria-live="polite"></span>
 </div>
@@ -39,6 +48,32 @@ import Bi from './Bi.astro';
     inset-inline-start:18px;
     z-index:90;
     display:flex;
+    flex-direction:column;
+    align-items:flex-start;
+    gap:10px;
+  }
+  /* The launcher: a round button carrying the universal accessibility symbol, in the exact
+     Printopack logo blue (also the internationally recognised colour for this control). */
+  .a11y-toggle{
+    display:inline-flex;
+    align-items:center;
+    justify-content:center;
+    width:52px;
+    height:52px;
+    border:0;
+    border-radius:50%;
+    background:var(--blue);
+    color:var(--white);
+    box-shadow:0 10px 30px rgba(0,70,162,.32);
+    cursor:pointer;
+  }
+  .a11y-toggle svg{width:28px;height:28px}
+  .a11y-toggle:hover{background:var(--navy-deep)}
+  .a11y-toggle:focus-visible{outline:2px solid var(--gold);outline-offset:3px}
+
+  /* The panel holds the two controls; it is closed by default and opens above the launcher. */
+  .a11y-panel{
+    display:none;
     gap:8px;
     padding:7px;
     background:var(--white);
@@ -46,6 +81,8 @@ import Bi from './Bi.astro';
     border-radius:calc(var(--radius) + 8px);
     box-shadow:0 10px 30px rgba(0,70,162,.16);
   }
+  .a11y[data-open="true"] .a11y-panel{display:flex}
+
   .a11y-btn{
     display:inline-flex;
     align-items:center;
@@ -60,6 +97,7 @@ import Bi from './Bi.astro';
     font-size:12.5px;
     font-weight:600;
     letter-spacing:.03em;
+    cursor:pointer;
   }
   .a11y-btn:hover{background:var(--navy);color:var(--white);border-color:var(--navy)}
   .a11y-btn:focus-visible{outline:2px solid var(--gold);outline-offset:2px}
@@ -78,10 +116,13 @@ import Bi from './Bi.astro';
   /* Screen-reader-only live region for announcing the new size. */
   .a11y-sr{position:absolute;width:1px;height:1px;overflow:hidden;clip:rect(0 0 0 0);white-space:nowrap;border:0;padding:0;margin:-1px}
 
-  /* On small screens the labels fold away to keep the toolbar out of the content; the icons and
+  /* On small screens the labels fold away to keep the panel out of the content; the icons and
      the aria-labels stay, so it is still a two-button control that a screen reader can name. */
   @media(max-width:600px){
-    .a11y{inset-block-end:12px;inset-inline-start:12px;gap:6px;padding:6px}
+    .a11y{inset-block-end:12px;inset-inline-start:12px;gap:8px}
+    .a11y-toggle{width:48px;height:48px}
+    .a11y-toggle svg{width:26px;height:26px}
+    .a11y-panel{gap:6px;padding:6px}
     .a11y-btn{padding:0 11px;gap:7px}
     .a11y-lbl,.a11y-pips{display:none}
   }
@@ -91,6 +132,8 @@ import Bi from './Bi.astro';
   const html = document.documentElement;
   const ZOOM = ['', '1.15', '1.3'];              // 100% / 115% / 130%
   const PCT  = ['100%', '115%', '130%'];
+  const wrap = document.querySelector('.a11y') as HTMLElement | null;
+  const toggle = document.getElementById('a11y-toggle');
   const fontBtn = document.getElementById('a11y-font');
   const grayBtn = document.getElementById('a11y-gray');
   const live = document.getElementById('a11y-live');
@@ -114,6 +157,23 @@ import Bi from './Bi.astro';
   // The pre-paint script in <head> already set both; re-sync the button state here.
   applyFont();
   applyGray();
+
+  // Open/close the panel from the launcher; close on outside click or Escape.
+  function setOpen(open: boolean) {
+    if (!wrap) return;
+    wrap.dataset.open = String(open);
+    toggle?.setAttribute('aria-expanded', String(open));
+  }
+  toggle?.addEventListener('click', (e) => {
+    e.stopPropagation();
+    setOpen(wrap?.dataset.open !== 'true');
+  });
+  document.addEventListener('click', (e) => {
+    if (wrap?.dataset.open === 'true' && !wrap.contains(e.target as Node)) setOpen(false);
+  });
+  document.addEventListener('keydown', (e) => {
+    if (e.key === 'Escape') setOpen(false);
+  });
 
   fontBtn?.addEventListener('click', () => {
     level = (level + 1) % 3;
