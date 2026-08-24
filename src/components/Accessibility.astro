@@ -52,8 +52,8 @@ import Bi from './Bi.astro';
     align-items:flex-start;
     gap:10px;
   }
-  /* The launcher: a round button carrying the universal accessibility symbol, in the exact
-     Printopack logo blue (also the internationally recognised colour for this control). */
+  /* The launcher: a round button carrying the universal accessibility symbol, in the green the
+     client provided (the colour recognised for this control). */
   .a11y-toggle{
     display:inline-flex;
     align-items:center;
@@ -62,13 +62,13 @@ import Bi from './Bi.astro';
     height:52px;
     border:0;
     border-radius:50%;
-    background:var(--blue);
+    background:#0e8354;
     color:var(--white);
-    box-shadow:0 10px 30px rgba(0,70,162,.32);
+    box-shadow:0 10px 30px rgba(14,131,84,.32);
     cursor:pointer;
   }
   .a11y-toggle svg{width:28px;height:28px}
-  .a11y-toggle:hover{background:var(--navy-deep)}
+  .a11y-toggle:hover{background:#0a6a44}
   .a11y-toggle:focus-visible{outline:2px solid var(--gold);outline-offset:3px}
 
   /* The panel holds the two controls; it is closed by default and opens above the launcher. */
