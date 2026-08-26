@@ -96,6 +96,16 @@ const officesAr = _offices.map((o) => o.cityAr || o.city).filter(Boolean)
         <a href="#" target="_blank" rel="noopener">Facebook</a>
       </div>
     </div>
+
+    <!-- Build credit. Its own line below the client's legal row, a step smaller and dimmer
+         than the copyright beside it, so it is legible without competing with Printopack's
+         own lines. The Arabic keeps the company name in Latin: it is a registered name, not
+         a phrase to translate. -->
+    <div class="foot-credit">
+      <a href="https://theoffice.it.com/card" target="_blank" rel="noopener">
+        <Bi en="Developed by The Office Development" ar="تطوير The Office Development" />
+      </a>
+    </div>
   </div>
 </footer>
 
@@ -153,6 +163,12 @@ const officesAr = _offices.map((o) => o.cityAr || o.city).filter(Boolean)
   .foot-legal{display:flex;gap:22px}
   .foot-legal a{font-size:12.5px;color:#fff}
   .foot-legal a:hover{color:var(--gold-bright)}
+  /* 11.5px against the row's 12.5px, and dimmed, so it reads as a signature rather
+     than a fifth footer link. Hover matches the legal row so it behaves like its
+     neighbours once someone reaches for it. */
+  .foot-credit{padding-top:14px;text-align:center}
+  .foot-credit a{font-size:11.5px;letter-spacing:.02em;color:rgba(255,255,255,.62)}
+  .foot-credit a:hover{color:var(--gold-bright)}
 
   @media(max-width:900px){.foot-grid{grid-template-columns:1fr 1fr;gap:36px}.qr{grid-column:1 / -1}}
   @media(max-width:560px){
