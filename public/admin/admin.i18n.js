@@ -106,7 +106,7 @@ window.PPK_AR = {
 "Country (English)":"الدولة (بالإنجليزية)",
 "Country":"الدولة",
 "Write the country, with the city before or after it if needed, for example Saudi Arabia - Jeddah. The map on the Partners page filters by it.":"اكتب اسم الدولة، ويمكن ذكر المدينة قبله أو بعده، مثل: Saudi Arabia - Jeddah. وتعتمد عليه خريطة صفحة الشركاء في التصفية.",
-"Partner saved, but “{c}” is not a country the map recognises, so it will not show when a country is selected.":"حُفظ الشريك، غير أن الخريطة لا تتعرّف على «{c}» بوصفها دولة، فلن يظهر عند اختيار أي دولة.",
+"Partner saved. “{c}” is not one of the countries on the map, so it is listed under International.":"حُفظ الشريك. «{c}» ليست من الدول الظاهرة على الخريطة، لذا يُدرج ضمن «دولي».",
 "Main partner":"شريك رئيسي",
 "Website (optional)":"الموقع الإلكتروني (اختياري)",
 "Certificate / image":"الشهادة أو الصورة",

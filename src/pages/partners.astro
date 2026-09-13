@@ -47,8 +47,8 @@ const content = {
     filterIn: { en: "in", ar: "في" },
     showAll: { en: "Show all partners", ar: "عرض جميع الشركاء" },
     empty: {
-      en: "No partners listed for this market yet. Its office is shown on the map below.",
-      ar: "لا شركاء مدرجين لهذا السوق بعد. ويظهر مكتبه على الخريطة أدناه.",
+      en: "No partners listed for this market yet. Its office is shown on the map above.",
+      ar: "لا شركاء مدرجين لهذا السوق بعد. ويظهر مكتبه على الخريطة أعلاه.",
     },
   },
   // "Where we deliver": interactive regional map. Click a country (or its chip) to
@@ -414,23 +414,26 @@ const c = content;
       pop.style.top = Math.max(8, (cr.height - pop.offsetHeight) / 2) + 'px';
     };
     // The map IS the wall's filter: choosing a market narrows the partner wall to that
-    // country as well as showing its office. `int` (International) is a catch-all rather
-    // than a territory, so it shows the office and leaves the wall whole.
+    // country as well as showing its office. `int` (International) narrows it to every
+    // partner outside the countries the map can select: a partner in Germany, say, or one
+    // whose country did not match any country at all. The client's definition, 2026-09-13.
     const cards = Array.from(document.querySelectorAll('.pcard'));
     const filterBar = document.querySelector('.wall-filter');
     const filterCount = document.querySelector('.wall-filter-count');
     const filterCountry = document.querySelector('.wall-filter-country');
     const wallEmpty = document.querySelector('.wall-empty');
+    // Read from the selector itself, so International always means "none of what can be picked".
+    const mapped = new Set([...paths, ...chips].map((el) => el.dataset.cc).filter((cc) => cc && cc !== 'int'));
     const filterWall = (cc) => {
       const office = cc ? OFFICES[cc] : null;
-      const country = office && cc !== 'int' ? office.name : null;
+      const country = office ? office.name : null;
       // The map sits above the wall, so narrowing the wall below never shifts the map.
       let shown = 0;
       cards.forEach((card) => {
         // By country code, resolved at build time from whatever was typed ("Jeddah - Saudi
         // Arabia" and the rest). Comparing the typed text to the country name matched only
         // partners whose country was the bare name.
-        const match = !country || card.dataset.cc === cc;
+        const match = !country || (cc === 'int' ? !mapped.has(card.dataset.cc) : card.dataset.cc === cc);
         card.hidden = !match;
         if (match) shown++;
       });

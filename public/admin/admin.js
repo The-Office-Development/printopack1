@@ -1502,10 +1502,13 @@ function openForm(key,id){
   var sv=$('#sv',host);if(sv){sv.disabled=true;sv.textContent=T('Saving...');}
   if(id==='new')draft.id=uid();
   saveRecord(key,draft);
-  /* A partner whose country the map cannot read never shows when a country is selected on the
-     Partners page. It is saved all the same, since the text is hers, but she is told why. */
-  if(key==='partners'&&(draft.country||draft.countryAr)&&!matchCountry(draft.country,draft.countryAr))
-   toast(T('Partner saved, but “{c}” is not a country the map recognises, so it will not show when a country is selected.',{c:draft.country||draft.countryAr}),'err');
+  /* On the Partners page a partner outside the countries on the map is listed under
+     International, and so is one whose country matched no country at all, which is usually a
+     typo. It is saved either way, since the text is hers, but she is told where it will appear:
+     that is also how a mistyped country gets noticed. */
+  var pcc=(key==='partners'&&(draft.country||draft.countryAr))?matchCountry(draft.country,draft.countryAr):null;
+  if(pcc!==null&&!coll('offices').some(function(o){return o.cc&&o.cc!=='int'&&o.cc===pcc;}))
+   toast(T('Partner saved. “{c}” is not one of the countries on the map, so it is listed under International.',{c:draft.country||draft.countryAr}),'ok');
   else toast(T(id==='new'?'{x} created':'{x} updated',{x:T(mdl.singular)}),'ok');
   dirty=false;close();refresh();
  });
