@@ -1,10 +1,13 @@
--- Printopack mailer: the campaign side of the same database.
+-- !! OBSOLETE - DO NOT APPLY TO THE WEBSITE DATABASE (2026-09-13) !!
 --
--- Deliberately in the SAME D1 as `contacts`, which the website writes into. The mailer never
--- copies or imports the website's addresses, it reads the one table they were written to.
--- Everything here is prefixed mail_ so the two halves are readable apart at a glance.
+-- Superseded on 2026-08-20 when the mailer moved to its OWN D1 (`printopack_mail`, in the
+-- client's own Cloudflare account). D1 quotas are per account and the website is promised it
+-- can never be billed, so the campaign tables must not live here. No website code reads any
+-- mail_* table. The live definitions are in the mailer repo: ~/printopack-mailer/db/schema.sql.
+-- 001 was applied to the live `printopack` D1 on 2026-09-13; this file deliberately was not.
+-- Kept only as a record of the pre-split design.
 --
---   wrangler d1 execute printopack --remote --file db/migrations/002_mailer.sql
+-- (Original header, now wrong:) Printopack mailer: the campaign side of the same database.
 
 -- Sending configuration and the operator's password, editable in the tool, so the client
 -- never needs a developer to change a from-address or rotate a password.
