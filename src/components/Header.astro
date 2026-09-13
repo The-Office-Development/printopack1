@@ -16,50 +16,35 @@ const addr = {
 
 // Global header. The client's seven main routes (his 7-page sitemap). Labels are
 // bilingual { en, ar }; the Arabic is Nasser's own wording from his brief.
+// On desktop every route is a plain link to its own page: the client asked for the hover
+// drop-downs to go (2026-09-13), and each section's landing page already lists its
+// sub-pages as cards. `subs` now feeds only the phone menu's expandable rows.
 const nav = [
   {
     label: { en: "About Us", ar: "من نحن" }, href: "/about",
-    mega: {
-      links: [
-        { label: { en: "The Company", ar: "الشركة" }, href: "/company" },
-        { label: { en: "Factory Departments", ar: "أقسام المصنع" }, href: "/factory" },
-        { label: { en: "Our Team", ar: "فريق العمل" }, href: "/team" },
-        { label: { en: "Social Responsibility", ar: "المسؤولية الاجتماعية" }, href: "/responsibility" },
-      ],
-      featured: [
-        { img: "/images/dept-1.jpg", label: { en: "Rotogravure", ar: "الطباعة الروتوغرافية" }, href: "/factory" },
-        { img: "/images/factory.jpg", label: { en: "Our Plant", ar: "مصنعنا" }, href: "/about" },
-      ],
-    },
+    subs: [
+      { label: { en: "The Company", ar: "الشركة" }, href: "/company" },
+      { label: { en: "Factory Departments", ar: "أقسام المصنع" }, href: "/factory" },
+      { label: { en: "Our Team", ar: "فريق العمل" }, href: "/team" },
+      { label: { en: "Social Responsibility", ar: "المسؤولية الاجتماعية" }, href: "/responsibility" },
+    ],
   },
   {
     label: { en: "Quality System", ar: "نظام الجودة" }, href: "/quality",
-    mega: {
-      links: [
-        { label: { en: "Quality Certificates", ar: "شهادات الجودة" }, href: "/quality/certificates" },
-        { label: { en: "Quality Assurance", ar: "ضمان الجودة" }, href: "/quality/assurance" },
-        { label: { en: "Lab & Testing", ar: "المختبر والفحص" }, href: "/quality/lab" },
-      ],
-      featured: [
-        { img: "/images/factory-solvent.jpg", label: { en: "Certified", ar: "معتمدون" }, href: "/quality/certificates" },
-        { img: "/images/dept-3.jpg", label: { en: "Tested", ar: "مفحوص" }, href: "/quality/lab" },
-      ],
-    },
+    subs: [
+      { label: { en: "Quality Certificates", ar: "شهادات الجودة" }, href: "/quality/certificates" },
+      { label: { en: "Quality Assurance", ar: "ضمان الجودة" }, href: "/quality/assurance" },
+      { label: { en: "Lab & Testing", ar: "المختبر والفحص" }, href: "/quality/lab" },
+    ],
   },
   { label: { en: "Products", ar: "المنتجات" }, href: "/products" },
   { label: { en: "Success Partners", ar: "شركاء النجاح" }, href: "/partners" },
   {
     label: { en: "News & Gallery", ar: "الأخبار والمعرض" }, href: "/news-gallery",
-    mega: {
-      links: [
-        { label: { en: "News & Events", ar: "الأخبار والأحداث" }, href: "/news" },
-        { label: { en: "Gallery", ar: "معرض الصور" }, href: "/gallery" },
-      ],
-      featured: [
-        { img: "/images/lineup.jpg", label: { en: "Latest news", ar: "أحدث الأخبار" }, href: "/news" },
-        { img: "/images/dept-2.jpg", label: { en: "Gallery", ar: "معرض الصور" }, href: "/gallery" },
-      ],
-    },
+    subs: [
+      { label: { en: "News & Events", ar: "الأخبار والأحداث" }, href: "/news" },
+      { label: { en: "Gallery", ar: "معرض الصور" }, href: "/gallery" },
+    ],
   },
   { label: { en: "Careers", ar: "الوظائف" }, href: "/careers" },
   { label: { en: "Contact", ar: "التواصل" }, href: "/contact" },
@@ -128,28 +113,7 @@ const nav = [
     <div class="wrap-wide nav-bar">
       <ul>
       {nav.map((item) => (
-        <li class={item.mega ? "has-mega" : ""}>
-          <a href={item.href}><Bi en={item.label.en} ar={item.label.ar} /></a>
-          {item.mega && (
-            <div class="mega">
-              <div class="mega-inner wrap-wide">
-                <div class="mega-links">
-                  <span class="mega-kicker"><Bi en="Explore" ar="استكشف" /></span>
-                  {item.mega.links.map((l) => <a href={l.href}><Bi en={l.label.en} ar={l.label.ar} /></a>)}
-                  <a href={item.href} class="mega-all"><Bi en="View all" ar="عرض الكل" /> &rarr;</a>
-                </div>
-                <div class="mega-feature">
-                  {item.mega.featured.map((f) => (
-                    <a href={f.href} class="mega-card">
-                      <span class="mega-card-img"><img src={f.img} alt={f.label.en} /></span>
-                      <span class="mega-card-label"><Bi en={f.label.en} ar={f.label.ar} /></span>
-                    </a>
-                  ))}
-                </div>
-              </div>
-            </div>
-          )}
-        </li>
+        <li><a href={item.href}><Bi en={item.label.en} ar={item.label.ar} /></a></li>
       ))}
       </ul>
       <div class="nav-tools">
@@ -196,15 +160,15 @@ const nav = [
     <div class="mnav-group">
       <div class="mnav-row">
         <a href={item.href} class="mnav-link"><Bi en={item.label.en} ar={item.label.ar} /></a>
-        {item.mega && (
+        {item.subs && (
           <button class="mnav-toggle" aria-expanded="false" aria-controls={`mnav-subs-${i}`} aria-label={`Show ${item.label.en} pages`}>
             <svg class="mnav-chev" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" aria-hidden="true"><path d="M6 9l6 6 6-6"/></svg>
           </button>
         )}
       </div>
-      {item.mega && (
+      {item.subs && (
         <div class="mnav-subs" id={`mnav-subs-${i}`} hidden>
-          {item.mega.links.map((l) => <a href={l.href} class="mnav-sub"><Bi en={l.label.en} ar={l.label.ar} /></a>)}
+          {item.subs.map((l) => <a href={l.href} class="mnav-sub"><Bi en={l.label.en} ar={l.label.ar} /></a>)}
         </div>
       )}
     </div>
@@ -286,25 +250,11 @@ const nav = [
      read as one twelve-item list. */
   .nav-tools{display:flex;align-items:center;gap:clamp(12px,1.3vw,20px);flex:none;margin-inline-start:auto;
              padding-inline-start:clamp(16px,1.7vw,28px);border-inline-start:1px solid var(--line-soft)}
-  .hdr-nav li{position:static}
+  /* Plain links, no drop-downs: hover is the site's instant colour change plus the underline. */
   .hdr-nav li > a{display:block;padding:17px 2px;font-family:var(--display);font-size:clamp(11.5px,.72vw,13px);font-weight:500;letter-spacing:.08em;text-transform:uppercase;color:var(--ink);position:relative;white-space:nowrap}
   .hdr-nav li > a::after{content:"";position:absolute;left:0;right:0;bottom:0;height:2px;background:var(--gold);opacity:0}
-  .hdr-nav li:hover > a{color:var(--gold-bright)}
-  .hdr-nav li:hover > a::after{opacity:1}
-
-  /* mega */
-  .mega{position:absolute;left:0;right:0;top:100%;background:var(--paper);border-top:1px solid var(--line);border-bottom:1px solid var(--line);box-shadow:0 30px 50px rgba(0,70,162,.08);opacity:0;visibility:hidden;z-index:5}
-  .has-mega:hover .mega{opacity:1;visibility:visible}
-  .mega-inner{display:grid;grid-template-columns:1fr 1fr;gap:60px;padding-block:44px}
-  .mega-links{display:flex;flex-direction:column;gap:2px}
-  .mega-kicker{font-family:var(--display);font-size:11px;letter-spacing:.2em;text-transform:uppercase;color:var(--gold);margin-bottom:16px}
-  .mega-links > a{font-family:var(--display);font-size:22px;font-weight:300;color:var(--ink);padding:9px 0;width:fit-content}
-  .mega-links > a:hover{color:var(--gold-bright)}
-  .mega-all{margin-top:14px;font-size:13px!important;letter-spacing:.1em;text-transform:uppercase;color:var(--muted)!important}
-  .mega-feature{display:grid;grid-template-columns:1fr 1fr;gap:22px}
-  .mega-card-img{display:block;aspect-ratio:4/3;overflow:hidden;background:var(--cream)}
-  .mega-card-img img{width:100%;height:100%;object-fit:cover}
-  .mega-card-label{display:block;margin-top:12px;font-family:var(--display);font-size:12px;letter-spacing:.16em;text-transform:uppercase;color:var(--muted)}
+  .hdr-nav li > a:hover{color:var(--gold-bright)}
+  .hdr-nav li > a:hover::after{opacity:1}
 
   .burger{display:none;flex-direction:column;gap:5px;padding:6px;justify-self:end}
   .burger span{width:24px;height:1.5px;background:var(--ink)}
@@ -332,7 +282,6 @@ const nav = [
   @media(max-width:1200px){
     .nav-bar > ul{gap:20px;overflow-x:auto;min-width:0;scrollbar-width:none}
     .nav-bar > ul::-webkit-scrollbar{display:none}
-    .mega{display:none}
   }
   @media(max-width:720px){
     /* the registered name is dropped on a phone: three brand blocks plus a burger will
