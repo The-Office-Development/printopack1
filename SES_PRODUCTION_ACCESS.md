@@ -46,9 +46,11 @@ manufacturer's list reads as a list broker. That distinction is what sank the Un
 Identity, DKIM, MAIL FROM, the configuration set and the event destination are all
 region-scoped. Changing region afterwards means redoing every DNS record, so decide once.
 
-Verified against Amazon's endpoint table, 2026-08-20:
+**SETTLED 2026-09-07: eu-west-1 (Ireland).** Bahrain's endpoints are unreachable from the network
+this is administered from; the identity, DKIM and MAIL FROM are live in Ireland. The notes below
+are the original 2026-08-20 comparison, kept for the record.
 
-- **me-south-1 (Bahrain)** is the recommendation. Closest to Jeddah, in the GCC, and it uses
+- **me-south-1 (Bahrain)** was the original recommendation. Closest to Jeddah, in the GCC, and it uses
   the default `dkim.amazonses.com` domain so the DKIM records look like every guide.
 - **me-central-1 (UAE)** also works, but issues DKIM under `dkim.me-central-1.amazonses.com`,
   a small extra thing to get right.
@@ -161,20 +163,21 @@ certifications, and the trade exhibitions we attend. It goes only to businesses 
 supply or actively trade with. We do not send unsolicited offers and we do not send on behalf of
 any third party.
 
-**Who receives it, and how they got on the list.** Every recipient is either an existing
-commercial customer with an active trading relationship with us, or a business that submitted an
-enquiry through the contact form on printopack.com.sa and asked to be kept informed. We have
-never purchased, rented, scraped or otherwise acquired a list from a third party, and we never
-will. New addresses enter only through those two routes, and the enquiry form records the
-timestamp of consent.
+**Who receives it, and how they got on the list.** Recipients come from our own records only:
+our existing and past commercial customers, taken from our company's customer records; businesses
+that contacted us through the forms on our website; and visitors who subscribed through the
+newsletter sign-up on our website. We have never purchased, rented, scraped or otherwise acquired
+a list from a third party, and we never will. Every address is stored with how and when it
+reached us, and that record is kept for as long as the address is on the list.
 
-**Expected volume.** Approximately 4,000 recipients, sent once per week, so roughly 16,000 to
+**Expected volume.** <!-- UNCONFIRMED: replace with the client's real count and cadence before submitting --> Approximately 4,000 recipients, sent once per week, so roughly 16,000 to
 20,000 messages per month. We expect this to grow slowly, in step with our customer base.
 
 **How we handle bounces.** We have configured an SES event destination publishing bounce events
 to SNS, delivered to an HTTPS endpoint we operate. Hard bounces are written immediately to a
-suppression table and are permanently excluded from every subsequent send. Soft bounces are
-retried a limited number of times and then suppressed. The suppression list is checked before
+suppression table and are permanently excluded from every subsequent send; they cannot be
+removed from it. An address that soft-bounces repeatedly is suppressed after a small number of
+attempts. The suppression list is checked before
 each send, so a suppressed address cannot be reintroduced by a later import.
 
 **How we handle complaints.** Complaint events arrive through the same pipeline and result in
@@ -185,10 +188,6 @@ complaint rate and will pause sending if it approaches AWS thresholds.
 `List-Unsubscribe-Post` headers supporting one-click unsubscribe, alongside a clearly visible
 unsubscribe link in the message body. Both routes write to the same suppression table and take
 effect immediately, with no login, no confirmation step and no further mail.
-
-**List hygiene.** Addresses that have not engaged over an extended period are removed rather
-than retained, and the list is reconciled against our customer records so that closed accounts
-are dropped.
 
 We have verified our sending domain, enabled DKIM signing, configured a custom MAIL FROM domain
 and published a DMARC policy before making this request.
