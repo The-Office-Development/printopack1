@@ -52,11 +52,12 @@
   /* --- rhythm --- */
   --wrap: 1320px;
   --gutter: clamp(20px, 5vw, 56px);
-  --section-y: clamp(72px, 10vw, 132px);
-  /* The home page's own rhythm. Every band carries half of it, so every boundary between
-     two bands comes to the same height. Tighter than --section-y because the client finds
-     the page over-airy. */
-  --band-y: clamp(30px, 3.8vw, 54px);
+  /* Inner pages share the home page's rhythm (client, 2026-09-13: less white space). */
+  --section-y: var(--band-y);
+  /* The one vertical rhythm for every page. Each band pads its top and bottom by this, so
+     every boundary between two bands is twice it (80px on desktop). Cut from 54px on
+     2026-09-13 because the client still found the site over-airy. */
+  --band-y: clamp(22px, 2.8vw, 40px);
   --ease: cubic-bezier(.22,1,.36,1);
   --radius: 2px;
 }
@@ -104,7 +105,7 @@ p{max-width:68ch}
 .wrap{max-width:var(--wrap);margin-inline:auto;padding-inline:var(--gutter)}
 .wrap-wide{max-width:1560px;margin-inline:auto;padding-inline:var(--gutter)}
 section{padding-block:var(--section-y)}
-.section-head{max-width:640px;margin-bottom:clamp(36px,5vw,60px)}
+.section-head{max-width:640px;margin-bottom:clamp(22px,2.8vw,38px)}
 .section-head.center{margin-inline:auto;text-align:center}
 .section-head h2{margin:16px 0 0}
 .section-head .lede{margin-top:20px}

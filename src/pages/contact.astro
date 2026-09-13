@@ -411,7 +411,7 @@ const markets = marketOrder.map((cc) => ({ cc, ...officesByCc[cc] }));
         ))}
       </div>
 
-      <span class="office-group-label" style="margin-top:clamp(30px,4vw,48px)"><Bi en={c.offices.regionalLabel.en} ar={c.offices.regionalLabel.ar} /></span>
+      <span class="office-group-label" style="margin-top:clamp(20px,2.6vw,32px)"><Bi en={c.offices.regionalLabel.en} ar={c.offices.regionalLabel.ar} /></span>
       <!-- Two columns per office: the details on the left, the manager's square photo filling
            the space on the right. The photo is uploaded and changed in the admin exactly like
            the email and phone; until one is set the square shows the manager's initials, so an
@@ -443,7 +443,7 @@ const markets = marketOrder.map((cc) => ({ cc, ...officesByCc[cc] }));
 </Base>
 
 <style>
-  .page-head{padding-block:clamp(40px,5.2vw,68px) clamp(22px,2.6vw,34px);background:var(--cream);border-bottom:1px solid var(--line)}
+  .page-head{padding-block:clamp(28px,3.4vw,48px) clamp(18px,2vw,28px);background:var(--cream);border-bottom:1px solid var(--line)}
   .page-head-inner{max-width:840px}
   .page-head h1{margin:20px 0 22px;font-size:clamp(40px,6vw,78px)}
   .page-head .lede{max-width:62ch}
@@ -452,7 +452,7 @@ const markets = marketOrder.map((cc) => ({ cc, ...officesByCc[cc] }));
   /* channels */
   /* Same rhythm as the rest of the site. */
   .channels,.reach,.directory,.enquire{padding-block:var(--band-y)}
-  .channels{padding-block:clamp(52px,7vw,92px)}
+  .channels{padding-block:var(--band-y)}
   .chan-grid{display:grid;grid-template-columns:repeat(3,1fr);gap:clamp(24px,3vw,44px)}
   .chan{border-top:1px solid var(--line);padding-top:26px;display:flex;flex-direction:column;align-items:flex-start}
   .chan-kicker{font-family:var(--display);font-size:11px;letter-spacing:.2em;text-transform:uppercase;color:var(--gold);display:block;margin-bottom:14px}
@@ -469,7 +469,7 @@ const markets = marketOrder.map((cc) => ({ cc, ...officesByCc[cc] }));
   .chan-list a:hover{color:var(--gold-bright)}
 
   /* enquiry window: vertical stack, comfortably centred */
-  .enquire{padding-block:clamp(52px,7vw,92px);border-top:1px solid var(--line);border-bottom:1px solid var(--line)}
+  .enquire{padding-block:var(--band-y);border-top:1px solid var(--line);border-bottom:1px solid var(--line)}
   .enquire-stack{max-width:760px}
   .enquire-head{margin-bottom:clamp(24px,3.5vw,38px)}
 
@@ -584,8 +584,8 @@ const markets = marketOrder.map((cc) => ({ cc, ...officesByCc[cc] }));
   .compose-btn:hover{border-color:var(--gold-bright);background:var(--surface)}
 
   /* offices directory */
-  .offices-band{padding-block:clamp(56px,7vw,96px)}
-  .office-group-label{display:block;font-family:var(--display);font-size:12px;font-weight:600;letter-spacing:.18em;text-transform:uppercase;color:var(--gold-bright);margin:clamp(24px,3vw,36px) 0 18px}
+  .offices-band{padding-block:var(--band-y)}
+  .office-group-label{display:block;font-family:var(--display);font-size:12px;font-weight:600;letter-spacing:.18em;text-transform:uppercase;color:var(--gold-bright);margin:clamp(16px,2vw,24px) 0 14px}
   .office-grid{display:grid;grid-template-columns:repeat(3,1fr);gap:clamp(20px,2.6vw,34px)}
   /* Office details on the left, the manager's square photo filling the space on the right. */
   .office{border-top:1px solid var(--line-dark);padding-top:18px;display:flex;align-items:flex-start;justify-content:space-between;gap:18px}

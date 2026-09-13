@@ -228,7 +228,7 @@ const t = {
   .crumbs span[aria-hidden]{color:var(--faint)}
   .crumb-here{color:var(--navy)}
 
-  .pdp{padding-block:clamp(40px,5vw,72px) var(--section-y)}
+  .pdp{padding-block:clamp(24px,3vw,40px) var(--band-y)}
   .pdp-grid{display:grid;grid-template-columns:1.1fr 1fr;gap:clamp(34px,6vw,90px);align-items:start}
   .pdp-media{background:var(--cream);border:1px solid var(--line);position:sticky;top:170px}
   .pdp-media img{width:100%;aspect-ratio:4/3;object-fit:contain;padding:clamp(24px,3vw,48px);mix-blend-mode:multiply}
@@ -254,8 +254,8 @@ const t = {
      photograph on one side, number + name + description on the other. Same pattern as the
      factory departments, which is the layout the client has asked for repeatedly. The dashed
      placeholder holds the photo's shape until Printopack uploads one. */
-  .range{padding-block:clamp(48px,7vw,84px);background:var(--cream);border-top:1px solid var(--line)}
-  .range-list{display:flex;flex-direction:column;gap:clamp(40px,6vw,80px);margin-top:clamp(30px,4vw,52px)}
+  .range{padding-block:var(--band-y);background:var(--cream);border-top:1px solid var(--line)}
+  .range-list{display:flex;flex-direction:column;gap:clamp(26px,3.4vw,48px);margin-top:clamp(20px,2.6vw,34px)}
   .range-row{display:grid;grid-template-columns:1.1fr 1fr;gap:clamp(28px,5vw,64px);align-items:center}
   .range-row.reverse .range-media{order:2}
   .range-media .card-img{aspect-ratio:4/3;border-radius:var(--radius);background:var(--paper);overflow:hidden}
@@ -286,14 +286,14 @@ const t = {
   .chart-ph svg{width:58px;height:58px}
   .chart-pending{font-size:14px;color:var(--muted);max-width:44ch;text-align:center}
 
-  .pdp-standard{padding-block:clamp(56px,7vw,96px)}
+  .pdp-standard{padding-block:var(--band-y)}
   .std-grid{display:grid;grid-template-columns:repeat(3,1fr);gap:clamp(26px,4vw,52px);margin-top:clamp(26px,3vw,40px)}
   .std-item{border-top:1px solid var(--line-dark);padding-top:22px}
   .std-item h3{font-size:clamp(19px,1.8vw,24px);color:var(--paper);margin-bottom:10px}
   .std-item p{font-size:14.5px;color:rgba(250,246,238,.72);line-height:1.65}
 
   .pdp-more{border-top:1px solid var(--line-soft)}
-  .more-head{margin-bottom:clamp(28px,4vw,44px)}
+  .more-head{margin-bottom:clamp(20px,2.6vw,32px)}
   .more-grid{display:grid;grid-template-columns:repeat(4,1fr);gap:clamp(18px,2vw,30px)}
   .more-card{display:flex;flex-direction:column;border:1px solid var(--line);background:var(--paper)}
   .more-card:hover{border-color:var(--gold-bright);box-shadow:0 20px 38px rgba(0,70,162,.07)}

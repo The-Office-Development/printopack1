@@ -236,7 +236,7 @@ const pad = (n: number) => String(n).padStart(2, "0");
   .cover-bg img{width:100%;height:100%;object-fit:contain;object-position:center bottom;display:block}
   /* order:-1 puts the copy above the photograph without reordering the markup, so the
      image still preloads first. */
-  .cover-inner{order:-1;position:relative;z-index:2;padding-block:clamp(34px,4.4vw,64px) clamp(8px,1vw,14px)}
+  .cover-inner{order:-1;position:relative;z-index:2;padding-block:clamp(24px,3vw,44px) clamp(8px,1vw,14px)}
   .cover-inner .eyebrow{color:var(--blue)}
   .cover-inner .eyebrow::before{background:var(--gold)}
   /* Sized for a full sentence rather than the old two-word headline: a smaller clamp and a
@@ -258,7 +258,7 @@ const pad = (n: number) => String(n).padStart(2, "0");
   .contents-head{display:flex;justify-content:space-between;align-items:flex-end;gap:24px}
   .contents-head .lede{max-width:56ch}
 
-  .shelf-wrap{margin-top:clamp(30px,4vw,46px)}
+  .shelf-wrap{margin-top:clamp(20px,2.6vw,32px)}
   /* Twenty-four columns so all seven cards are one width. Every card spans 6, which is a
      quarter of the row, so the bottom three match the top four exactly rather than
      stretching to fill the row. Three spare columns sit each side of the bottom row, which
@@ -309,7 +309,7 @@ const pad = (n: number) => String(n).padStart(2, "0");
   /* Five to a row, at the client's request. Ten tracks rather than five: every counter
      spans 2, so all nine are one width, and the second row of four starts one track in,
      which leaves a single spare track each side and keeps it centred under the first. */
-  .counters-grid{display:grid;grid-template-columns:repeat(10,1fr);gap:44px 26px;max-width:2000px;padding-inline:clamp(20px,2.4vw,44px)}
+  .counters-grid{display:grid;grid-template-columns:repeat(10,1fr);gap:32px 26px;max-width:2000px;padding-inline:clamp(20px,2.4vw,44px)}
   .counters-grid > :global(.counter){grid-column:span 2}
   /* Astro drops this component's hoisted <script> in beside the first counter, so the grid
      has a tenth child that is not a counter. It must not hold a track, and the second row
