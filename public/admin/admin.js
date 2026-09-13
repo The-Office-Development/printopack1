@@ -217,6 +217,36 @@ var COUNTRIES=[
  {cc:'dj',en:'Djibouti',ar:'جيبوتي'}
 ];
 
+/* Which map country a partner's free-text country names ("Jeddah - Saudi Arabia" and so on),
+   '' when none. A copy of src/data/country-match.ts: the site filters the partner wall by the
+   result, and this copy only warns on save when a country will not be recognised. The two
+   must agree; change one, change the other. */
+var COUNTRY_ALIASES={sa:['Saudi','KSA','Kingdom of Saudi Arabia','السعودية'],ae:['UAE','Emirates','الإمارات']};
+function normCountry(s){
+ return String(s||'').normalize('NFKC').toLowerCase()
+  .replace(/[\u064B-\u0652\u0670\u0640]/g,'') // diacritics (incl. shadda) and tatweel
+  .replace(/[أإآٱ]/g,'ا').replace(/ى/g,'ي').replace(/ة/g,'ه')
+  .replace(/[.'’]/g,'').replace(/\s+/g,' ').trim();
+}
+var COUNTRY_BY_NAME=(function(){
+ var m={};
+ function add(cc,n){var k=normCountry(n);if(k&&!Object.prototype.hasOwnProperty.call(m,k))m[k]=cc;}
+ COUNTRIES.forEach(function(c){add(c.cc,c.en);add(c.cc,c.ar);});
+ Object.keys(COUNTRY_ALIASES).forEach(function(cc){COUNTRY_ALIASES[cc].forEach(function(n){add(cc,n);});});
+ return m;
+})();
+function matchCountry(en,ar){
+ var names=Object.keys(COUNTRY_BY_NAME).sort(function(a,b){return b.length-a.length;});
+ function one(text){
+  var t=normCountry(text);if(!t)return '';
+  var hits=t.split(/\s*[-–—,\/|،]\s*/).map(function(p){return COUNTRY_BY_NAME[p];}).filter(Boolean);
+  if(!hits.length){var pad=' '+t+' ';for(var i=0;i<names.length;i++){if(pad.indexOf(' '+names[i]+' ')>-1){hits=[COUNTRY_BY_NAME[names[i]]];break;}}}
+  if(hits.length>1)hits=hits.filter(function(cc){return cc!=='om';}); // عمان: Oman, or Amman in Jordan
+  return hits[0]||'';
+ }
+ return one(en)||one(ar);
+}
+
 /* The options for an office's "Country on the map". Built from COUNTRIES rather than typed
    out a second time: the hand-written list had only 13 of the 20 codes, so switching on any
    of UAE, Bahrain, Oman, Qatar, Lebanon, Palestine, Mauritania or Djibouti produced an office
@@ -635,7 +665,7 @@ var MODELS={
   fields:[{name:"title",type:"text",label:"Title (English)",half:true},{name:"titleAr",type:"text",label:"Title",ar:"Arabic",rtl:true,half:true},{name:"dept",type:"select",label:"Department",half:true,options:["Production","Quality","Sales","Engineering","Admin","Logistics","IT"]},{name:"deptAr",type:"text",label:"Department",ar:"Arabic",rtl:true,half:true},{name:"type",type:"select",label:"Type",half:true,options:["Full-time","Part-time","Contract","Internship"]},{name:"typeAr",type:"text",label:"Type",ar:"Arabic",rtl:true,half:true},{name:"location",type:"text",label:"Location",half:true},{name:"locationAr",type:"text",label:"Location",ar:"Arabic",rtl:true,half:true},{name:"status",type:"select",label:"Status",half:true,options:["draft","published"]},{name:"email",type:"text",label:"Application email",half:true,rec:"Applications for THIS role go here. Send a manager vacancy to that manager rather than to one shared inbox."},{name:"summary",type:"textarea",label:"Summary (English)",rec:"One or two lines, shown under the job title."},{name:"summaryAr",type:"textarea",label:"Summary",ar:"Arabic",rtl:true},{name:"requirements",type:"textarea",label:"Requirements (English)",rec:"One requirement per line. Each line becomes a bullet on the site."},{name:"requirementsAr",type:"textarea",label:"Requirements",ar:"Arabic",rtl:true}]},
  partners:{label:"Success Partners",singular:"Partner",icon:"partners",group:"Content",
   columns:[{type:"thumb",field:"image",contain:true},{type:"title",field:"name",sub:"country",fallback:"country"},{type:"text",field:"country"}],
-  fields:[{name:"image",type:"image",label:"Logo",contain:true,frame:"8/5",rec:"480 × 300px (transparent PNG)"},{name:"name",type:"text",label:"Client name (English)",half:true},{name:"nameAr",type:"text",label:"Client name",ar:"Arabic",rtl:true,half:true},{name:"country",type:"text",label:"Country (English)",half:true},{name:"countryAr",type:"text",label:"Country",ar:"Arabic",rtl:true,half:true},{name:"featured",type:"select",label:"Main partner",half:true,options:["false","true"],rec:"Main partners are the ones shown on the home page. There are always exactly "+MAIN_PARTNERS+" of them, so turn one off before turning another on."},{name:"link",type:"url",label:"Website (optional)"}]},
+  fields:[{name:"image",type:"image",label:"Logo",contain:true,frame:"8/5",rec:"480 × 300px (transparent PNG)"},{name:"name",type:"text",label:"Client name (English)",half:true},{name:"nameAr",type:"text",label:"Client name",ar:"Arabic",rtl:true,half:true},{name:"country",type:"text",label:"Country (English)",half:true,rec:"Write the country, with the city before or after it if needed, for example Saudi Arabia - Jeddah. The map on the Partners page filters by it."},{name:"countryAr",type:"text",label:"Country",ar:"Arabic",rtl:true,half:true},{name:"featured",type:"select",label:"Main partner",half:true,options:["false","true"],rec:"Main partners are the ones shown on the home page. There are always exactly "+MAIN_PARTNERS+" of them, so turn one off before turning another on."},{name:"link",type:"url",label:"Website (optional)"}]},
  factory:{label:"Factory Departments",singular:"Department",icon:"factory",group:"Company",
   columns:[{type:"thumb",field:"image"},{type:"title",field:"name",sub:"kind"},{type:"tag",field:"kind"}],
   fields:[{name:"image",type:"image",label:"Photo",frame:"4/3",rec:"1200 × 900px (landscape, JPG)"},{name:"name",type:"text",label:"Name (English)",half:true},{name:"kind",type:"select",label:"Type",half:true,options:["Department","Warehouse"]},{name:"nameAr",type:"text",label:"Name",ar:"Arabic",rtl:true},{name:"description",type:"textarea",label:"Description (English)"},{name:"descriptionAr",type:"textarea",label:"Description",ar:"Arabic",rtl:true}]},
@@ -1472,7 +1502,11 @@ function openForm(key,id){
   var sv=$('#sv',host);if(sv){sv.disabled=true;sv.textContent=T('Saving...');}
   if(id==='new')draft.id=uid();
   saveRecord(key,draft);
-  toast(T(id==='new'?'{x} created':'{x} updated',{x:T(mdl.singular)}),'ok');
+  /* A partner whose country the map cannot read never shows when a country is selected on the
+     Partners page. It is saved all the same, since the text is hers, but she is told why. */
+  if(key==='partners'&&(draft.country||draft.countryAr)&&!matchCountry(draft.country,draft.countryAr))
+   toast(T('Partner saved, but “{c}” is not a country the map recognises, so it will not show when a country is selected.',{c:draft.country||draft.countryAr}),'err');
+  else toast(T(id==='new'?'{x} created':'{x} updated',{x:T(mdl.singular)}),'ok');
   dirty=false;close();refresh();
  });
 }

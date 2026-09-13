@@ -167,7 +167,7 @@ const c = content;
       </div>
       <ul class="pgrid">
         {partners.map((p) => (
-          <li class="pcard" data-country={p.country.en}>
+          <li class="pcard" data-cc={p.cc}>
             <span class="pcard-logo"><img src={p.logo} alt={p.name.en || "Client brand"} loading="lazy" decoding="async" data-fit={p.fit || undefined} style={p.focus ? `object-position:${p.focus}` : undefined} /></span>
             <span class="pcard-meta">
               {(p.name.en || p.name.ar) && (
@@ -427,7 +427,10 @@ const c = content;
       // The map sits above the wall, so narrowing the wall below never shifts the map.
       let shown = 0;
       cards.forEach((card) => {
-        const match = !country || card.dataset.country === country.en;
+        // By country code, resolved at build time from whatever was typed ("Jeddah - Saudi
+        // Arabia" and the rest). Comparing the typed text to the country name matched only
+        // partners whose country was the bare name.
+        const match = !country || card.dataset.cc === cc;
         card.hidden = !match;
         if (match) shown++;
       });

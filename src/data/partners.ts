@@ -1,9 +1,15 @@
 // Success partners, from the admin-managed collection. Shared by the Partners page (the full
 // wall) and the home page (the "main partners" strip), so the two can never drift apart.
 import { collection } from '../lib/content';
+import { COUNTRY_NAMES } from './offices';
+import { makeCountryMatcher } from './country-match';
 
 export type Bi = { en: string; ar: string };
-export type Partner = { logo: string; name: Bi; country: Bi; link: string; featured: boolean; fit?: string; focus?: string };
+/** `cc` is the map country the free-text country resolves to, '' when it names none. The map
+ *  filter compares this, never the text. */
+export type Partner = { logo: string; name: Bi; country: Bi; cc: string; link: string; featured: boolean; fit?: string; focus?: string };
+
+const matchCountry = makeCountryMatcher(COUNTRY_NAMES);
 
 /** How many partners the home page shows. The client's rule: there are always exactly 20
  *  main partners. The admin enforces the count on the way in; this is the backstop on the
@@ -16,6 +22,7 @@ export const partners: Partner[] = collection('partners').map((p) => ({
   focus: p.imageFocus,
   name: { en: p.name || '', ar: p.nameAr || p.name || '' },
   country: { en: p.country || '', ar: p.countryAr || p.country || '' },
+  cc: matchCountry(p.country || '', p.countryAr || ''),
   link: p.link || '',
   // Missing means NOT main. A partner added without the flag must not quietly become the
   // 21st logo on the home page; `mainPartners` below tops the strip up instead.
