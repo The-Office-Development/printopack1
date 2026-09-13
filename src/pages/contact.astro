@@ -250,7 +250,10 @@ const markets = marketOrder.map((cc) => ({ cc, ...officesByCc[cc] }));
         </div>
         {/* The manager the enquiry actually reaches. Falls back to their initials until a
             picture is uploaded, the same as the directory below. */}
-        <span class="oc-photo" aria-hidden="true"></span>
+        <span class="oc-person">
+          <span class="oc-photo" aria-hidden="true"></span>
+          <span class="oc-staff"></span>
+        </span>
       </div>
 
       <!-- routed enquiry form -->
@@ -454,7 +457,9 @@ const markets = marketOrder.map((cc) => ({ cc, ...officesByCc[cc] }));
   .channels,.reach,.directory,.enquire{padding-block:var(--band-y)}
   .channels{padding-block:var(--band-y)}
   .chan-grid{display:grid;grid-template-columns:repeat(3,1fr);gap:clamp(24px,3vw,44px)}
-  .chan{border-top:1px solid var(--line);padding-top:26px;display:flex;flex-direction:column;align-items:flex-start}
+  /* No rule of its own: the page head's full-width divider sits just above, and a hairline on
+     each column doubled it (client, 2026-09-13). Stacked on a phone, a rule separates them. */
+  .chan{display:flex;flex-direction:column;align-items:flex-start}
   .chan-kicker{font-family:var(--display);font-size:11px;letter-spacing:.2em;text-transform:uppercase;color:var(--gold);display:block;margin-bottom:14px}
   .chan h3{margin-bottom:14px}
   .chan p{font-size:15px;color:var(--muted);line-height:1.7;margin-bottom:18px;max-width:38ch}
@@ -508,6 +513,10 @@ const markets = marketOrder.map((cc) => ({ cc, ...officesByCc[cc] }));
   /* stable office card (the former floating popup) */
   .office-card{margin-top:18px;background:var(--paper);border:1px solid var(--line);border-inline-start:3px solid var(--gold);border-radius:var(--radius);padding:16px 20px;display:flex;align-items:center;justify-content:space-between;gap:16px}
   .oc-text{display:flex;flex-direction:column;gap:3px;min-width:0}
+  /* The manager's photo with their name under it (client, 2026-09-13). */
+  .oc-person{flex:none;display:flex;flex-direction:column;align-items:center;gap:6px;max-width:130px}
+  .oc-staff{font-family:var(--display);font-size:12.5px;color:var(--ink);line-height:1.3;text-align:center}
+  .oc-staff:empty{display:none}
   .oc-photo{flex:none;width:clamp(64px,7vw,86px);aspect-ratio:1;border-radius:var(--radius);overflow:hidden;background:var(--surface);border:1px solid var(--line);display:grid;place-items:center}
   .oc-photo img{width:100%;height:100%;object-fit:cover;display:block}
   .oc-mono{font-family:var(--display);font-size:22px;font-weight:300;color:var(--muted)}
@@ -606,6 +615,7 @@ const markets = marketOrder.map((cc) => ({ cc, ...officesByCc[cc] }));
   @media(max-width:960px){.office-grid{grid-template-columns:repeat(2,1fr)}}
   @media(max-width:900px){
     .chan-grid{grid-template-columns:1fr;gap:30px}
+    .chan + .chan{border-top:1px solid var(--line);padding-top:26px}
   }
   @media(max-width:560px){
     .field-row{grid-template-columns:1fr}
@@ -657,6 +667,7 @@ const markets = marketOrder.map((cc) => ({ cc, ...officesByCc[cc] }));
     const ocPlace = card.querySelector('.oc-place');
     const ocNote = card.querySelector('.oc-note');
     const ocPhoto = card.querySelector('.oc-photo');
+    const ocStaff = card.querySelector('.oc-staff');
     const careerFields = form.querySelector('.career-fields');
     const cvInput = form.querySelector('.cv-input');
     const paths = Array.from(scope.querySelectorAll('.rc'));
@@ -674,11 +685,14 @@ const markets = marketOrder.map((cc) => ({ cc, ...officesByCc[cc] }));
       ocName.textContent = o.name[L];
       ocPlace.textContent = (o.place && o.place[L]) ? o.place[L] : '';
       ocNote.textContent = isCareers() ? CAREER[L] : NOTE[L];
+      ocStaff.textContent = (o.staff && o.staff[L]) || '';
       const pic = o.photo || '';
       ocPhoto.innerHTML = '';
       if (pic) {
         const img = document.createElement('img');
         img.src = pic; img.alt = ''; img.loading = 'lazy'; img.decoding = 'async';
+        if (o.fit) img.dataset.fit = o.fit;
+        if (o.focus) img.style.objectPosition = o.focus;
         ocPhoto.appendChild(img);
       } else {
         const sp = document.createElement('span');
