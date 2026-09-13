@@ -15,6 +15,13 @@ export function collection(name: string): Rec[] {
   return DB.entries[name] || [];
 }
 
+/** Whether the snapshot carries a collection at all. A section added to the admin after the
+ *  last Publish is ABSENT from the snapshot, not empty, so a page can keep its built-in content
+ *  until the client first publishes the section, and still honour a section she emptied. */
+export function hasCollection(name: string): boolean {
+  return Array.isArray(DB.entries[name]);
+}
+
 /** A singleton object (about | settings). */
 export function singleton(key: string): Rec {
   return DB.singletons[key] || {};

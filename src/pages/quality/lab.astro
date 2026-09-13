@@ -1,10 +1,41 @@
 ---
 import Base from '../../layouts/Base.astro';
 import Bi from '../../components/Bi.astro';
+import { collection, hasCollection } from '../../lib/content';
 
-// Lab & Testing (Page 2, subsection 3). The live site has no lab content, so the test
-// types below are generic and factual, grounded in Printopack's real work (food and
-// cosmetic flexible packaging), editable by the client.
+type Bi = { en: string; ar: string };
+type Test = { title: Bi; desc: Bi; price: number | null };
+
+// Lab & Testing (Page 2, subsection 3). The tests come from the admin's "Lab Tests" section
+// (client, 2026-09-13): a name, a description and a price each, because this page is becoming
+// the place to order a test. Until that section is first published, the four tests this page
+// has always shown stand in, without prices.
+const DEFAULT_TESTS: Test[] = [
+  { title: { en: "Barrier performance", ar: "أداء الحاجز" }, desc: { en: "Oxygen and moisture barrier testing.", ar: "فحص الحاجز ضد الأكسجين والرطوبة." }, price: null },
+  { title: { en: "Food-contact & migration", ar: "الملامسة للأغذية والانتقال" }, desc: { en: "Food-contact safety and migration checks.", ar: "فحوصات سلامة الملامسة للأغذية والانتقال." }, price: null },
+  { title: { en: "Print quality", ar: "جودة الطباعة" }, desc: { en: "Colour accuracy and registration.", ar: "دقة اللون والتسجيل." }, price: null },
+  { title: { en: "Bond & seal strength", ar: "قوة الالتصاق والغلق" }, desc: { en: "Lamination bond and seal strength.", ar: "قوة التصاق التصفيح والغلق." }, price: null },
+];
+
+/** A price the admin typed, as a positive number, or null for "Price on request". */
+const priceOf = (v: unknown): number | null => {
+  const s = String(v ?? '').replace(/[,\s]/g, '');
+  const n = Number(s);
+  return s !== '' && Number.isFinite(n) && n > 0 ? n : null;
+};
+const money = (n: number): Bi => {
+  const amount = n.toLocaleString('en-US', { maximumFractionDigits: 2 });
+  return { en: `SAR ${amount}`, ar: `${amount} ر.س` };
+};
+
+const tests: Test[] = hasCollection('labTests')
+  ? collection('labTests').map((t) => ({
+      title: { en: t.title || '', ar: t.titleAr || t.title || '' },
+      desc: { en: t.description || '', ar: t.descriptionAr || t.description || '' },
+      price: priceOf(t.price),
+    }))
+  : DEFAULT_TESTS;
+
 const content = {
   meta: { title: "Lab & Testing - Printopack", description: "Printopack's in-house laboratory checks barrier performance, migration and print quality before an order ships." },
   header: {
@@ -18,12 +49,8 @@ const content = {
   tests: {
     eyebrow: { en: "What our lab checks", ar: "ما يفحصه مختبرنا" },
     title: { en: "Tested before it ships.", ar: "يُفحص قبل الشحن." },
-    items: [
-      { icon: '<path d="M9 3h6M10 3v6l-5 9a2 2 0 0 0 1.8 3h10.4a2 2 0 0 0 1.8-3l-5-9V3"/>', title: { en: "Barrier performance", ar: "أداء الحاجز" }, desc: { en: "Oxygen and moisture barrier testing.", ar: "فحص الحاجز ضد الأكسجين والرطوبة." } },
-      { icon: '<path d="M12 3l7 3v5c0 4.4-3 8.4-7 10-4-1.6-7-5.6-7-10V6z"/><path d="M9.2 12l2 2 3.6-4"/>', title: { en: "Food-contact & migration", ar: "الملامسة للأغذية والانتقال" }, desc: { en: "Food-contact safety and migration checks.", ar: "فحوصات سلامة الملامسة للأغذية والانتقال." } },
-      { icon: '<circle cx="13" cy="11" r="8"/><path d="M13 7v4l3 2"/>', title: { en: "Print quality", ar: "جودة الطباعة" }, desc: { en: "Colour accuracy and registration.", ar: "دقة اللون والتسجيل." } },
-      { icon: '<path d="M4 12h16M8 8l-4 4 4 4M16 8l4 4-4 4"/>', title: { en: "Bond & seal strength", ar: "قوة الالتصاق والغلق" }, desc: { en: "Lamination bond and seal strength.", ar: "قوة التصاق التصفيح والغلق." } },
-    ],
+    onRequest: { en: "Price on request", ar: "السعر عند الطلب" },
+    empty: { en: "Tests will be listed here soon.", ar: "ستُدرج الفحوص هنا قريبًا." },
   },
 };
 const c = content;
@@ -45,15 +72,23 @@ const c = content;
         <span class="eyebrow"><Bi en={c.tests.eyebrow.en} ar={c.tests.eyebrow.ar} /></span>
         <h2><Bi en={c.tests.title.en} ar={c.tests.title.ar} /></h2>
       </div>
-      <div class="step-grid">
-        {c.tests.items.map((s) => (
-          <div class="step">
-            <span class="step-icon" aria-hidden="true"><svg viewBox="0 0 24 24" width="26" height="26" fill="none" stroke="currentColor" stroke-width="1.5" set:html={s.icon} /></span>
-            <h3><Bi en={s.title.en} ar={s.title.ar} /></h3>
-            <p><Bi en={s.desc.en} ar={s.desc.ar} /></p>
-          </div>
-        ))}
-      </div>
+      {tests.length > 0 ? (
+        <div class="step-grid">
+          {tests.map((t) => (
+            <div class="step">
+              <h3><Bi en={t.title.en} ar={t.title.ar} /></h3>
+              {(t.desc.en || t.desc.ar) && <p><Bi en={t.desc.en} ar={t.desc.ar} /></p>}
+              <span class={"price" + (t.price == null ? " price-ask" : "")}>
+                {t.price != null
+                  ? <Bi en={money(t.price).en} ar={money(t.price).ar} />
+                  : <Bi en={c.tests.onRequest.en} ar={c.tests.onRequest.ar} />}
+              </span>
+            </div>
+          ))}
+        </div>
+      ) : (
+        <p class="tests-empty"><Bi en={c.tests.empty.en} ar={c.tests.empty.ar} /></p>
+      )}
     </div>
   </section>
 
@@ -66,11 +101,15 @@ const c = content;
   .page-head .lede{max-width:62ch}
 
   .step-grid{display:grid;grid-template-columns:repeat(4,1fr);gap:26px}
-  .step{background:var(--cream);border:1px solid var(--line);border-radius:var(--radius);padding:clamp(26px,2.6vw,34px)}
-  .step-icon{display:inline-flex;align-items:center;justify-content:center;width:52px;height:52px;border-radius:50%;background:var(--gold-soft);color:var(--gold);margin-bottom:18px}
-  .step-icon svg{width:25px;height:25px}
+  /* A column so the price always sits on the card's bottom edge, level across a row however
+     long each description runs. */
+  .step{display:flex;flex-direction:column;background:var(--cream);border:1px solid var(--line);border-radius:var(--radius);padding:clamp(22px,2.4vw,30px)}
   .step h3{font-size:clamp(18px,1.7vw,21px);margin-bottom:10px;line-height:1.2}
   .step p{color:var(--muted);font-size:14.5px}
+  .price{margin-top:auto;padding-top:14px;border-top:1px solid var(--line);font-family:var(--display);font-size:17px;font-weight:500;letter-spacing:.02em;color:var(--navy)}
+  .step p + .price,.step h3 + .price{margin-top:18px}
+  .price-ask{font-size:13px;font-weight:400;letter-spacing:.06em;text-transform:uppercase;color:var(--muted)}
+  .tests-empty{color:var(--muted)}
   @media(max-width:900px){.step-grid{grid-template-columns:1fr 1fr;gap:20px}}
   @media(max-width:520px){.step-grid{grid-template-columns:1fr}}
 

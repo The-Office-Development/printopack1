@@ -10,7 +10,7 @@
 export const COLLECTIONS = [
   'news', 'productGroups', 'products', 'team', 'careers', 'partners',
   'factory', 'quality', 'responsibility', 'gallery', 'offices', 'values',
-  'formats', 'standard',
+  'formats', 'standard', 'productFamilies', 'labTests',
 ];
 export const SINGLETONS = ['about', 'settings'];
 

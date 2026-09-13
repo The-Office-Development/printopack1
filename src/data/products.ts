@@ -1,18 +1,28 @@
 // Product groups, sourced from the content store (db/seed.json baseline, or the live published
 // snapshot on a Cloudflare build). The page shape is preserved so products.astro and the
-// /products/[slug] route need no change. `filters` is a fixed browse taxonomy (structural).
-import { collection } from '../lib/content';
+// /products/[slug] route need no change.
+import { collection, hasCollection } from '../lib/content';
 
 export type Bi = { en: string; ar: string };
 
-export const filters: { key: string; label: Bi }[] = [
-  { key: "all", label: { en: "All products", ar: "كل المنتجات" } },
-  // Nuts is deliberately NOT a family. Amal's approved taxonomy has no Nuts section, and the
-  // client's content note (2026-09-10, "the programmer did not add the Nuts group") asks for a
-  // GROUP, which is admin-managed: it can be created in the dashboard and filed under Snacks,
-  // where the old live site kept it as "Crisps, Snacks & Nuts". Do not promote it to a family
-  // on that note alone. Families are hardcoded here AND in the admin's "Browse family" select,
-  // so unlike a group, one added by mistake cannot be removed by the client.
+/** A group's URL, or a family's filter key. The client never sees or types slugs, so one is
+ *  derived from the English name when the record has none. Without this a group created in the
+ *  dashboard would build to /products/undefined and its page would be unreachable. */
+const slugify = (s: string) =>
+  String(s || '')
+    .toLowerCase()
+    .replace(/&/g, ' and ')
+    .replace(/[^a-z0-9]+/g, '-')
+    .replace(/^-+|-+$/g, '') || 'group';
+
+/** The browse families as they were hardcoded before they became the admin's "Product Families"
+ *  section (client, 2026-09-13). Groups saved before then store these short keys in `filter`;
+ *  groups saved since store the family's English name. Both resolve to the same family. This is
+ *  also the list shown until the new section is first published.
+ *
+ *  The earlier note against adding a Nuts family no longer applies in the same way: families are
+ *  now the client's to add and remove, which was the whole reason not to add one on a guess. */
+const LEGACY_FAMILIES: { key: string; label: Bi }[] = [
   { key: "snacks", label: { en: "Snacks", ar: "الوجبات الخفيفة" } },
   { key: "confectionery", label: { en: "Confectionery", ar: "الحلويات" } },
   { key: "bakery", label: { en: "Bakery & Breads", ar: "المخابز والخبز" } },
@@ -20,6 +30,25 @@ export const filters: { key: string; label: Bi }[] = [
   { key: "beverage", label: { en: "Bottles & Liquids", ar: "القوارير والسوائل" } },
   { key: "chilled", label: { en: "Frozen & Chilled", ar: "المجمّدة والمبرّدة" } },
   { key: "specialty", label: { en: "Specialty", ar: "منتجات خاصة" } },
+];
+
+/** A group's `filter` value, legacy key or family name, as the family's filter key. */
+export const familyKey = (value: unknown): string => {
+  const v = String(value ?? '').trim();
+  const name = LEGACY_FAMILIES.find((f) => f.key === v)?.label.en ?? v;
+  const key = slugify(name);
+  return key === 'all' ? 'family-all' : key; // "all" is the rail's own "All products"
+};
+
+const familyNames: Bi[] = hasCollection('productFamilies')
+  ? collection('productFamilies')
+      .map((r) => ({ en: String(r.name || '').trim(), ar: String(r.nameAr || r.name || '').trim() }))
+      .filter((n) => n.en)
+  : LEGACY_FAMILIES.map((f) => f.label);
+
+export const filters: { key: string; label: Bi }[] = [
+  { key: "all", label: { en: "All products", ar: "كل المنتجات" } },
+  ...familyNames.map((label) => ({ key: familyKey(label.en), label })),
 ];
 
 /** The sub-items inside each group, in the order the client arranged them. Amal's approved
@@ -43,19 +72,9 @@ export const subItems = collection('products')
 /** The sub-items belonging to one group, by its English name. */
 export const subItemsOf = (groupName: string) => subItems.filter((s) => s.group === groupName);
 
-/** A group's URL. The client never sees or types slugs, so one is derived from the English
- *  name when the record has none. Without this a group created in the dashboard would build
- *  to /products/undefined and its page would be unreachable. */
-const slugify = (s: string) =>
-  String(s || '')
-    .toLowerCase()
-    .replace(/&/g, ' and ')
-    .replace(/[^a-z0-9]+/g, '-')
-    .replace(/^-+|-+$/g, '') || 'group';
-
 export const categories = collection('productGroups').map((r) => ({
   slug: r.slug || slugify(r.name),
-  group: r.filter,
+  group: familyKey(r.filter),
   img: r.image,
   fit: r.imageFit,
   focus: r.imageFocus,

@@ -34,6 +34,8 @@ give very different totals. Both are shown below.
 | Factory Departments | 30 | 1 each | 6 today. A plant does not sprout departments. |
 | Careers | 40 | none | Open roles. Closed ones should be deleted, not archived forever. |
 | Bag Formats | 20 | none | 6 today. A short list by nature. |
+| Product Families | 20 | none | 7 today. The headings of the Browse list: past about 20 it stops being a way to browse. |
+| Lab Tests | 40 | none | 4 today. Tests the lab offers for purchase, each with a price. |
 | The Printopack Standard | 10 | none | 3 today. It is a promise, not a catalogue. |
 | Our Values | 12 | none | 4 today. |
 

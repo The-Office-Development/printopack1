@@ -185,8 +185,13 @@ var MAIN_PARTNERS=20;
    that grows without limit is a real risk rather than a tidiness question. When a section is
    full the client deletes something before adding more, which is what the client asked for. */
 var CAPS={news:500,products:300,gallery:500,partners:1000,team:60,offices:40,productGroups:40,
- quality:40,responsibility:40,careers:40,factory:30,formats:20,values:12,standard:10};
+ quality:40,responsibility:40,careers:40,factory:30,formats:20,values:12,standard:10,productFamilies:20,labTests:40};
 function capOf(k){return CAPS[k]||null;}
+/* The browse families as short keys, from before they became the Product Families section. A
+   group still holding one reads as that family's name. Mirrors LEGACY_FAMILIES in
+   src/data/products.ts; change one, change the other. */
+var LEGACY_FAMILIES={snacks:'Snacks',confectionery:'Confectionery',bakery:'Bakery & Breads',staples:'Pantry Staples',beverage:'Bottles & Liquids',chilled:'Frozen & Chilled',specialty:'Specialty'};
+function familyName(v){v=String(v==null?'':v).trim();return Object.prototype.hasOwnProperty.call(LEGACY_FAMILIES,v)?LEGACY_FAMILIES[v]:v;}
 function capLeft(k){var c=capOf(k);return c==null?null:Math.max(0,c-coll(k).length);}
 
 /* Every Arab country the map can draw, and the Arabic name that goes with it. Switching one
@@ -400,7 +405,7 @@ function imgSrc(v){
  v=v||'';
  return MODE==='api'&&v.slice(0,9)==='/uploads/'?'/media/'+v.slice(9):v;
 }
-var COLLECTIONS=['news','productGroups','products','team','careers','partners','factory','quality','responsibility','gallery','offices','values','formats','standard'];
+var COLLECTIONS=['news','productGroups','products','team','careers','partners','factory','quality','responsibility','gallery','offices','values','formats','standard','productFamilies','labTests'];
 var CACHE={entries:{},singletons:{}};
 
 function coll(k){return CACHE.entries[k]||(CACHE.entries[k]=[]);}
@@ -651,10 +656,13 @@ var MODELS={
  news:{label:"News & Events",singular:"Post",icon:"news",group:"Content",hasImport:true,hasCalendar:true,
   columns:[{type:"thumb",field:"image"},{type:"title",field:"title",sub:"category"},{type:"pill",field:"status"},{type:"date",field:"date"}],
   fields:[{name:"image",type:"image",label:"Cover image",frame:"3/2",rec:"1200 × 800px (landscape, JPG)"},{name:"category",type:"select",label:"Category",half:true,options:["General","Company News","Sustainability","Certifications","Events","Products"]},{name:"date",type:"date",label:"Date",half:true},{name:"status",type:"select",label:"Status",half:true,options:["draft","published"]},{name:"title",type:"text",label:"Title (English)"},{name:"body",type:"textarea",label:"Body (English)"},{name:"titleAr",type:"text",label:"Title",ar:"Arabic",rtl:true},{name:"bodyAr",type:"textarea",label:"Body",ar:"Arabic (review before publishing)",rtl:true}]},
- productGroups:{label:"Product Groups",singular:"Group",icon:"products",group:"Content",
+ productFamilies:{label:"Product Families",singular:"Family",icon:"products",group:"Products",
+  columns:[{type:"title",field:"name",sub:"nameAr"}],
+  fields:[{name:"name",type:"text",label:"Name (English)",half:true,rec:"A heading in the Browse list on the Products page. Product groups are filed under it."},{name:"nameAr",type:"text",label:"Name",ar:"Arabic",rtl:true,half:true}]},
+ productGroups:{label:"Product Groups",singular:"Group",icon:"products",group:"Products",
   columns:[{type:"thumb",field:"image",contain:true},{type:"title",field:"name",sub:"description"},{type:"text",field:"nameAr"}],
-  fields:[{name:"image",type:"image",label:"Group image",contain:true,frame:"4/3",rec:"1000 × 750px (transparent PNG)"},{name:"name",type:"text",label:"Name (English)",half:true},{name:"nameAr",type:"text",label:"Name",ar:"Arabic",rtl:true,half:true},{name:"kind",type:"select",label:"Type",half:true,options:["Group","Measurements"],rec:"A Measurements group is a size chart rather than a product range: its page shows the drawing at full page width."},{name:"filter",type:"select",label:"Browse family",half:true,options:["snacks","confectionery","bakery","staples","beverage","chilled","specialty"],rec:"Which heading this group sits under in the Browse list on the products page. Snacks · Confectionery · Bakery & Breads · Pantry Staples · Bottles & Liquids · Frozen & Chilled · Specialty."},{name:"description",type:"textarea",label:"Description (English)"},{name:"descriptionAr",type:"textarea",label:"Description",ar:"Arabic",rtl:true}]},
- products:{label:"Products",singular:"Product",icon:"products",group:"Content",
+  fields:[{name:"image",type:"image",label:"Group image",contain:true,frame:"4/3",rec:"1000 × 750px (transparent PNG)"},{name:"name",type:"text",label:"Name (English)",half:true},{name:"nameAr",type:"text",label:"Name",ar:"Arabic",rtl:true,half:true},{name:"kind",type:"select",label:"Type",half:true,options:["Group","Measurements"],rec:"A Measurements group is a size chart rather than a product range: its page shows the drawing at full page width."},{name:"filter",type:"select",label:"Browse family",half:true,optionsFrom:"productFamilies",rec:"Which heading this group sits under in the Browse list on the Products page. The headings are the Product Families section."},{name:"description",type:"textarea",label:"Description (English)"},{name:"descriptionAr",type:"textarea",label:"Description",ar:"Arabic",rtl:true}]},
+ products:{label:"Products",singular:"Product",icon:"products",group:"Products",
   columns:[{type:"thumb",field:"image",contain:true},{type:"title",field:"name",sub:"category"},{type:"active",field:"active"}],
   fields:[{name:"image",type:"image",label:"Product image",frame:"4/3",rec:"1000 × 750px (landscape photo, JPG)"},{name:"name",type:"text",label:"Name (English)",half:true},{name:"category",type:"select",label:"Group",half:true,optionsFrom:"productGroups"},{name:"kind",type:"select",label:"Type",half:true,options:["Product","Measurements"],rec:"A Measurements section is shown differently: full width, the chart uncropped, and openable at full size, because the sizes printed on it have to be readable."},{name:"description",type:"textarea",label:"Description (English)"},{name:"nameAr",type:"text",label:"Name",ar:"Arabic",rtl:true,half:true},{name:"active",type:"select",label:"Visible on site",half:true,options:["true","false"]},{name:"descriptionAr",type:"textarea",label:"Description",ar:"Arabic",rtl:true}]},
  team:{label:"Our Team",singular:"Member",icon:"team",group:"Content",
@@ -672,16 +680,19 @@ var MODELS={
  quality:{label:"Quality System",singular:"Item",icon:"quality",group:"Company",
   columns:[{type:"thumb",field:"image"},{type:"title",field:"title",sub:"kind"},{type:"tag",field:"kind"}],
   fields:[{name:"image",type:"image",label:"Certificate / image",contain:true,frame:"3/4",rec:"1050 × 1400px (portrait, JPG or PNG)"},{name:"title",type:"text",label:"Title (English)",half:true},{name:"kind",type:"select",label:"Type",half:true,options:["Certificate","Assurance","Lab"]},{name:"titleAr",type:"text",label:"Title",ar:"Arabic",rtl:true},{name:"description",type:"textarea",label:"Description (English)"},{name:"descriptionAr",type:"textarea",label:"Description",ar:"Arabic",rtl:true}]},
+ labTests:{label:"Lab Tests",singular:"Test",icon:"quality",group:"Company",
+  columns:[{type:"title",field:"title",sub:"description"},{field:"price"}],
+  fields:[{name:"title",type:"text",label:"Test (English)",half:true},{name:"titleAr",type:"text",label:"Test",ar:"Arabic",rtl:true,half:true},{name:"price",type:"number",label:"Price (SAR)",half:true,rec:"Shown on the test's card on the Lab & Testing page. Leave empty to show Price on request."},{name:"description",type:"textarea",label:"Description (English)"},{name:"descriptionAr",type:"textarea",label:"Description",ar:"Arabic",rtl:true}]},
  responsibility:{label:"Social Responsibility",singular:"Item",icon:"responsibility",group:"Company",
   columns:[{type:"thumb",field:"image"},{type:"title",field:"title",sub:"category"},{type:"tag",field:"category"}],
   fields:[{name:"image",type:"image",label:"Certificate / image",contain:true,frame:"3/4",rec:"1050 × 1400px (portrait, JPG or PNG)"},{name:"title",type:"text",label:"Title (English)",half:true},{name:"category",type:"select",label:"Area",half:true,options:["Environment","Local Community","International"]},{name:"titleAr",type:"text",label:"Title",ar:"Arabic",rtl:true},{name:"description",type:"textarea",label:"Description (English)"},{name:"descriptionAr",type:"textarea",label:"Description",ar:"Arabic",rtl:true}]},
- gallery:{label:"Gallery",singular:"Item",icon:"gallery",group:"Company",
+ gallery:{label:"Gallery",singular:"Item",icon:"gallery",group:"Content",
   columns:[{type:"thumb",field:"image"},{type:"title",field:"title",sub:"kind"},{type:"tag",field:"kind"}],
   fields:[{name:"kind",type:"select",label:"Type",half:true,options:["Photo","Video","Advertisement"]},{name:"span",type:"select",label:"Size (photos & ads)",half:true,options:["normal","wide"],rec:"Wide takes two columns. Both are the same shape, so this changes size only, never cropping."},{name:"title",type:"text",label:"Title (English)",half:true},{name:"image",type:"image",label:"Image / thumbnail",frame:"8/5",frameBy:{field:"kind",map:{Video:"16/9"}},rec:"1600 × 1000px JPG/WebP. That is exactly the shape of the tile, so a file at this size is not cropped at all. For a video, upload the poster only, at 1600 × 900px (16:9, the YouTube and Vimeo shape). Uploading a different shape is fine: set Focus point, or choose Show whole image."},{name:"titleAr",type:"text",label:"Title",ar:"Arabic",rtl:true},{name:"url",type:"url",label:"External video / campaign link",rec:"Paste a YouTube or Vimeo link. Do not upload video files."}]},
  values:{label:"Our Values",singular:"Value",icon:"about",group:"Company",
   columns:[{type:"title",field:"title",sub:"text"},{type:"text",field:"titleAr"}],
   fields:[{name:"title",type:"text",label:"Value (English)",half:true},{name:"titleAr",type:"text",label:"Value",ar:"Arabic",rtl:true,half:true},{name:"text",type:"textarea",label:"Description (English)"},{name:"textAr",type:"textarea",label:"Description",ar:"Arabic",rtl:true}]},
- formats:{label:"Bag Formats",singular:"Format",icon:"products",group:"Content",
+ formats:{label:"Bag Formats",singular:"Format",icon:"products",group:"Products",
   columns:[{field:"title"},{field:"titleAr"}],
   fields:[{name:"title",type:"text",label:"Format (English)",half:true},{name:"titleAr",type:"text",label:"Format",ar:"Arabic",rtl:true,half:true}]},
  standard:{label:"The Printopack Standard",singular:"Point",icon:"quality",group:"Content",
@@ -709,6 +720,8 @@ var REQUIRED={
  gallery:["kind","title","image"],
  values:["title","text"],
  formats:["title"],
+ productFamilies:["name"],
+ labTests:["title"],
  standard:["title","text"],
  // An office is bilingual contact data shown on the contact page and both maps; a blank English
  // OR Arabic field leaves a gap in the RTL layout, so every naming/contact field is required.
@@ -784,7 +797,10 @@ function renderLogin(msg){
 
 /* ---------------- shell ---------------- */
 var view='dashboard';
-var NAV=[{k:'dashboard',label:'Dashboard',icon:'dash'},{k:'enquiries',label:'Enquiries',icon:'inbox'},{grp:'Content'},{k:'news'},{k:'products'},{k:'team'},{k:'careers'},{k:'partners'},{k:'formats'},{k:'standard'},{grp:'Company'},{k:'factory'},{k:'quality'},{k:'responsibility'},{k:'values'},{k:'gallery'},{grp:'Site'},{k:'about',label:'About & Home',icon:'about'},{k:'offices'},{k:'countries',label:'Countries on the map',icon:'offices'},{k:'settings',label:'Settings',icon:'settings'},{k:'security',label:'Password',icon:'logout'}];
+/* Order and grouping set by the client, 2026-09-13: Gallery straight after News & Events, and
+   everything about products under one heading, Bag Formats included. Product Groups was never in
+   this list before, so the groups themselves could not be opened from the sidebar at all. */
+var NAV=[{k:'dashboard',label:'Dashboard',icon:'dash'},{k:'enquiries',label:'Enquiries',icon:'inbox'},{grp:'Content'},{k:'news'},{k:'gallery'},{k:'team'},{k:'careers'},{k:'partners'},{k:'standard'},{grp:'Products'},{k:'productFamilies'},{k:'productGroups'},{k:'products'},{k:'formats'},{grp:'Company'},{k:'factory'},{k:'quality'},{k:'labTests'},{k:'responsibility'},{k:'values'},{grp:'Site'},{k:'about',label:'About & Home',icon:'about'},{k:'offices'},{k:'countries',label:'Countries on the map',icon:'offices'},{k:'settings',label:'Settings',icon:'settings'},{k:'security',label:'Password',icon:'logout'}];
 function sidebar(){
  var items=NAV.map(function(n){
   if(n.grp)return '<div class="sb-group">'+esc(T(n.grp))+'</div>';
@@ -1380,6 +1396,9 @@ function fieldHTML(f,val){
 function openForm(key,id){
  var mdl=MODELS[key];var rec=id==='new'?{}:coll(key).find(function(x){return x.id===id;})||{};
  draft=JSON.parse(JSON.stringify(rec));
+ /* Groups saved before families became a section store a short key ("snacks"). Shown as its
+    family's name, so the select is never blank and a save can never write the blank back. */
+ if(key==='productGroups'&&draft.filter)draft.filter=familyName(draft.filter);
  if(id==='new'){mdl.fields.forEach(function(f){if(f.name==='date'&&!draft.date)draft.date=today();if(f.name==='status'&&!draft.status)draft.status='draft';});}
  var imp=mdl.hasImport?'<div class="li-import"><label>'+svg('link')+' '+esc(T('Import from a LinkedIn post'))+'</label><div class="li-row"><input id="liu" placeholder="'+esc(T('Paste a LinkedIn post link…'))+'"><button class="btn btn-primary" id="lib" type="button">'+esc(T('Import'))+'</button></div><div class="li-status" id="lis"><span class="spin"></span><span id="lit"></span></div></div>':'';
  var body='<div class="form-grid">'+mdl.fields.map(function(f){return fieldHTML(f,draft[f.name]);}).join('')+'</div>';
@@ -1489,6 +1508,17 @@ function openForm(key,id){
      to strand every product inside it: the products vanished from the site and the next time
      one was opened its Group select showed blank, which then saved the blank. The rename is
      carried through to them here instead, which is what the client means by renaming. */
+  /* Groups are joined to their family by the family's English name, exactly as products are to
+     their group, so a family rename carries its groups with it. */
+  if(key==='productFamilies'&&id!=='new'){
+   var fBefore=coll('productFamilies').filter(function(x){return x.id===draft.id;})[0];
+   var fOld=fBefore&&fBefore.name,fNew=draft.name;
+   if(fOld&&fNew&&fOld!==fNew){
+    var fMoved=coll('productGroups').filter(function(g){return familyName(g.filter)===fOld;});
+    if(fMoved.length&&!confirm(T('Rename this family to \u201c{name}\u201d? {n} groups inside it will move with it.',{name:fNew,n:fMoved.length})))return;
+    fMoved.forEach(function(g){g.filter=fNew;saveRecord('productGroups',g);});
+   }
+  }
   if(key==='productGroups'&&id!=='new'){
    var before=coll('productGroups').filter(function(x){return x.id===draft.id;})[0];
    var oldName=before&&before.name,newName=draft.name;
@@ -1676,6 +1706,14 @@ function bind(scope){
   var p=el.getAttribute('data-del').split(':');
   /* A group holds products, and deleting it strands them: they keep a group name that no
      longer exists, so they disappear from the site with nothing to say why. Name them. */
+  if(p[0]==='productFamilies'){
+   var fam=coll('productFamilies').filter(function(x){return x.id===p[1];})[0];
+   var held=fam?coll('productGroups').filter(function(g){return familyName(g.filter)===fam.name;}):[];
+   if(held.length){
+    toast(T('This family still holds {n} groups. Move them to another family first, or delete them.',{n:held.length}),'err');
+    return;
+   }
+  }
   if(p[0]==='productGroups'){
    var g=coll('productGroups').filter(function(x){return x.id===p[1];})[0];
    var inside=g?coll('products').filter(function(pr){return pr.category===g.name;}):[];
