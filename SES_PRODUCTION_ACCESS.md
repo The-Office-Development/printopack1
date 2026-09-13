@@ -144,55 +144,30 @@ Do not add an SES include to the apex SPF. It is unnecessary and it risks their 
 
 ## Request text
 
-Mail type: **Marketing**
-Website URL: **https://printopack.com.sa**
-Preferred contact language: English
+**SUBMITTED 2026-09-13** via `aws sesv2 put-account-details` on account 006325950907, eu-west-1.
+Review status on submission: PENDING. Mail type MARKETING, website https://printopack.com.sa,
+contact language EN. The text below is exactly what was sent (read back from `get-account`).
+Volume (about 4,000 per announcement, a few times a month at most) was our estimate.
 
-### Use case description
+```text
+Printopack (Saudi Modern Packaging Factory Co. Ltd) is a flexible packaging manufacturer founded in 1997, based in Jeddah, Saudi Arabia, with approximately 400 employees and customers in more than 26 countries. We manufacture printed packaging for food, beverage, pharmaceutical, medical and personal care brands.
 
-Printopack (Saudi Modern Packaging Factory Co. Ltd) is a flexible packaging manufacturer founded
-in 1997, based in Jeddah, Saudi Arabia, with approximately 400 employees and customers in more
-than 26 countries. We manufacture printed packaging for food, beverage, pharmaceutical, medical
-and personal care brands.
+We are requesting production access to send product and service announcements to our own customers.
 
-We are requesting production access to send product and service announcements to our own
-customers.
+What we send: announcements whenever we launch something our customers can use, such as a new packaging service, a new production capability, or a new laboratory test we can now perform on their packaging. These are sent as each one launches, not on a fixed schedule. They go only to businesses that have bought from us, current or past, or that contacted us themselves. We do not send on behalf of any third party.
 
-**What we send.** Announcements when we launch something our customers can use: a new packaging
-service, a new production capability, or a new laboratory test we can now perform on their
-packaging. These are sent as each one launches, not on a fixed schedule. It goes only to businesses that have
-bought from us, current or past, or that contacted us themselves. We do not send on behalf of any
-third party.
+Who receives it, and how they got on the list: recipients come only from our own records. They are our existing and past commercial customers, taken from our company's customer records, businesses that contacted us through the forms on our website, and visitors who subscribed through the newsletter sign-up on our website. We have never purchased, rented, scraped or otherwise acquired a list from a third party, and we never will. Every address is stored with how and when it reached us, and that record is kept for as long as the address is on the list.
 
-**Who receives it, and how they got on the list.** Recipients come from our own records only:
-our existing and past commercial customers, taken from our company's customer records; businesses
-that contacted us through the forms on our website; and visitors who subscribed through the
-newsletter sign-up on our website. We have never purchased, rented, scraped or otherwise acquired
-a list from a third party, and we never will. Every address is stored with how and when it
-reached us, and that record is kept for as long as the address is on the list.
+Expected volume: approximately 4,000 recipients per announcement. Announcements are sent as new services and tests launch, which we expect to be a few times per month at most, so typically under 16,000 messages per month. We expect the list to grow slowly, in step with our customer base.
 
-**Expected volume.** <!-- UNCONFIRMED count: replace with the client's real list size if known --> Approximately 4,000 recipients per announcement. Announcements are sent as new services and
-tests launch, which we expect to be a few times per month at most, so typically under 16,000
-messages per month. We expect the list to grow slowly, in step with our customer base.
+How we handle bounces: we have configured an SES event destination publishing bounce events to SNS, delivered to an HTTPS endpoint we operate. Hard bounces are written immediately to a suppression table and are permanently excluded from every subsequent send; they cannot be removed from it. An address that soft-bounces repeatedly is suppressed after a small number of attempts. The suppression list is checked before each send, so a suppressed address cannot be reintroduced by a later import.
 
-**How we handle bounces.** We have configured an SES event destination publishing bounce events
-to SNS, delivered to an HTTPS endpoint we operate. Hard bounces are written immediately to a
-suppression table and are permanently excluded from every subsequent send; they cannot be
-removed from it. An address that soft-bounces repeatedly is suppressed after a small number of
-attempts. The suppression list is checked before
-each send, so a suppressed address cannot be reintroduced by a later import.
+How we handle complaints: complaint events arrive through the same pipeline and result in immediate and permanent suppression, with no retry and no manual override. We monitor the complaint rate and will pause sending if it approaches AWS thresholds.
 
-**How we handle complaints.** Complaint events arrive through the same pipeline and result in
-immediate and permanent suppression, with no retry and no manual override. We monitor the
-complaint rate and will pause sending if it approaches AWS thresholds.
+How recipients unsubscribe: every message carries List-Unsubscribe and List-Unsubscribe-Post headers supporting one-click unsubscribe, alongside a clearly visible unsubscribe link in the message body. Both routes write to the same suppression table and take effect immediately, with no login, no confirmation step and no further mail.
 
-**How recipients unsubscribe.** Every message carries `List-Unsubscribe` and
-`List-Unsubscribe-Post` headers supporting one-click unsubscribe, alongside a clearly visible
-unsubscribe link in the message body. Both routes write to the same suppression table and take
-effect immediately, with no login, no confirmation step and no further mail.
-
-We have verified our sending domain, enabled DKIM signing, configured a custom MAIL FROM domain
-and published a DMARC policy before making this request.
+We have verified our sending domain, enabled DKIM signing, configured a custom MAIL FROM domain and published a DMARC policy before making this request.
+```
 
 ---
 
