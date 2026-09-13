@@ -159,9 +159,9 @@ We are requesting production access to send a periodic business update to our ow
 customers and trade partners.
 
 **What we send.** A weekly update covering new production capabilities, quality and food-safety
-certifications, and the trade exhibitions we attend. It goes only to businesses we already
-supply or actively trade with. We do not send unsolicited offers and we do not send on behalf of
-any third party.
+certifications, and the trade exhibitions we attend. It goes only to businesses that have
+bought from us, current or past, or that contacted us themselves. We do not send on behalf of any
+third party.
 
 **Who receives it, and how they got on the list.** Recipients come from our own records only:
 our existing and past commercial customers, taken from our company's customer records; businesses
