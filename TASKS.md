@@ -73,7 +73,8 @@ Branch `feat/enquiries-and-mailer`, not yet merged or deployed.
 
 **Still open from the audit, not done here**
 - [ ] The dev login bypass still ships (tracked below).
-- [ ] Placeholder content and the test records are still live.
+- [x] ~~Placeholder content and the test records are still live.~~ Not ours: RETIRED 2026-09-13,
+      see "Blocks launch" below.
 - [ ] `HANDOVER-CLIENT.md` still describes the Cloudflare Access email login that was never
       built. `db/README.md` still calls its destructive seed
       load safe. Both mislead anyone who follows them.
@@ -253,13 +254,9 @@ The GM sent two emails on 2026-08-13: seven section images, and a marked-up PDF 
       `functions/api/login.js:23`, `public/admin/admin.js:433`, `public/admin/admin.js:488`.
       Hard-gated to localhost so it cannot issue a session in production, but it ships in the
       bundle. Rebuild and redeploy after removing.
-- [!] **Placeholder content is publicly visible.** In the content store today:
-      - 20 partners named "Partner 01" through "Partner 20", and these show on the home page
-      - 13 office managers reading "Name Name"
-      - 4 offices carrying test images that are cropped factory photos, not portraits
-      - Gallery items that are samples, already listed for removal in `PRODUCTION_TODO.md`
-
-      Real names and photos are client-gated, so this closes when the content arrives.
+- [x] **RETIRED 2026-09-13 (Bader): placeholder content is the client's job, not a task.**
+      Partners, office managers, test images and sample gallery items are all replaced by
+      Printopack's own team from the admin dashboard. Do not track it, chase it, or raise it.
 
 - [!] **The contact and careers forms ship on the wrong host and fail silently.** Both use
       Netlify Forms (`data-netlify="true"`, `method="POST"`, `action="/contact?submitted=1"` and
@@ -399,6 +396,9 @@ holds once the real domain is attached.
 ---
 
 ## Phase 2: the fonts
+
+**DISCARDED 2026-09-13 (Bader): Narkissim is not being used.** Everything below is kept only as
+the record of why; none of it is open work. Do not quote, license, or reply about it.
 
 **Corrected 2026-08-14.** The earlier finding was wrong. It described **Narkisim**, the
 single-weight Hebrew font bundled with Windows. The client means **Narkissim**, the Fontef

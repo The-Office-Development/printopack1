@@ -622,8 +622,8 @@ clarify.
 
 ## 11. Conflict to resolve before building
 
-- [!] **Mr Printo, the mascot: "appearing every once in a while, animated, and waving."**
-      The GM's own design brief is **no motion, no animation**, on the grounds that it tires the
-      eyes and distracts, and the whole site was built to that rule. An animated waving mascot is
-      the opposite of it. Confirm with the GM before building, and consider a still mascot as the
-      compromise.
+- [x] **Mr Printo, the mascot: "appearing every once in a while, animated, and waving."**
+      RESOLVED 2026-09-13 (Bader): build it animated and waving. The GM asked for it himself, so
+      it is a deliberate, named exception to his no-motion brief, not a breach of it. The rest of
+      the public site stays still. Three versions: home = the plain Mr Printo, About Us = wearing
+      a shemagh and agal, Contact = holding a telephone.
