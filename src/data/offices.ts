@@ -17,8 +17,10 @@ import { reachMap } from './reach-map';
 export type Bi = { en: string; ar: string };
 export type MapOffice = { cc: string; name: Bi; role: Bi; place: Bi; email: string; phone: string;
   /** The manager's picture and, until one is uploaded, their initials. Shown on the selected
-   *  office card so the enquiry has a face against it. */
-  photo: string; mono: string };
+   *  office card so the enquiry has a face against it, and in the Partners map popup. */
+  photo: string; mono: string;
+  /** The manager written against this office, with their title, and how their photo sits. */
+  staff: Bi; staffRole: Bi; fit?: string; focus?: string };
 
 /** Initials for the photo placeholder: the manager's, falling back to the office name. */
 const initials = (name: string, fallback: string) => {
@@ -87,6 +89,10 @@ for (const o of collection('offices')) {
     phone: o.phone || '',
     photo: o.photo || '',
     mono: initials(o.staffName, o.city),
+    staff: { en: String(o.staffName || '').trim(), ar: String(o.staffNameAr || o.staffName || '').trim() },
+    staffRole: { en: String(o.staffRole || '').trim(), ar: String(o.staffRoleAr || o.staffRole || '').trim() },
+    fit: o.photoFit || undefined,
+    focus: o.photoFocus || undefined,
   };
 }
 

@@ -307,7 +307,7 @@ const c = content;
 
   /* office popup: floats by the country on desktop (JS-positioned), sits as a panel
      under the map on small screens (see media query) */
-  .map-pop{position:absolute;z-index:6;width:min(266px,80vw);background:var(--paper);border:1px solid var(--line);box-shadow:0 24px 46px rgba(0,70,162,.20);border-radius:var(--radius);padding:16px 18px;display:flex;flex-direction:column;gap:4px}
+  .map-pop{position:absolute;z-index:6;width:min(290px,80vw);background:var(--paper);border:1px solid var(--line);box-shadow:0 24px 46px rgba(0,70,162,.20);border-radius:var(--radius);padding:16px 18px;display:flex;flex-direction:column;gap:4px}
   .map-pop[hidden]{display:none}
   /* The popup's inner nodes are injected via innerHTML at runtime, so they never
      receive Astro's scope attribute. These rules are :global (kept contained under
@@ -321,6 +321,14 @@ const c = content;
   .map-pop :global(.pop-cta){margin-top:11px;font-family:var(--display);font-size:11.5px;font-weight:500;letter-spacing:.1em;text-transform:uppercase;color:var(--navy);border-top:1px solid var(--line);padding-top:12px;width:fit-content}
   .map-pop :global(.pop-cta:hover){color:var(--gold-bright)}
   .map-pop :global(.pop-arrow){display:inline-block}
+  /* The office's manager: photo square beside name and title, between hairlines. */
+  .map-pop :global(.pop-staff){display:flex;align-items:center;gap:12px;margin:8px 0 6px;padding:10px 0;border-top:1px solid var(--line);border-bottom:1px solid var(--line)}
+  .map-pop :global(.pop-photo){flex:none;width:64px;height:64px;border-radius:var(--radius);overflow:hidden;display:grid;place-items:center;background:var(--surface);border:1px solid var(--line)}
+  .map-pop :global(.pop-photo img){width:100%;height:100%;object-fit:cover;display:block}
+  .map-pop :global(.pop-mono){font-family:var(--display);font-size:19px;font-weight:300;letter-spacing:.04em;color:var(--muted)}
+  .map-pop :global(.pop-staff-text){display:flex;flex-direction:column;gap:2px;min-width:0}
+  .map-pop :global(.pop-staff-name){font-family:var(--display);font-size:15px;color:var(--ink);line-height:1.25}
+  .map-pop :global(.pop-staff-role){font-size:12.5px;color:var(--muted);line-height:1.35}
   [dir="rtl"] .map-pop :global(.pop-arrow){transform:scaleX(-1)}
 
   .chips-toggle{display:none}
@@ -393,6 +401,30 @@ const c = content;
       rows.push(`<a class="pop-cta" href="/contact?office=${cc}#enquire">${CONTACT[L]} <span class="pop-arrow">&rarr;</span></a>`);
       pop.innerHTML = rows.join('');
       pop.querySelector('.pop-close').addEventListener('click', hide);
+      // The manager written against this office, with their photo (client, 2026-09-13). Built
+      // from nodes with textContent rather than joined into the markup above, so a name typed
+      // in the admin can never become HTML. The photo box has a fixed size, so the popup is
+      // already its final height when it is positioned, before the picture has loaded.
+      const staffName = o.staff && o.staff[L];
+      if (staffName || o.photo) {
+        const el = (tag, cls, text) => { const n = document.createElement(tag); n.className = cls; if (text) n.textContent = text; return n; };
+        const row = el('div', 'pop-staff');
+        const pic = el('span', 'pop-photo');
+        if (o.photo) {
+          const img = document.createElement('img');
+          img.src = o.photo; img.alt = staffName || ''; img.decoding = 'async';
+          if (o.fit) img.dataset.fit = o.fit;
+          if (o.focus) img.style.objectPosition = o.focus;
+          pic.append(img);
+        } else {
+          pic.append(el('span', 'pop-mono', o.mono || ''));
+        }
+        const text = el('span', 'pop-staff-text');
+        if (staffName) text.append(el('span', 'pop-staff-name', staffName));
+        if (o.staffRole && o.staffRole[L]) text.append(el('span', 'pop-staff-role', o.staffRole[L]));
+        row.append(pic, text);
+        pop.insertBefore(row, pop.querySelector('a[href^="mailto:"]'));
+      }
     };
     const position = (path) => {
       if (isPanel()) { pop.style.left = pop.style.top = ''; return; }
@@ -483,9 +515,12 @@ const c = content;
     document.addEventListener('keydown', (e) => { if (e.key === 'Escape') closePopup(); });
     // keep the popup correct when the language flips or the viewport resizes.
     // Observe the real dir/lang change (not the toggle click) so it never races.
-    const active = () => paths.find((p) => p.classList.contains('active'));
-    new MutationObserver(() => { const a = active(); if (a && !pop.hidden) { render(a.dataset.cc); position(a); } })
+    // The selection is read from the chips as well as the map: International is a chip with no
+    // territory, so reading the map alone left its popup in the old language after a switch.
+    const activeCc = () => (chips.find((ch) => ch.classList.contains('active')) || paths.find((p) => p.classList.contains('active')))?.dataset.cc;
+    const place = (cc) => { const path = paths.find((p) => p.dataset.cc === cc); if (path) position(path); else centre(); };
+    new MutationObserver(() => { const cc = activeCc(); if (cc && !pop.hidden) { render(cc); place(cc); } })
       .observe(document.documentElement, { attributes: true, attributeFilter: ['dir', 'lang'] });
-    window.addEventListener('resize', () => { const a = active(); if (a && !pop.hidden) position(a); });
+    window.addEventListener('resize', () => { const cc = activeCc(); if (cc && !pop.hidden) place(cc); });
   }
 </script>

@@ -140,7 +140,7 @@ window.PPK_AR = {
 "480 × 300px (transparent PNG)":"480 × 300 بكسل (PNG بخلفية شفافة)",
 "1000 × 1400px (portrait, JPG or PNG)":"1000 × 1400 بكسل (طولية، JPG أو PNG)",
 "1600 × 1000px JPG/WebP. For videos, upload only a poster image.":"1600 × 1000 بكسل بصيغة JPG أو WebP. أما الفيديو فتُرفع له صورة غلاف فقط.",
-"420 × 420px, square. Shown beside the office on the contact page; initials stand in until one is added.":"420 × 420 بكسل، مربّعة. تظهر بجانب المكتب في صفحة التواصل، وتظهر الأحرف الأولى من الاسم إلى أن تُضاف صورة.",
+"420 × 420px, square. Shown beside the office on the contact page and in the map popup on the Partners page; initials stand in until one is added.":"420 × 420 بكسل، مربّعة. تظهر بجانب المكتب في صفحة التواصل وفي النافذة المنبثقة على خريطة صفحة الشركاء، وتظهر الأحرف الأولى من الاسم إلى أن تُضاف صورة.",
 "A Measurements group is a size chart rather than a product range: its page shows the drawing at full page width.":"مجموعة المقاسات جدول قياسات لا مجموعة منتجات، وتظهر صفحتها بعرض الصفحة كاملاً.",
 "A Measurements section is shown differently: full width, the chart uncropped, and openable at full size, because the sizes printed on it have to be readable.":"قسم المقاسات يظهر بطريقة مختلفة: بعرض كامل، ودون اقتصاص، ويمكن فتحه بالحجم الكامل، لأنّ القياسات المطبوعة عليه يجب أن تكون واضحة للقراءة.",
 "Which heading this group sits under in the Browse list on the products page. Snacks · Confectionery · Bakery & Breads · Pantry Staples · Bottles & Liquids · Frozen & Chilled · Specialty.":"العنوان الذي تندرج تحته هذه المجموعة في قائمة التصفح بصفحة المنتجات: المقرمشات · الحلويات · المخبوزات والأرغفة · المواد الأساسية · العبوات والسوائل · المجمّدات والمبرّدات · التطبيقات الخاصة.",
