@@ -94,6 +94,7 @@ window.PPK_AR = {
 "Years of experience":"سنوات الخبرة",
 "Short note (English)":"نبذة قصيرة (بالإنجليزية)",
 "Short note":"نبذة قصيرة",
+"Shown in the profile that opens from the photo or Read more on the Our Team page. Leave a blank line between paragraphs.":"تظهر في الملف التعريفي الذي يُفتح عند الضغط على الصورة أو «اقرأ المزيد» في صفحة فريق العمل. اترك سطرًا فارغًا بين الفقرات.",
 "Location":"الموقع الجغرافي",
 "Application email":"بريد استقبال الطلبات",
 "Summary (English)":"الملخص (بالإنجليزية)",

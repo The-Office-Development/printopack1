@@ -4,6 +4,10 @@ import Bi from '../components/Bi.astro';
 import { collection, stats } from '../lib/content';
 const year = new Date().getFullYear();
 
+/** A bio as paragraphs: blank lines separate them, single line breaks stay inside one. */
+const paras = (s: unknown): string[] =>
+  String(s || '').split(/\n\s*\n/).map((p) => p.trim()).filter(Boolean);
+
 // ── EDITABLE CONTENT (bilingual) ─────────────────────────────────────────────
 // Team (Nasser's Page 1 subsection). He asked for manager names + photos; the live
 // site has no team page, so names/photos are client-gated: leadership is shown by role
@@ -31,16 +35,19 @@ const content = {
       en: "Each part of the business is run by a manager with deep experience in flexible packaging.",
       ar: "يدير كل جزء من الأعمال مديرٌ ذو خبرة عميقة في التغليف المرن.",
     },
+    readMore: { en: "Read more", ar: "اقرأ المزيد" },
     // Each member has a name slot (client-gated, filled via admin) + role, photo/monogram
-    // and a concise note. When `name` is filled it becomes the heading and the role moves
-    // to a subtitle; until then the role heads the card. The admin adds/edits/removes these.
+    // and a note. When `name` is filled it becomes the heading and the role moves to a
+    // subtitle; until then the role heads the card. The admin adds/edits/removes these.
     // Sourced from the content store (admin-managed). Blank name -> the card shows the role
     // as its heading (no invented name), exactly as before.
     members: collection('team').map((m) => ({
       photo: m.photo, mono: m.mono, fit: m.photoFit, focus: m.photoFocus,
       name: { en: m.name, ar: m.nameAr },
       role: { en: m.role, ar: m.roleAr },
-      desc: { en: m.bio, ar: m.bioAr },
+      bio: { en: paras(m.bio), ar: paras(m.bioAr) },
+      experience: Number(m.experience) || 0,
+      email: String(m.email || '').trim(),
     })),
   },
   culture: {
@@ -72,7 +79,9 @@ const c = content;
   </section>
 
 
-  <!-- LEADERSHIP -->
+  <!-- LEADERSHIP. The card is the photo, the name and the title only (client, 2026-09-13), so
+       the grid stays even however long a bio is. Everything else opens in the profile overlay,
+       from the photo or from "Read more". -->
   <section class="leadership">
     <div class="wrap-wide">
       <div class="section-head">
@@ -81,26 +90,54 @@ const c = content;
         <p class="lede"><Bi en={c.leadership.lede.en} ar={c.leadership.lede.ar} /></p>
       </div>
       <div class="team-grid">
-        {c.leadership.members.map((m) => (
+        {c.leadership.members.map((m, i) => {
+          const label = m.name.en || m.role.en;
+          return (
           <div class="member">
-            {m.photo
-              ? <button
-                  type="button"
-                  class="avatar avatar-zoom"
-                  data-full={m.photo}
-                  data-cap-en={m.name.en || m.role.en}
-                  data-cap-ar={m.name.ar || m.role.ar || m.name.en || m.role.en}
-                  aria-label={`Enlarge the photo of ${m.name.en || m.role.en}`}
-                >
-                  <img src={m.photo} alt={m.name.en || m.role.en} data-fit={m.fit || undefined} style={m.focus ? `object-position:${m.focus}` : undefined} />
-                </button>
-              : <span class="avatar"><span class="avatar-mono" aria-hidden="true">{m.mono}</span></span>}
+            <button type="button" class="avatar avatar-open" data-profile={`member-${i}`} aria-haspopup="dialog" aria-label={`Open the profile of ${label}`}>
+              {m.photo
+                ? <img src={m.photo} alt={label} loading="lazy" decoding="async" data-fit={m.fit || undefined} style={m.focus ? `object-position:${m.focus}` : undefined} />
+                : <span class="avatar-mono" aria-hidden="true">{m.mono}</span>}
+            </button>
             {m.name.en
               ? <><h3 class="member-name"><Bi en={m.name.en} ar={m.name.ar} /></h3><span class="member-role"><Bi en={m.role.en} ar={m.role.ar} /></span></>
               : <h3 class="member-name"><Bi en={m.role.en} ar={m.role.ar} /></h3>}
-            <p class="member-desc"><Bi en={m.desc.en} ar={m.desc.ar} /></p>
+            <button type="button" class="link-line member-more" data-profile={`member-${i}`} aria-haspopup="dialog">
+              <Bi en={c.leadership.readMore.en} ar={c.leadership.readMore.ar} />
+            </button>
+
+            <!-- This member's profile, rendered with the page and copied into the overlay when
+                 it opens: no markup is assembled from strings at runtime. -->
+            <template id={`member-${i}`}>
+              <div class="pf-photo">
+                {m.photo
+                  ? <img src={m.photo} alt={label} data-fit={m.fit || undefined} style={m.focus ? `object-position:${m.focus}` : undefined} />
+                  : <span class="pf-mono" aria-hidden="true">{m.mono}</span>}
+              </div>
+              <div class="pf-body">
+                {m.name.en && <span class="pf-role"><Bi en={m.role.en} ar={m.role.ar} /></span>}
+                <h2 class="pf-name" id="pf-title">
+                  {m.name.en ? <Bi en={m.name.en} ar={m.name.ar} /> : <Bi en={m.role.en} ar={m.role.ar} />}
+                </h2>
+                {(m.experience > 0 || m.email) && (
+                  <div class="pf-meta">
+                    {m.experience > 0 && (
+                      <span><Bi en={`${m.experience} years of experience`} ar={`سنوات الخبرة: ${m.experience}`} /></span>
+                    )}
+                    {m.email && <a href={`mailto:${m.email}`} dir="ltr">{m.email}</a>}
+                  </div>
+                )}
+                {m.bio.en.length > 0 && (
+                  <div class="pf-bio pf-bio-en">{m.bio.en.map((p) => <p>{p}</p>)}</div>
+                )}
+                {(m.bio.ar.length > 0 || m.bio.en.length > 0) && (
+                  <div class="pf-bio pf-bio-ar" dir="rtl">{(m.bio.ar.length ? m.bio.ar : m.bio.en).map((p) => <p>{p}</p>)}</div>
+                )}
+              </div>
+            </template>
           </div>
-        ))}
+          );
+        })}
       </div>
     </div>
   </section>
@@ -124,17 +161,15 @@ const c = content;
     </div>
   </section>
 
-  <!-- PORTRAIT LIGHTBOX. Same shape as the gallery's, but the stage holds ONE static <img>
-       whose src the script sets, rather than assembling markup: a team photo needs nothing
-       else, and it keeps this page clear of the innerHTML pattern. -->
-  <div class="lightbox" id="portrait-lightbox" role="dialog" aria-modal="true" hidden>
-    <button class="lb-close" type="button" aria-label="Close">
-      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><path d="M6 6l12 12M18 6L6 18"/></svg>
-    </button>
-    <figure class="lb-figure">
-      <img class="lb-photo" src="" alt="" />
-      <figcaption class="lb-cap"></figcaption>
-    </figure>
+  <!-- PROFILE OVERLAY. One shell for the whole page; the member's <template> fills it. Appears
+       and disappears instantly: the site is motion-free. -->
+  <div class="profile" id="member-profile" role="dialog" aria-modal="true" aria-labelledby="pf-title" hidden>
+    <div class="pf-panel">
+      <button class="pf-close" type="button" aria-label="Close">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" aria-hidden="true"><path d="M6 6l12 12M18 6L6 18"/></svg>
+      </button>
+      <div class="pf-content"></div>
+    </div>
   </div>
 </Base>
 
@@ -158,25 +193,39 @@ const c = content;
   }
   /* The photo is a <button>, so the UA's own box has to be cleared. No transition: the site
      is deliberately motion-free, the cue is the cursor plus the border. */
-  .avatar-zoom{padding:0;font:inherit;color:inherit;cursor:zoom-in}
-  .avatar-zoom:hover,.avatar-zoom:focus-visible{border-color:var(--navy)}
+  .avatar-open{padding:0;font:inherit;color:inherit;cursor:pointer}
+  .avatar-open:hover,.avatar-open:focus-visible{border-color:var(--navy)}
   .avatar img{width:100%;height:100%;object-fit:cover}
   .avatar-mono{font-family:var(--display);font-weight:400;font-size:clamp(23px,4vw,46px);letter-spacing:.04em;color:var(--navy)}
-
-  /* Portrait lightbox, matching the gallery's treatment. */
-  .lightbox{position:fixed;inset:0;z-index:200;background:rgba(9,24,41,.9);display:flex;align-items:center;justify-content:center;padding:clamp(20px,5vw,64px)}
-  .lightbox[hidden]{display:none}
-  .lb-close{position:absolute;top:clamp(16px,3vw,28px);inset-inline-end:clamp(16px,3vw,28px);width:46px;height:46px;display:inline-flex;align-items:center;justify-content:center;color:var(--paper);border:1px solid var(--line-dark);border-radius:50%}
-  .lb-close:hover{background:var(--paper);color:var(--gold-bright)}
-  .lb-close svg{width:20px;height:20px}
-  .lb-figure{max-width:min(760px,92vw);display:flex;flex-direction:column;align-items:center;margin:0}
-  /* contain, never cover: the whole portrait has to be visible, which is the entire point of
-     opening it. Capped so the caption always sits below the photo, never over it. */
-  .lb-photo{max-width:100%;max-height:76vh;object-fit:contain;display:block}
-  .lb-cap{flex:none;margin-top:18px;font-family:var(--display);font-size:14px;letter-spacing:.06em;color:rgba(250,246,238,.85);text-align:center}
   .member-name{font-size:clamp(18px,1.5vw,21px);margin-bottom:8px}
-  .member-role{display:block;font-family:var(--display);font-size:12px;font-weight:500;letter-spacing:.1em;text-transform:uppercase;color:var(--gold);margin-bottom:10px}
-  .member-desc{font-size:14.5px;color:var(--muted);line-height:1.6;max-width:30ch}
+  .member-role{display:block;font-family:var(--display);font-size:12px;font-weight:500;letter-spacing:.1em;text-transform:uppercase;color:var(--gold);margin-bottom:12px}
+  .member-more{cursor:pointer}
+
+  /* Profile overlay. The panel's contents are cloned from a <template> when it opens, so their
+     rules are :global() anchored to the scoped .profile, the only form that is certain to reach
+     DOM put there at runtime. */
+  .profile{position:fixed;inset:0;z-index:200;background:rgba(9,24,41,.72);display:flex;align-items:center;justify-content:center;padding:clamp(12px,4vw,48px)}
+  .profile[hidden]{display:none}
+  .pf-panel{position:relative;background:var(--paper);width:min(920px,100%);max-height:min(88vh,780px);overflow-y:auto;border-radius:var(--radius);box-shadow:0 30px 70px rgba(0,0,0,.35)}
+  .pf-close{position:absolute;top:12px;inset-inline-end:12px;z-index:2;width:42px;height:42px;display:inline-flex;align-items:center;justify-content:center;color:var(--ink);background:var(--paper);border:1px solid var(--line);border-radius:50%}
+  .pf-close:hover,.pf-close:focus-visible{color:var(--gold-bright);border-color:var(--gold)}
+  .pf-close svg{width:18px;height:18px}
+  .pf-content{display:grid;grid-template-columns:minmax(200px,300px) 1fr;gap:clamp(22px,3vw,40px);padding:clamp(22px,3.4vw,44px)}
+  .profile :global(.pf-photo){width:100%;aspect-ratio:1;align-self:start;overflow:hidden;display:grid;place-items:center;background:var(--cream);border:1px solid var(--line);border-radius:var(--radius)}
+  .profile :global(.pf-photo img){width:100%;height:100%;object-fit:cover;display:block}
+  .profile :global(.pf-mono){font-family:var(--display);font-size:clamp(40px,6vw,64px);letter-spacing:.04em;color:var(--navy)}
+  .profile :global(.pf-body){min-width:0}
+  .profile :global(.pf-role){display:block;font-family:var(--display);font-size:12px;font-weight:500;letter-spacing:.1em;text-transform:uppercase;color:var(--gold);padding-inline-end:48px}
+  .profile :global(.pf-name){font-size:clamp(26px,3vw,38px);margin:10px 0 14px;padding-inline-end:48px}
+  .profile :global(.pf-meta){display:flex;flex-wrap:wrap;gap:6px 22px;padding-bottom:14px;margin-bottom:16px;border-bottom:1px solid var(--line);font-family:var(--display);font-size:14px;color:var(--muted)}
+  .profile :global(.pf-meta a){color:var(--link)}
+  .profile :global(.pf-meta a:hover){color:var(--link-hover)}
+  /* pre-line keeps the single line breaks typed inside a paragraph in the admin. */
+  .profile :global(.pf-bio p){font-size:15.5px;line-height:1.72;color:var(--ink);white-space:pre-line;max-width:64ch}
+  .profile :global(.pf-bio p + p){margin-top:12px}
+  .profile :global(.pf-bio-ar){display:none}
+  :global([dir="rtl"]) .profile :global(.pf-bio-ar){display:block}
+  :global([dir="rtl"]) .profile :global(.pf-bio-en){display:none}
 
   .culture{position:relative;color:var(--paper);overflow:hidden;padding-block:clamp(48px,6vw,84px)}
   .culture-bg{position:absolute;inset:0}
@@ -188,44 +237,51 @@ const c = content;
   @media(max-width:1000px){
     .team-grid{grid-template-columns:repeat(2,1fr);gap:40px 28px}
   }
+  @media(max-width:700px){
+    .pf-content{grid-template-columns:1fr}
+    .profile :global(.pf-photo){max-width:220px}
+  }
   @media(max-width:520px){
     .team-grid{grid-template-columns:1fr}
   }
 </style>
 
 <script>
-  // Click a portrait to see it whole. Click the backdrop, the x, or press Esc to close.
-  const lightbox = document.getElementById('portrait-lightbox');
-  const photo = lightbox?.querySelector('.lb-photo') as HTMLImageElement | null;
-  const cap = lightbox?.querySelector('.lb-cap') as HTMLElement | null;
-  const isAr = () => document.documentElement.dir === 'rtl';
+  // Profile overlay: the photo or "Read more" copies that member's <template> into the panel.
+  // Closes on the x, the backdrop, or Esc, and hands focus back to whatever opened it.
+  const dlg = document.getElementById('member-profile');
+  const panel = dlg?.querySelector('.pf-panel') as HTMLElement | null;
+  const content = dlg?.querySelector('.pf-content') as HTMLElement | null;
+  let opener: HTMLElement | null = null;
 
   const close = () => {
-    if (!lightbox || !photo || !cap) return;
-    lightbox.hidden = true;
-    // Dropped so a reopen never flashes the previous portrait while the new one loads.
-    photo.removeAttribute('src');
-    cap.textContent = '';
+    if (!dlg || !content) return;
+    dlg.hidden = true;
+    content.replaceChildren();
     document.body.style.overflow = '';
+    opener?.focus();
+    opener = null;
   };
 
-  document.querySelectorAll<HTMLElement>('.avatar-zoom').forEach((btn) => {
+  document.querySelectorAll<HTMLElement>('[data-profile]').forEach((btn) => {
     btn.addEventListener('click', () => {
-      if (!lightbox || !photo || !cap) return;
-      const label = (isAr() ? btn.dataset.capAr : btn.dataset.capEn) || '';
-      photo.src = btn.dataset.full || '';
-      photo.alt = label;
-      cap.textContent = label;
-      lightbox.hidden = false;
+      const tpl = document.getElementById(btn.dataset.profile || '') as HTMLTemplateElement | null;
+      if (!dlg || !content || !tpl) return;
+      content.replaceChildren(tpl.content.cloneNode(true));
+      opener = btn;
+      dlg.hidden = false;
       document.body.style.overflow = 'hidden';
+      if (panel) panel.scrollTop = 0;
+      dlg.querySelector<HTMLElement>('.pf-close')?.focus();
     });
   });
 
-  lightbox?.addEventListener('click', (e) => {
-    // Anywhere that is not the photo itself closes: backdrop, padding, caption, the x.
-    if (!(e.target as HTMLElement).closest('.lb-photo')) close();
+  dlg?.addEventListener('click', (e) => {
+    const t = e.target as HTMLElement;
+    // Outside the panel, or on the x, closes. Anything inside the panel stays open.
+    if (!t.closest('.pf-panel') || t.closest('.pf-close')) close();
   });
   document.addEventListener('keydown', (e) => {
-    if (e.key === 'Escape' && lightbox && !lightbox.hidden) close();
+    if (e.key === 'Escape' && dlg && !dlg.hidden) close();
   });
 </script>
