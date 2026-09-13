@@ -155,11 +155,12 @@ in 1997, based in Jeddah, Saudi Arabia, with approximately 400 employees and cus
 than 26 countries. We manufacture printed packaging for food, beverage, pharmaceutical, medical
 and personal care brands.
 
-We are requesting production access to send a periodic business update to our own commercial
-customers and trade partners.
+We are requesting production access to send product and service announcements to our own
+customers.
 
-**What we send.** A weekly update covering new production capabilities, quality and food-safety
-certifications, and the trade exhibitions we attend. It goes only to businesses that have
+**What we send.** Announcements when we launch something our customers can use: a new packaging
+service, a new production capability, or a new laboratory test we can now perform on their
+packaging. These are sent as each one launches, not on a fixed schedule. It goes only to businesses that have
 bought from us, current or past, or that contacted us themselves. We do not send on behalf of any
 third party.
 
@@ -170,8 +171,9 @@ newsletter sign-up on our website. We have never purchased, rented, scraped or o
 a list from a third party, and we never will. Every address is stored with how and when it
 reached us, and that record is kept for as long as the address is on the list.
 
-**Expected volume.** <!-- UNCONFIRMED: replace with the client's real count and cadence before submitting --> Approximately 4,000 recipients, sent once per week, so roughly 16,000 to
-20,000 messages per month. We expect this to grow slowly, in step with our customer base.
+**Expected volume.** <!-- UNCONFIRMED count: replace with the client's real list size if known --> Approximately 4,000 recipients per announcement. Announcements are sent as new services and
+tests launch, which we expect to be a few times per month at most, so typically under 16,000
+messages per month. We expect the list to grow slowly, in step with our customer base.
 
 **How we handle bounces.** We have configured an SES event destination publishing bounce events
 to SNS, delivered to an HTTPS endpoint we operate. Hard bounces are written immediately to a
