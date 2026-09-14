@@ -171,6 +171,102 @@ We have verified our sending domain, enabled DKIM signing, configured a custom M
 
 ---
 
+## Round 2: Amazon asked for more information (2026-09-13), reply posted 2026-09-14
+
+Amazon's first answer was their standard "we would like to gather more information" message
+(case 178931713400385, status DENIED in `get-account`). It asked for sending frequency, list
+maintenance, bounce/complaint/unsubscribe handling, and an example email. The reply below was
+posted by Bader in the AWS Support Center (the Support API needs a paid support plan, so it
+cannot be posted from the CLI). Status stays DENIED until a reviewer acts on the reply.
+
+The example email's lab test (migration testing) is illustrative, not a confirmed Printopack
+service. Every figure in it matched the live tool's settings on 2026-09-13.
+
+```text
+Hello,
+
+Thank you for reviewing our request. Below are the details you asked for, covering each point in turn, followed by an example of the email we plan to send.
+
+1. Who we are and what we send
+
+Printopack (Saudi Modern Packaging Factory Co. Ltd) has manufactured flexible packaging in Jeddah, Saudi Arabia, since 1997, for food, beverage, pharmaceutical, medical and personal care brands in more than 26 countries.
+
+We send one kind of email: an announcement to our customers when we launch something they can use, such as a new packaging service, a new production capability, or a new laboratory test we can now run on their packaging. Each message is written in English and Arabic, and each recipient receives the version in their own language. We do not send on behalf of any third party.
+
+Our sending domain, printopack.com.sa, is already verified in eu-west-1, with DKIM signing (RSA 2048), a custom MAIL FROM domain (bounce.printopack.com.sa) and a published DMARC record.
+
+2. How often we send
+
+Announcements go out when a new service or test launches, not on a fixed schedule. We expect a few announcements per month at most, each to approximately 4,000 recipients, so typically under 16,000 messages per month.
+
+Sending is throttled on our side. Our system sends at most 25 messages per minute, and a single campaign is capped at 5,000 recipients, so a mistake can never turn into a large burst.
+
+3. How we maintain our recipient list
+
+Addresses reach our list in three ways only:
+- our existing and past customers, from our own company customer records;
+- businesses that contacted us through the enquiry forms on our website;
+- visitors who subscribed through the newsletter sign-up on our website.
+
+We have never bought, rented or scraped a list, and never will.
+
+Every address is stored with its source, the basis on which we may write to it, and the date it arrived. When we import our customer records, every row is checked for a valid address format, duplicates are removed, and every address is checked against our suppression list first. An address that has ever unsubscribed, bounced or complained is reported as suppressed and is not added back.
+
+When a campaign starts, its recipient list is fixed at that moment, so contacts added or changed during a send cannot cause duplicates or gaps.
+
+4. How we manage bounces
+
+SES publishes bounce, complaint and delivery events through our configuration set to an SNS topic, which delivers them to an HTTPS endpoint we operate. The endpoint's address contains a secret, and it only accepts notifications from our own topic.
+
+- A hard bounce suppresses the address immediately and permanently. It cannot be removed from the suppression list by anyone using our system.
+- A soft bounce is counted. After 3 soft bounces the address is suppressed.
+- Once a campaign has sent 50 messages, if its hard bounce rate reaches 4%, the campaign pauses itself automatically and waits for a person to review it. Nothing further is sent until then.
+
+5. How we manage complaints
+
+A complaint suppresses the address immediately and permanently, with no retry. Like hard bounces, complaints cannot be removed from the suppression list by anyone using our system. Once a campaign has sent 200 messages, if its complaint rate reaches 0.08%, the campaign pauses itself automatically.
+
+6. How we manage unsubscribe requests
+
+Every message carries List-Unsubscribe and List-Unsubscribe-Post headers (RFC 8058), so the unsubscribe button in Gmail, Outlook and other mail apps works in one click. Every message also has a visible unsubscribe link in its footer. The link is cryptographically signed, so it cannot be forged to unsubscribe someone else.
+
+Either route takes effect immediately, with no login and no confirmation step. The address is added to the suppression list, and any messages still queued for it in any campaign are cancelled. The suppression list is checked again for every individual message just before it is sent, so an unsubscribe that arrives in the middle of a campaign is honoured on the very next message.
+
+7. Testing already done in the sandbox
+
+Before requesting production access we tested the full process in the sandbox:
+- delivery to verified addresses in both English and Arabic;
+- the unsubscribe link, followed by a second campaign that correctly skipped the unsubscribed address;
+- bounce@simulator.amazonses.com and complaint@simulator.amazonses.com, both of which were suppressed automatically within seconds and counted against the campaign.
+
+8. Example email
+
+From: Printopack <announcements address on printopack.com.sa>
+Subject: New at Printopack: in-house migration testing for food packaging
+
+Hello [first name],
+
+We can now run migration testing on your food packaging in our own laboratory in Jeddah.
+
+Migration testing checks whether substances from the packaging material pass into the food it holds, which many markets require before a product goes on sale. Until now, most of our customers had to send samples to an outside laboratory and wait for the results. We can now test samples of your printed films and pouches here, alongside production, and return the report with your order.
+
+If you would like to know whether this applies to your products, reply to this email or contact your account manager, and we will explain what the test involves and how long it takes.
+
+Kind regards,
+Printopack
+
+Saudi Modern Packaging Factory Co. Ltd. (Printopack), Industrial Area 5, Unit 10, 8508, Jeddah 22428, Saudi Arabia
+You are receiving this because you are a Printopack customer or subscribed to our news.
+Unsubscribe: [one-click unsubscribe link]
+
+Every message follows this format: one announcement, a clear reason it is relevant to the recipient, a way to reply to a real person, our postal address, and an unsubscribe link.
+
+Please let us know if you need anything further.
+
+Kind regards,
+Printopack
+```
+
 ## If it is declined
 
 A first rejection is not final and is often reversible by replying with specifics rather than
