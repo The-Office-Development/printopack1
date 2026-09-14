@@ -2,6 +2,7 @@
 import Base from '../layouts/Base.astro';
 import Counter from '../components/Counter.astro';
 import Bi from '../components/Bi.astro';
+import Mascot from '../components/Mascot.astro';
 import { stats } from '../lib/content';
 import { posts } from '../data/news';
 import { mainPartners } from '../data/partners';
@@ -212,6 +213,7 @@ const pad = (n: number) => String(n).padStart(2, "0");
   </section>
 
   <!-- ============ CTA ============ -->
+  <Mascot variant="plain" />
 </Base>
 
 <style>

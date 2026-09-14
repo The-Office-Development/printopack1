@@ -1,0 +1,513 @@
+---
+import Bi from './Bi.astro';
+
+// Mr Printo, the mascot. Every so often he turns up somewhere along the bottom of the screen, waves,
+// says hello, and goes again. The GM asked for him himself, so he is the one deliberate exception to
+// the site's no-motion rule (CLIENT_NOTES.md section 11); nothing else on the public site moves.
+//
+// How the wave works: each version is two transparent layers cut from a flat picture, the body and
+// the waving hand. The hand sits underneath the body and rotates about the wrist, whose opening is
+// hidden by the sleeve cuff, so the joint never shows a gap. `pivot` is that wrist point as a
+// percentage of the picture, and `handSide` is the side of the PICTURE the waving hand is on, so he
+// can be turned to wave towards the page wherever he appears. The layers are produced by the scripts
+// in scripts/mascot/ (see its README).
+//
+// Motion is driven by the Web Animations API, not CSS: global.css switches off every CSS animation
+// and transition on the site, and that switch does not reach element.animate(). Visitors who ask
+// their system for reduced motion get a still Mr Printo that fades in and out, with no movement.
+//
+// Versions: plain (home), shemagh and agal (About Us), telephone (Contact).
+
+type Variant = 'plain' | 'shemagh' | 'phone';
+const { variant = 'plain' } = Astro.props as { variant?: Variant };
+
+const VARIANTS = {
+  // Home. Cut from his own waving picture.
+  plain: {
+    body: '/images/mascot/printo-plain-body.webp',
+    hand: '/images/mascot/printo-plain-hand.webp',
+    w: 383, h: 560,
+    pivot: [22.28, 46.1],
+    handSide: 'left',
+    feet: true,
+    en: 'Hello! Welcome to Printopack',
+    ar: 'أهلاً وسهلاً بكم في برنتوباك',
+  },
+  // About Us. His picture had no free hand, so the waving arm is the plain one's, in thobe white.
+  shemagh: {
+    body: '/images/mascot/printo-shemagh-body.webp',
+    hand: '/images/mascot/printo-shemagh-hand.webp',
+    w: 363, h: 560,
+    pivot: [19.14, 33.62],
+    handSide: 'left',
+    feet: true,
+    en: 'Welcome! Get to know Printopack',
+    ar: 'حيّاكم الله! تعرّفوا على برنتوباك',
+  },
+  // Contact. Cut off at the chest, with the phone in one hand; the waving arm is the plain one's,
+  // mirrored onto his free side.
+  phone: {
+    body: '/images/mascot/printo-phone-body.webp',
+    hand: '/images/mascot/printo-phone-hand.webp',
+    w: 603, h: 560,
+    pivot: [83.09, 72.71],
+    handSide: 'right',
+    feet: false,
+    en: "We'd love to hear from you!",
+    ar: 'يسعدنا تواصلكم معنا!',
+  },
+} as const;
+const v = VARIANTS[variant as keyof typeof VARIANTS] ?? VARIANTS.plain;
+---
+<div
+  class="printo"
+  data-printo
+  data-hand-side={v.handSide}
+  data-feet={v.feet ? '1' : '0'}
+  style={`--printo-ratio:${v.w}/${v.h};--pivot-x:${v.pivot[0]}%;--pivot-y:${v.pivot[1]}%`}
+>
+  <div class="printo-shadow" data-shadow aria-hidden="true"></div>
+  <div class="printo-mirror">
+    <div class="printo-actor" data-actor>
+      <div class="printo-sway" data-sway>
+        <div class="printo-breathe" data-breathe>
+          <button class="printo-figure" type="button" data-figure tabindex="-1" aria-hidden="true">
+            <img class="printo-hand" data-hand src={v.hand} alt="" width={v.w} height={v.h} decoding="async" fetchpriority="low" draggable="false" />
+            <img class="printo-body" data-body src={v.body} alt="" width={v.w} height={v.h} decoding="async" fetchpriority="low" draggable="false" />
+          </button>
+        </div>
+      </div>
+    </div>
+  </div>
+  <div class="printo-bubble" data-bubble>
+    <p class="printo-say"><Bi en={v.en} ar={v.ar} /></p>
+    <button class="printo-close" type="button" data-close aria-label="Hide Mr Printo" data-label-en="Hide Mr Printo" data-label-ar="إخفاء مستر برنتو">
+      <svg viewBox="0 0 12 12" aria-hidden="true"><path d="M2.5 2.5l7 7m0-7l-7 7" stroke="currentColor" stroke-width="1.6" stroke-linecap="round"/></svg>
+    </button>
+  </div>
+</div>
+
+<style>
+  .printo{
+    --printo-h:262px;
+    position:fixed;
+    bottom:0;
+    right:40px;                     /* the script moves him to a new spot before every appearance */
+    z-index:80;                     /* above page content, below the accessibility control (90) and overlays (200) */
+    --printo-k:1;
+    width:calc(var(--printo-h) * var(--printo-k) * var(--printo-ratio));
+    height:calc(var(--printo-h) * var(--printo-k));
+    pointer-events:none;
+    visibility:hidden;              /* shown only while he is on screen */
+  }
+  .printo.is-on{visibility:visible}
+  /* A version cut off at the chest is mostly head, so it stands smaller, and a little below the edge
+     so the line where the picture ends never lifts into view as he bounces and sways. */
+  .printo[data-feet="0"]{--printo-k:.78;margin-bottom:calc(var(--printo-h) * var(--printo-k) * -.08)}
+  @media(max-width:1100px){.printo{--printo-h:220px}}
+  @media(max-width:600px){.printo{--printo-h:142px}}
+
+  /* He is turned so the waving hand always points towards the middle of the screen. */
+  .printo-mirror{position:absolute;inset:0}
+  .printo.is-mirrored .printo-mirror{transform:scaleX(-1)}
+
+  .printo-actor,.printo-sway,.printo-breathe{position:absolute;inset:0;transform-origin:50% 100%}
+  .printo-actor{transform:translateY(125%);will-change:transform}
+  .printo-sway,.printo-breathe{will-change:transform}
+
+  .printo-figure{
+    position:absolute;inset:0;
+    padding:0;margin:0;border:0;background:none;
+    cursor:pointer;
+    pointer-events:auto;
+    -webkit-tap-highlight-color:transparent;
+  }
+  .printo-figure img{
+    position:absolute;inset:0;width:100%;height:100%;
+    user-select:none;-webkit-user-drag:none;
+  }
+  .printo-hand{transform-origin:var(--pivot-x) var(--pivot-y);will-change:transform}
+
+  /* A soft contact shadow under his shoes, so he stands on the page instead of floating over it.
+     Not drawn when he leans in from the side, or for a version cut off at the chest. */
+  .printo-shadow{
+    position:absolute;
+    bottom:4px;
+    left:14%;
+    width:72%;
+    height:16px;
+    border-radius:50%;
+    background:radial-gradient(closest-side,rgba(9,24,41,.30),rgba(9,24,41,0));
+    opacity:0;
+    transform-origin:50% 50%;
+  }
+  .printo.is-peek .printo-shadow,.printo[data-feet="0"] .printo-shadow{display:none}
+
+  /* The speech bubble floats above his head on the side facing the middle of the screen, its tail
+     pointing down at him. Positioned physically, because where he stands is physical. */
+  .printo-bubble{
+    position:absolute;
+    bottom:calc(100% + 12px);
+    right:22%;
+    z-index:2;
+    display:flex;
+    align-items:flex-start;
+    gap:6px;
+    width:max-content;
+    max-width:min(340px,calc(100vw - 40px));
+    padding:13px 11px 13px 17px;
+    background:var(--white);
+    color:var(--navy);
+    border:1px solid rgba(0,70,162,.14);
+    border-radius:16px;
+    box-shadow:0 14px 34px rgba(0,70,162,.18),0 2px 6px rgba(0,70,162,.08);
+    opacity:0;
+    transform-origin:85% 110%;
+    pointer-events:none;
+  }
+  :global([dir="rtl"]) .printo-bubble{padding:13px 17px 13px 11px}
+  .printo-bubble.is-open{pointer-events:auto}
+  .printo-bubble::after{
+    content:"";
+    position:absolute;
+    bottom:-7px;
+    right:30px;
+    width:13px;height:13px;
+    background:var(--white);
+    border-right:1px solid rgba(0,70,162,.14);
+    border-bottom:1px solid rgba(0,70,162,.14);
+    transform:rotate(45deg);
+    border-bottom-right-radius:3px;
+  }
+  .printo.on-left .printo-bubble{right:auto;left:22%;transform-origin:15% 110%}
+  .printo.on-left .printo-bubble::after{right:auto;left:30px}
+  /* Leaning in from the edge, his head comes in a long way from where he stands. */
+  .printo.is-peek .printo-bubble{bottom:calc(100% - 2px)}
+  .printo.is-peek.on-right .printo-bubble{right:62%}
+  .printo.is-peek.on-left .printo-bubble{left:62%}
+
+  .printo-say{
+    margin:0;
+    font-family:var(--display);
+    font-size:16px;
+    font-weight:600;
+    line-height:1.35;
+    letter-spacing:.01em;
+  }
+  .printo-close{
+    flex:none;
+    display:inline-flex;align-items:center;justify-content:center;
+    width:24px;height:24px;
+    margin-block-start:-2px;
+    padding:0;border:0;border-radius:50%;
+    background:transparent;
+    color:rgba(0,70,162,.55);
+    cursor:pointer;
+  }
+  .printo-close svg{width:11px;height:11px}
+  .printo-close:hover{background:rgba(0,70,162,.08);color:var(--navy)}
+  .printo-close:focus-visible{outline:2px solid var(--gold);outline-offset:1px}
+
+  @media(max-width:600px){
+    .printo-say{font-size:13.5px}
+    .printo-bubble{padding:10px 8px 10px 13px;right:8%;bottom:calc(100% + 8px)}
+    :global([dir="rtl"]) .printo-bubble{padding:10px 13px 10px 8px}
+    .printo.on-left .printo-bubble{left:8%}
+    .printo-bubble::after{right:22px}
+    .printo.on-left .printo-bubble::after{left:22px}
+  }
+  @media print{.printo{display:none}}
+</style>
+
+<script>
+  // Choreography for one appearance (about six and a half seconds):
+  //   arrive  ->  wave while the bubble pops  ->  a breathing hold  ->  bubble folds away  ->  leave.
+  // He arrives in one of two ways, from a different spot each time: RISING from below the bottom
+  // edge somewhere along it, or LEANING IN from beyond the left or right edge. The spot never
+  // repeats back to back, across page loads too.
+  // First appearance a few seconds after the page settles, then again every so often, capped so it
+  // never nags. Hidden tabs are skipped, and dismissing him keeps him away for the rest of the visit.
+  const FIRST_DELAY = 4000;
+  const REPEAT_EVERY = 38000;
+  const MAX_APPEARANCES = 3;
+  const DISMISS_KEY = 'printoDismissed';
+  const LAST_SPOT_KEY = 'printoLastSpot';
+
+  type Spot = { id: string; mode: 'rise' | 'peek'; side: 'left' | 'right'; at: number };
+  // `at` is how far in from that side he stands, as a share of the screen width (rise only).
+  const SPOTS: Spot[] = [
+    { id: 'rise-right', mode: 'rise', side: 'right', at: 0 },
+    { id: 'rise-left', mode: 'rise', side: 'left', at: 0 },
+    { id: 'rise-mid-right', mode: 'rise', side: 'right', at: .24 },
+    { id: 'rise-mid-left', mode: 'rise', side: 'left', at: .24 },
+    { id: 'peek-right', mode: 'peek', side: 'right', at: 0 },
+    { id: 'peek-left', mode: 'peek', side: 'left', at: 0 },
+  ];
+
+  const root = document.querySelector<HTMLElement>('[data-printo]');
+  if (root) init(root);
+
+  function init(root: HTMLElement) {
+    const $ = <T extends Element>(s: string) => root.querySelector(s) as T;
+    const actor = $<HTMLElement>('[data-actor]');
+    const sway = $<HTMLElement>('[data-sway]');
+    const breathe = $<HTMLElement>('[data-breathe]');
+    const hand = $<HTMLElement>('[data-hand]');
+    const shadow = $<HTMLElement>('[data-shadow]');
+    const bubble = $<HTMLElement>('[data-bubble]');
+    const figure = $<HTMLElement>('[data-figure]');
+    const close = $<HTMLButtonElement>('[data-close]');
+    const handSide = root.dataset.handSide === 'right' ? 'right' : 'left';
+    const hasFeet = root.dataset.feet !== '0';
+
+    const reduce = matchMedia('(prefers-reduced-motion: reduce)');
+    const phone = matchMedia('(max-width: 600px)');
+    let shown = 0;
+    let visible = false;
+    let spot: Spot = SPOTS[0];
+    let waving: Animation | null = null;
+    let breathing: Animation | null = null;
+    let hovered = false;
+    let dismissed = false;
+    try { dismissed = sessionStorage.getItem(DISMISS_KEY) === '1'; } catch (e) {}
+    if (dismissed) return;
+
+    const wait = (ms: number) => new Promise<void>((r) => setTimeout(r, ms));
+    const run = (el: Element, frames: Keyframe[], opts: KeyframeAnimationOptions) => {
+      const a = el.animate(frames, { fill: 'forwards', ...opts });
+      return a.finished.then(() => { try { a.commitStyles(); } catch (e) {} a.cancel(); }).catch(() => {});
+    };
+    const tabVisible = () =>
+      document.visibilityState === 'visible'
+        ? Promise.resolve()
+        : new Promise<void>((r) => document.addEventListener('visibilitychange', function f() {
+            if (document.visibilityState === 'visible') { document.removeEventListener('visibilitychange', f); r(); }
+          }));
+
+    // The close button's name follows the page language, which switches live without a reload.
+    const syncLabel = () => {
+      const ar = document.documentElement.dir === 'rtl';
+      close.setAttribute('aria-label', (ar ? close.dataset.labelAr : close.dataset.labelEn) || '');
+    };
+    syncLabel();
+    new MutationObserver(syncLabel).observe(document.documentElement, { attributes: true, attributeFilter: ['dir'] });
+
+    const busy = () => [...document.querySelectorAll<HTMLElement>('.mobile-nav, .qr-overlay, .lightbox, .profile')]
+      .some((el) => !el.hidden && getComputedStyle(el).display !== 'none' && getComputedStyle(el).visibility !== 'hidden');
+
+    // Pick a spot that differs from the last one, then stand him there, turned towards the page.
+    function place() {
+      let last = '';
+      try { last = sessionStorage.getItem(LAST_SPOT_KEY) || ''; } catch (e) {}
+      // The accessibility button sits in the bottom corner on the reading-start side.
+      const a11ySide = document.documentElement.dir === 'rtl' ? 'right' : 'left';
+      const options = SPOTS.filter((s) =>
+        s.id !== last &&
+        !(s.mode === 'peek' && s.side === a11ySide) &&  // leaning in there would cover that button
+        (hasFeet || s.mode === 'rise') &&              // a version cut off at the chest can only rise
+        (!phone.matches || s.at === 0)                  // on a phone, keep to the corners and edges
+      );
+      spot = options[Math.floor(Math.random() * options.length)] || SPOTS[0];
+      try { sessionStorage.setItem(LAST_SPOT_KEY, spot.id); } catch (e) {}
+
+      const w = root.offsetWidth;
+      const vw = document.documentElement.clientWidth;
+      // Stand clear of the accessibility button when rising on its side.
+      const clear = spot.side === a11ySide ? (phone.matches ? 72 : 100) : (phone.matches ? 10 : 40);
+      const offset = spot.mode === 'peek'
+        ? -Math.round(w * .4)                           // more than a third of him stays beyond the edge
+        : Math.round(Math.max(clear, Math.min(spot.at * vw, vw - w - clear)));
+
+      root.style.left = spot.side === 'left' ? `${offset}px` : 'auto';
+      root.style.right = spot.side === 'right' ? `${offset}px` : 'auto';
+      root.classList.toggle('on-left', spot.side === 'left');
+      root.classList.toggle('on-right', spot.side === 'right');
+      root.classList.toggle('is-peek', spot.mode === 'peek');
+      // Wave towards the middle: the hand should be on the side of him that faces the page.
+      const handTowardsMiddle = spot.side === 'right' ? 'left' : 'right';
+      root.classList.toggle('is-mirrored', handSide !== handTowardsMiddle);
+    }
+
+    const SOFT = 'cubic-bezier(.45,0,.55,1)';
+
+    function wave() {
+      if (reduce.matches || waving) return Promise.resolve();
+      // A natural wave: a quick first swing, two full ones, then it settles with a smaller echo.
+      waving = hand.animate([
+        { transform: 'rotate(0deg)', easing: 'cubic-bezier(.3,0,.5,1)' },
+        { transform: 'rotate(-14deg)', offset: .1, easing: SOFT },
+        { transform: 'rotate(19deg)', offset: .27, easing: SOFT },
+        { transform: 'rotate(-14deg)', offset: .44, easing: SOFT },
+        { transform: 'rotate(19deg)', offset: .61, easing: SOFT },
+        { transform: 'rotate(-8deg)', offset: .77, easing: SOFT },
+        { transform: 'rotate(6deg)', offset: .9, easing: SOFT },
+        { transform: 'rotate(0deg)' },
+      ], { duration: 2500 });
+      // The body answers the hand: a slight lean and lift in time with each swing.
+      sway.animate([
+        { transform: 'rotate(0deg) translateY(0)', easing: SOFT },
+        { transform: 'rotate(-1.4deg) translateY(-1%)', offset: .27, easing: SOFT },
+        { transform: 'rotate(.8deg) translateY(0)', offset: .44, easing: SOFT },
+        { transform: 'rotate(-1.4deg) translateY(-1%)', offset: .61, easing: SOFT },
+        { transform: 'rotate(.5deg) translateY(0)', offset: .82, easing: SOFT },
+        { transform: 'rotate(0deg) translateY(0)' },
+      ], { duration: 2500 });
+      return waving.finished.catch(() => {}).finally(() => { waving = null; });
+    }
+
+    function openBubble() {
+      bubble.classList.add('is-open');
+      if (reduce.matches) return run(bubble, [{ opacity: 0 }, { opacity: 1 }], { duration: 300 });
+      return run(bubble, [
+        { opacity: 0, transform: 'translateY(8px) scale(.6)', easing: 'cubic-bezier(.2,.9,.3,1.25)' },
+        { opacity: 1, transform: 'translateY(0) scale(1)' },
+      ], { duration: 460 });
+    }
+    function closeBubble() {
+      if (!bubble.classList.contains('is-open')) return Promise.resolve();
+      bubble.classList.remove('is-open');
+      return run(bubble, [
+        { opacity: 1, transform: 'translateY(0) scale(1)' },
+        { opacity: 0, transform: reduce.matches ? 'none' : 'translateY(4px) scale(.9)' },
+      ], { duration: 240, easing: 'cubic-bezier(.4,0,1,1)' });
+    }
+
+    // Written for the right-hand side; the mirror flips them for the left, since he is mirrored there.
+    // (When the art's own hand side already faces the middle he is not mirrored, so the lean is
+    // flipped by hand.)
+    const lean = () => (root.classList.contains('is-mirrored') === (spot.side === 'left') ? 1 : -1);
+    const PEEK_OUT = () => `translateX(${88 * lean()}%) rotate(0deg)`;
+
+    async function arrive() {
+      if (reduce.matches) {
+        actor.style.transform = spot.mode === 'peek' ? `rotate(${-12 * lean()}deg)` : 'none';
+        await Promise.all([
+          run(actor, [{ opacity: 0 }, { opacity: 1 }], { duration: 400 }),
+          run(shadow, [{ opacity: 0 }, { opacity: 1 }], { duration: 400 }),
+        ]);
+        return;
+      }
+      if (spot.mode === 'peek') {
+        const l = lean();
+        await run(actor, [
+          { transform: PEEK_OUT(), easing: 'cubic-bezier(.2,.7,.3,1)' },
+          { transform: `translateX(${-3 * l}%) rotate(${-15 * l}deg)`, offset: .64, easing: SOFT },
+          { transform: `translateX(${1 * l}%) rotate(${-11 * l}deg)`, offset: .84, easing: SOFT },
+          { transform: `translateX(0%) rotate(${-12 * l}deg)` },
+        ], { duration: 1000 });
+        return;
+      }
+      await Promise.all([
+        run(actor, [
+          { transform: 'translateY(125%) rotate(5deg) scale(.94,1.06)', easing: 'cubic-bezier(.15,.75,.35,1)' },
+          { transform: 'translateY(-5%) rotate(-1.5deg) scale(1.03,.97)', offset: .6, easing: 'cubic-bezier(.4,0,.6,1)' },
+          { transform: 'translateY(1.2%) rotate(.6deg) scale(.99,1.015)', offset: .82, easing: 'cubic-bezier(.4,0,.6,1)' },
+          { transform: 'translateY(0) rotate(0deg) scale(1,1)' },
+        ], { duration: 950 }),
+        run(shadow, [
+          { opacity: 0, transform: 'scaleX(.3)' },
+          { opacity: .2, transform: 'scaleX(.5)', offset: .45 },
+          { opacity: 1, transform: 'scaleX(1.06)', offset: .62 },
+          { opacity: 1, transform: 'scaleX(1)' },
+        ], { duration: 950, easing: 'ease-out' }),
+      ]);
+    }
+
+    async function leave() {
+      if (reduce.matches) {
+        await Promise.all([
+          run(actor, [{ opacity: 1 }, { opacity: 0 }], { duration: 400 }),
+          run(shadow, [{ opacity: 1 }, { opacity: 0 }], { duration: 400 }),
+        ]);
+        return;
+      }
+      if (spot.mode === 'peek') {
+        const l = lean();
+        await run(actor, [
+          { transform: `translateX(0%) rotate(${-12 * l}deg)`, easing: 'cubic-bezier(.3,0,.5,1)' },
+          { transform: `translateX(${-2 * l}%) rotate(${-14 * l}deg)`, offset: .22, easing: 'cubic-bezier(.55,0,.85,.3)' },
+          { transform: PEEK_OUT() },
+        ], { duration: 760 });
+        return;
+      }
+      await Promise.all([
+        run(actor, [
+          { transform: 'translateY(0) rotate(0deg) scale(1,1)', easing: 'cubic-bezier(.3,0,.5,1)' },
+          { transform: 'translateY(-3.5%) rotate(-1deg) scale(.98,1.03)', offset: .24, easing: 'cubic-bezier(.55,0,.85,.25)' },
+          { transform: 'translateY(125%) rotate(4deg) scale(.96,1.04)' },
+        ], { duration: 720 }),
+        run(shadow, [
+          { opacity: 1, transform: 'scaleX(1)' },
+          { opacity: 1, transform: 'scaleX(.92)', offset: .24 },
+          { opacity: 0, transform: 'scaleX(.3)' },
+        ], { duration: 520, easing: 'ease-in' }),
+      ]);
+    }
+
+    function startBreathing() {
+      if (reduce.matches) return;
+      breathing = breathe.animate([
+        { transform: 'scale(1,1)', easing: SOFT },
+        { transform: 'scale(1.006,.99)', offset: .5, easing: SOFT },
+        { transform: 'scale(1,1)' },
+      ], { duration: 1900, iterations: Infinity });
+    }
+    function stopBreathing() { breathing?.cancel(); breathing = null; }
+
+    async function appear() {
+      if (dismissed) return;
+      await tabVisible();
+      // Never pop up over the open phone menu or a full-screen overlay (lightbox, profile, QR).
+      while (!dismissed && busy()) await wait(1000);
+      if (dismissed) return;
+      place();
+      // Park him out of sight in the new spot's own way before making him visible.
+      if (!reduce.matches) actor.style.transform = spot.mode === 'peek' ? PEEK_OUT() : 'translateY(125%)';
+      root.classList.add('is-on');
+      visible = true;
+      shown++;
+      await arrive();
+      if (dismissed) return;
+      startBreathing();
+      const bubbleIn = wait(reduce.matches ? 0 : 180).then(openBubble);
+      await Promise.all([wave(), bubbleIn]);
+      await wait(reduce.matches ? 4200 : 1700);
+      while (hovered && !dismissed) await wait(250);   // he waits for you while you are pointing at him
+      if (dismissed) return;
+      await closeBubble();
+      await wait(180);
+      stopBreathing();
+      await leave();
+      root.classList.remove('is-on');
+      visible = false;
+    }
+
+    async function dismiss() {
+      if (dismissed) return;
+      dismissed = true;
+      try { sessionStorage.setItem(DISMISS_KEY, '1'); } catch (e) {}
+      await closeBubble();
+      stopBreathing();
+      waving?.finish();
+      if (visible) await leave();
+      root.remove();
+    }
+
+    close.addEventListener('click', dismiss);
+    figure.addEventListener('click', () => { if (visible) wave(); });
+    [figure, bubble].forEach((el) => {
+      el.addEventListener('pointerenter', () => { hovered = true; });
+      el.addEventListener('pointerleave', () => { hovered = false; });
+    });
+
+    // Start only once both layers are decoded, so he never arrives half-drawn.
+    const imgs = [...root.querySelectorAll('img')];
+    Promise.all(imgs.map((i) => i.decode().catch(() => {}))).then(async () => {
+      await wait(FIRST_DELAY);
+      while (!dismissed && shown < MAX_APPEARANCES) {
+        await appear();
+        if (shown < MAX_APPEARANCES) await wait(REPEAT_EVERY);
+      }
+    });
+  }
+</script>
