@@ -171,13 +171,15 @@ We have verified our sending domain, enabled DKIM signing, configured a custom M
 
 ---
 
-## Round 2: Amazon asked for more information (2026-09-13), reply posted 2026-09-14
+## Round 2: Amazon asked for more information (2026-09-13), reply NOT YET RECEIVED by Amazon
 
 Amazon's first answer was their standard "we would like to gather more information" message
 (case 178931713400385, status DENIED in `get-account`). It asked for sending frequency, list
 maintenance, bounce/complaint/unsubscribe handling, and an example email. The reply below was
-posted by Bader in the AWS Support Center (the Support API needs a paid support plan, so it
-cannot be posted from the CLI). Status stays DENIED until a reviewer acts on the reply.
+first sent on 2026-09-14 08:26 UTC as an EMAIL reply to Amazon's message, which BOUNCED (their
+no-reply address accepts no mail). It must be posted with Reply inside the case in the AWS
+Support Center; the Support API needs a paid support plan, so the CLI cannot post it either.
+Status stays DENIED until a reviewer acts on a reply posted in the case.
 
 The example email's lab test (migration testing) is illustrative, not a confirmed Printopack
 service. Every figure in it matched the live tool's settings on 2026-09-13.
