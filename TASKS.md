@@ -13,6 +13,25 @@ Last updated: 2026-08-20 (client notes round 2 complete, page by page)
 
 ---
 
+## DONE 2026-09-14: update email to the GM
+
+Sent by Bader, in Arabic: the site edits since 23 August (Mr Printo, the BRCGS mark, navbar, team,
+partners, contact, spacing, the two new admin sections), the revised website cost (figures in the
+private `CLAUDE.md`, not here), the email software's AWS production-access review, and the sign
+language research below.
+
+- [x] **Sign language research, the client's request.** No tool takes a transcript and produces an
+      accurate Arabic sign language video: what exists is avatar software (Idmaj, Tamkin, Al-Tarjuman),
+      and we advised against it as too new to be accurate. No sign language interpreters on Fiverr or
+      Upwork. Recommended a certified human interpreter recorded on video, in **Saudi** Sign Language
+      (it differs by country, so a Jordanian or Egyptian interpreter is the wrong variant), and pointed
+      the client to the Saudi Sign Language Interpreters Association in Riyadh (saudisla.org,
+      licence 1002). Mostaql also has sign language freelancers. We offered to put the videos on the
+      site once the client picks an interpreter.
+- [?] **Waiting on the client:** whether to go ahead with an interpreter, and who.
+
+---
+
 ## DONE 2026-09-14: Mr Printo, the animated mascot
 
 The GM's own request, built as the one deliberate exception to his no-motion rule. Component
