@@ -68,16 +68,19 @@ const officesAr = _offices.map((o) => o.cityAr || o.city).filter(Boolean)
            them is already in the header nav, so the footer was repeating itself; the code is
            the thing he wanted given room. -->
       <div class="qr">
-        <button class="qr-box" data-qr-open aria-label="Enlarge the QR code">
-          <img src="/images/printopack-qr.png" alt="Printopack QR code" width="451" height="451" />
-        </button>
-        <span><Bi en="Scan for our digital profile" ar="امسح للوصول إلى ملفنا الرقمي" /></span>
-        <!-- BRCGS certification mark, from the client's file brcgs-packaging-materials-certificated OL.pdf
-             (2026-09-14). Its light blue and grey would vanish on the footer blue, so it sits on a
-             white tile the same width as the QR frame. -->
-        <div class="cert-badge">
-          <img src="/images/brcgs-packaging-materials.webp" alt="BRCGS Packaging Materials, Certificated" width="480" height="361" loading="lazy" decoding="async" />
+        <!-- The QR and the BRCGS certification mark (the client's file
+             brcgs-packaging-materials-certificated OL.pdf, 2026-09-14) share one row of equal-height
+             white tiles, so the column stays about as tall as its neighbours. The mark's light blue
+             and grey would vanish on the footer blue, hence its tile. -->
+        <div class="qr-row">
+          <button class="qr-box" data-qr-open aria-label="Enlarge the QR code">
+            <img src="/images/printopack-qr.png" alt="Printopack QR code" width="451" height="451" />
+          </button>
+          <div class="cert-badge">
+            <img src="/images/brcgs-packaging-materials.webp" alt="BRCGS Packaging Materials, Certificated" width="480" height="361" loading="lazy" decoding="async" />
+          </div>
         </div>
+        <span><Bi en="Scan for our digital profile" ar="امسح للوصول إلى ملفنا الرقمي" /></span>
       </div>
 
       <div class="foot-col foot-visit">
@@ -149,11 +152,12 @@ const officesAr = _offices.map((o) => o.cityAr || o.city).filter(Boolean)
   .qr{display:flex;flex-direction:column;align-items:center;gap:12px;justify-self:center;max-width:100%}
   /* the QR PNG already carries its own quiet zone, so keep the frame padding tight
      and the box larger, or the code reads tiny inside a big white square */
-  .qr-box{width:clamp(150px,15vw,215px);height:clamp(150px,15vw,215px);background:var(--paper);border-radius:8px;padding:8px;color:var(--navy);flex:none}
+  .qr-row{--tile:clamp(104px,8.4vw,124px);display:flex;align-items:stretch;gap:10px}
+  .qr-box{width:var(--tile);height:var(--tile);background:var(--paper);border-radius:8px;padding:6px;color:var(--navy);flex:none}
   .qr-box svg,.qr-box img{width:100%;height:100%;display:block}
-  .qr span{font-size:13.5px;color:#fff;letter-spacing:.02em;line-height:1.5;text-align:center}
-  .cert-badge{width:clamp(150px,15vw,215px);margin-top:6px;padding:12px 14px;background:var(--paper);border-radius:8px}
-  .cert-badge img{width:100%;height:auto;display:block}
+  .qr span{font-size:13px;color:#fff;letter-spacing:.02em;line-height:1.5;text-align:center}
+  .cert-badge{height:var(--tile);box-sizing:border-box;padding:10px 12px;background:var(--paper);border-radius:8px;flex:none;display:flex;align-items:center}
+  .cert-badge img{height:100%;width:auto;display:block}
 
   .foot-col a,.foot-visit p{display:block;color:#fff;font-size:15px;margin-bottom:13px;max-width:none}
   .foot-col a:hover{color:var(--gold-bright)}
