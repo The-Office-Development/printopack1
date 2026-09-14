@@ -171,7 +171,7 @@ We have verified our sending domain, enabled DKIM signing, configured a custom M
 
 ---
 
-## Round 2: Amazon asked for more information (2026-09-13), reply NOT YET RECEIVED by Amazon
+## Round 2: Amazon asked for more information (2026-09-13), reply POSTED in the case 2026-09-14 08:33 UTC
 
 Amazon's first answer was their standard "we would like to gather more information" message
 (case 178931713400385, status DENIED in `get-account`). It asked for sending frequency, list
@@ -180,6 +180,13 @@ first sent on 2026-09-14 08:26 UTC as an EMAIL reply to Amazon's message, which 
 no-reply address accepts no mail). It must be posted with Reply inside the case in the AWS
 Support Center; the Support API needs a paid support plan, so the CLI cannot post it either.
 Status stays DENIED until a reviewer acts on a reply posted in the case.
+
+**Posted via the console 2026-09-14 11:33 (GMT+3), confirmed visible in the case correspondence.**
+Bader's small edits to the text below: "We are Printopack ... and we've manufactured", the
+volume line shortened to "a few announcements per month, each to approximately 4,000
+recipients", "honored" spelling. He appended the company email signature (Tel ext 234, mobile,
+fax, aws@ address, www.printopack.com.sa, mkt@printopack.com.sa, 00966-531179791, PO Box 19596
+Jeddah 21445, Industrial Area #1 phase-5).
 
 The example email's lab test (migration testing) is illustrative, not a confirmed Printopack
 service. Every figure in it matched the live tool's settings on 2026-09-13.
