@@ -627,3 +627,4 @@ clarify.
       it is a deliberate, named exception to his no-motion brief, not a breach of it. The rest of
       the public site stays still. Three versions: home = the plain Mr Printo, About Us = wearing
       a shemagh and agal, Contact = holding a telephone.
+      BUILT 2026-09-14, all three; see TASKS.md "DONE 2026-09-14: Mr Printo".

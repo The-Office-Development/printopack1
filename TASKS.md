@@ -13,6 +13,28 @@ Last updated: 2026-08-20 (client notes round 2 complete, page by page)
 
 ---
 
+## DONE 2026-09-14: Mr Printo, the animated mascot
+
+The GM's own request, built as the one deliberate exception to his no-motion rule. Component
+`src/components/Mascot.astro`; layers in `public/images/mascot/`; build scripts and their README in
+`scripts/mascot/`.
+
+- [x] **Three versions:** plain on the home page, shemagh and agal on About Us, telephone on Contact.
+- [x] **He waves for real:** each version is a body layer and a hand layer, the hand rotating about the
+      wrist under the sleeve cuff. Arrives, waves with a greeting bubble, breathes, leaves. Clicking him
+      waves again; the x hides him for the visit; reduced motion gives a still figure that fades.
+- [x] **A different place each time:** rising at one of four points along the bottom edge, or leaning
+      in from the side edge away from the accessibility button; never the same spot twice running.
+      Always turned so he waves towards the page. First after 4s, then every ~40s, at most 3 a visit.
+- [x] **Artwork repairs:** the waving picture's helmet top was cut off by its frame and was rebuilt.
+      The shemagh and telephone pictures have no free hand, so both borrow the plain picture's raised
+      arm, recoloured to the thobe and to the yellow shirt; the shemagh's hand-on-hip arm was removed
+      and the thobe repainted.
+- [ ] **If the client sends waving artwork** for the shemagh or telephone versions, rebuild from it
+      (see `scripts/mascot/README.md`); the borrowed arms are a good match but not his illustrator's.
+
+---
+
 ## DONE 2026-08-20: the audit fixes, the enquiry pipeline, and the messaging tool
 
 A full audit of the repo (93 verified findings) was run first; these are the items acted on.
