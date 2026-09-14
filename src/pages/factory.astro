@@ -1,6 +1,7 @@
 ---
 import Base from '../layouts/Base.astro';
 import Bi from '../components/Bi.astro';
+import Mascot from '../components/Mascot.astro';
 import { collection, stats } from '../lib/content';
 const year = new Date().getFullYear();
 
@@ -127,6 +128,7 @@ const c = content;
       <a href="/contact" class="btn btn-gold"><Bi en={c.cta.button.en} ar={c.cta.button.ar} /></a>
     </div>
   </section>
+  <Mascot variant="shemagh" />
 </Base>
 
 <style>

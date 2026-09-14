@@ -16,7 +16,7 @@ import Bi from './Bi.astro';
 // and transition on the site, and that switch does not reach element.animate(). Visitors who ask
 // their system for reduced motion get a still Mr Printo that fades in and out, with no movement.
 //
-// Versions: plain (home), shemagh and agal (About Us), telephone (Contact).
+// Versions: plain (home), shemagh and agal (About Us and its four sub-pages), telephone (Contact).
 
 type Variant = 'plain' | 'shemagh' | 'phone';
 const { variant = 'plain' } = Astro.props as { variant?: Variant };
@@ -33,7 +33,7 @@ const VARIANTS = {
     en: 'Hello! Welcome to Printopack',
     ar: 'أهلاً وسهلاً بكم في برنتوباك',
   },
-  // About Us. His picture had no free hand, so the waving arm is the plain one's, in thobe white.
+  // About Us and its sub-pages (company, factory, team, responsibility). His picture had no free hand, so the waving arm is the plain one's, in thobe white.
   shemagh: {
     body: '/images/mascot/printo-shemagh-body.webp',
     hand: '/images/mascot/printo-shemagh-hand.webp',
@@ -92,7 +92,7 @@ const v = VARIANTS[variant as keyof typeof VARIANTS] ?? VARIANTS.plain;
     --printo-h:262px;
     position:fixed;
     bottom:0;
-    right:40px;                     /* the script moves him to a new spot before every appearance */
+    inset-inline-end:40px;          /* the script moves him to a new spot before every appearance */
     z-index:80;                     /* above page content, below the accessibility control (90) and overlays (200) */
     --printo-k:1;
     width:calc(var(--printo-h) * var(--printo-k) * var(--printo-ratio));
@@ -223,8 +223,12 @@ const v = VARIANTS[variant as keyof typeof VARIANTS] ?? VARIANTS.plain;
   // Choreography for one appearance (about six and a half seconds):
   //   arrive  ->  wave while the bubble pops  ->  a breathing hold  ->  bubble folds away  ->  leave.
   // He arrives in one of two ways, from a different spot each time: RISING from below the bottom
-  // edge somewhere along it, or LEANING IN from beyond the left or right edge. The spot never
-  // repeats back to back, across page loads too.
+  // edge somewhere along it, or LEANING IN from beyond a side edge. The spot never repeats back to
+  // back, across page loads too.
+  // Spots are defined by reading direction, like the accessibility button (which sits in the
+  // reading-START corner): 'start' is left in English and right in Arabic. Switching language flips
+  // the page under him while he is on screen, so a physical left/right spot that was clear of the
+  // button in English ended up standing on it in Arabic. With logical sides he flips with the page.
   // First appearance a few seconds after the page settles, then again every so often, capped so it
   // never nags. Hidden tabs are skipped, and dismissing him keeps him away for the rest of the visit.
   const FIRST_DELAY = 4000;
@@ -233,15 +237,14 @@ const v = VARIANTS[variant as keyof typeof VARIANTS] ?? VARIANTS.plain;
   const DISMISS_KEY = 'printoDismissed';
   const LAST_SPOT_KEY = 'printoLastSpot';
 
-  type Spot = { id: string; mode: 'rise' | 'peek'; side: 'left' | 'right'; at: number };
-  // `at` is how far in from that side he stands, as a share of the screen width (rise only).
+  type Spot = { id: string; mode: 'rise' | 'peek'; edge: 'start' | 'end'; at: number };
+  // `at` is how far in from that edge he stands, as a share of the screen width (rise only).
   const SPOTS: Spot[] = [
-    { id: 'rise-right', mode: 'rise', side: 'right', at: 0 },
-    { id: 'rise-left', mode: 'rise', side: 'left', at: 0 },
-    { id: 'rise-mid-right', mode: 'rise', side: 'right', at: .24 },
-    { id: 'rise-mid-left', mode: 'rise', side: 'left', at: .24 },
-    { id: 'peek-right', mode: 'peek', side: 'right', at: 0 },
-    { id: 'peek-left', mode: 'peek', side: 'left', at: 0 },
+    { id: 'rise-end', mode: 'rise', edge: 'end', at: 0 },
+    { id: 'rise-start', mode: 'rise', edge: 'start', at: 0 },
+    { id: 'rise-mid-end', mode: 'rise', edge: 'end', at: .24 },
+    { id: 'rise-mid-start', mode: 'rise', edge: 'start', at: .24 },
+    { id: 'peek-end', mode: 'peek', edge: 'end', at: 0 },   // never from the start edge: that is the button's
   ];
 
   const root = document.querySelector<HTMLElement>('[data-printo]');
@@ -265,6 +268,9 @@ const v = VARIANTS[variant as keyof typeof VARIANTS] ?? VARIANTS.plain;
     let shown = 0;
     let visible = false;
     let spot: Spot = SPOTS[0];
+    const rtl = () => document.documentElement.dir === 'rtl';
+    // The physical side of the screen his spot is on right now.
+    const side = () => ((spot.edge === 'start') !== rtl() ? 'left' : 'right');
     let waving: Animation | null = null;
     let breathing: Animation | null = null;
     let hovered = false;
@@ -285,11 +291,11 @@ const v = VARIANTS[variant as keyof typeof VARIANTS] ?? VARIANTS.plain;
           }));
 
     // The close button's name follows the page language, which switches live without a reload.
+    // When the language switches, he also crosses to the mirrored spot, turned the other way.
     const syncLabel = () => {
-      const ar = document.documentElement.dir === 'rtl';
-      close.setAttribute('aria-label', (ar ? close.dataset.labelAr : close.dataset.labelEn) || '');
+      close.setAttribute('aria-label', (rtl() ? close.dataset.labelAr : close.dataset.labelEn) || '');
+      orient();
     };
-    syncLabel();
     new MutationObserver(syncLabel).observe(document.documentElement, { attributes: true, attributeFilter: ['dir'] });
 
     const busy = () => [...document.querySelectorAll<HTMLElement>('.mobile-nav, .qr-overlay, .lightbox, .profile')]
@@ -299,11 +305,8 @@ const v = VARIANTS[variant as keyof typeof VARIANTS] ?? VARIANTS.plain;
     function place() {
       let last = '';
       try { last = sessionStorage.getItem(LAST_SPOT_KEY) || ''; } catch (e) {}
-      // The accessibility button sits in the bottom corner on the reading-start side.
-      const a11ySide = document.documentElement.dir === 'rtl' ? 'right' : 'left';
       const options = SPOTS.filter((s) =>
         s.id !== last &&
-        !(s.mode === 'peek' && s.side === a11ySide) &&  // leaning in there would cover that button
         (hasFeet || s.mode === 'rise') &&              // a version cut off at the chest can only rise
         (!phone.matches || s.at === 0)                  // on a phone, keep to the corners and edges
       );
@@ -312,21 +315,30 @@ const v = VARIANTS[variant as keyof typeof VARIANTS] ?? VARIANTS.plain;
 
       const w = root.offsetWidth;
       const vw = document.documentElement.clientWidth;
-      // Stand clear of the accessibility button when rising on its side.
-      const clear = spot.side === a11ySide ? (phone.matches ? 72 : 100) : (phone.matches ? 10 : 40);
+      // Stand clear of the accessibility button when rising at the start edge, where it is.
+      const clear = spot.edge === 'start' ? (phone.matches ? 72 : 100) : (phone.matches ? 10 : 40);
       const offset = spot.mode === 'peek'
         ? -Math.round(w * .4)                           // more than a third of him stays beyond the edge
         : Math.round(Math.max(clear, Math.min(spot.at * vw, vw - w - clear)));
 
-      root.style.left = spot.side === 'left' ? `${offset}px` : 'auto';
-      root.style.right = spot.side === 'right' ? `${offset}px` : 'auto';
-      root.classList.toggle('on-left', spot.side === 'left');
-      root.classList.toggle('on-right', spot.side === 'right');
+      // Logical insets, so a language switch moves him with the page.
+      root.style.insetInlineStart = spot.edge === 'start' ? `${offset}px` : 'auto';
+      root.style.insetInlineEnd = spot.edge === 'end' ? `${offset}px` : 'auto';
       root.classList.toggle('is-peek', spot.mode === 'peek');
+      orient();
+    }
+
+    // The side classes (bubble placement) and which way he faces follow the physical side.
+    // Mirroring flips his whole pose with him, so an animation already running stays correct.
+    function orient() {
+      const s = side();
+      root.classList.toggle('on-left', s === 'left');
+      root.classList.toggle('on-right', s === 'right');
       // Wave towards the middle: the hand should be on the side of him that faces the page.
-      const handTowardsMiddle = spot.side === 'right' ? 'left' : 'right';
+      const handTowardsMiddle = s === 'right' ? 'left' : 'right';
       root.classList.toggle('is-mirrored', handSide !== handTowardsMiddle);
     }
+    syncLabel();
 
     const SOFT = 'cubic-bezier(.45,0,.55,1)';
 
@@ -375,7 +387,7 @@ const v = VARIANTS[variant as keyof typeof VARIANTS] ?? VARIANTS.plain;
     // Written for the right-hand side; the mirror flips them for the left, since he is mirrored there.
     // (When the art's own hand side already faces the middle he is not mirrored, so the lean is
     // flipped by hand.)
-    const lean = () => (root.classList.contains('is-mirrored') === (spot.side === 'left') ? 1 : -1);
+    const lean = () => (root.classList.contains('is-mirrored') === (side() === 'left') ? 1 : -1);
     const PEEK_OUT = () => `translateX(${88 * lean()}%) rotate(0deg)`;
 
     async function arrive() {
