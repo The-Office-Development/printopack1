@@ -171,6 +171,13 @@ We have verified our sending domain, enabled DKIM signing, configured a custom M
 
 ---
 
+## Outcome: GRANTED
+
+Amazon granted production access after the Round 2 reply: 50,000 messages/day, 14/second,
+out of the sandbox in eu-west-1. Verified with `get-account` on 2026-09-15 (review status
+GRANTED, enforcement HEALTHY). What worked: a request that only claimed what the tool really
+does, then a detailed reply with an example email posted inside the case.
+
 ## Round 2: Amazon asked for more information (2026-09-13), reply POSTED in the case 2026-09-14 08:33 UTC
 
 Amazon's first answer was their standard "we would like to gather more information" message
